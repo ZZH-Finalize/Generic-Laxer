@@ -1,0 +1,7 @@
+*.o
+*.exe
+*.s
+*.stackdump
+*.map
+build/
+test_cases/

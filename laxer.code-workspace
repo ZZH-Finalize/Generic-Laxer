@@ -1,0 +1,108 @@
+{
+    "folders": [
+        {
+            "path": ".",
+            "name": "EDL编译器"
+        }
+    ],
+    "settings": {
+        "C_Cpp.default.cStandard": "gnu99",
+        "C_Cpp.autocomplete": "default",
+        "C_Cpp.default.cppStandard": "gnu++11",
+        "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+        "files.associations": {
+            "*.h": "cpp"
+        },
+        "files.encoding": "utf8",
+        "search.useIgnoreFiles": false,
+        "files.exclude": {
+            "**/.git": true,
+            "**/.svn": true,
+            "**/.hg": true,
+            "**/CVS": true,
+            "**/.DS_Store": true,
+            "**/Thumbs.db": true,
+            "**/*.code-workspace": true,
+        }
+    },
+    "tasks": {
+        "version": "2.0.0",
+        "tasks": [
+            {
+                "type": "cmake",
+                "label": "build",
+                "command": "build",
+                "group": {
+                    "kind": "build",
+                    "isDefault": true
+                },
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": false,
+                    "panel": "shared",
+                    "showReuseMessage": true,
+                    "clear": true,
+                },
+                "detail": "构建"
+            },
+            {
+                "type": "cmake",
+                "label": "clean",
+                "command": "clean",
+                "presentation": {
+                    "close": true
+                },
+                "detail": "清理"
+            },
+            {
+                "type": "shell",
+                "label": "Test Run",
+                "command": "./build/edl-laxer",
+                "args": [
+                    "std.edl"
+                ],
+                "options": {
+                    "cwd": "${workspaceFolder}"
+                },
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": false,
+                    "panel": "shared",
+                    "showReuseMessage": true,
+                    "clear": true
+                },
+                "group": {
+                    "kind": "test",
+                    "isDefault": true
+                },
+                "detail": "测试运行"
+            }
+        ]
+    },
+    "launch": {
+        "configurations": [
+            {
+                "name": "main",
+                "type": "cppdbg",
+                "request": "launch",
+                "program": "${workspaceFolder}/build/edl-laxer.exe",
+                "args": [],
+                "stopAtEntry": true,
+                "cwd": "${workspaceFolder}",
+                "environment": [],
+                "externalConsole": false,
+                "MIMode": "gdb",
+                "miDebuggerPath": "gdb",
+                "setupCommands": [
+                    {
+                        "description": "为 gdb 启用整齐打印",
+                        "text": "-enable-pretty-printing",
+                        "ignoreFailures": true
+                    }
+                ],
+            },
+        ]
+    }
+}
