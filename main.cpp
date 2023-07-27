@@ -4,7 +4,7 @@
 
 int main(const int argc, const char** argv)
 {
-    std::ifstream test_file("test_cases/dec.edl");
+    std::ifstream test_file(argv[1]);
 
     if (false == test_file.is_open())
     {
@@ -19,7 +19,7 @@ int main(const int argc, const char** argv)
     {
         token = laxer.next_token();
         std::cout << "token_type:" << token.id << ", value:" << token.value.integer << std::endl;
-    } while (token.id != EDL::Laxer_t::invalid);
+    } while (token.id != EDL::Laxer_t::eof);
 
     return 0;
 }

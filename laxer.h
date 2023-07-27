@@ -36,7 +36,7 @@ namespace EDL
             symbol,//+-*/ etc.
             key_word,
 
-        } cur_state;
+        };
 
     protected:
         void init_state_map(void);

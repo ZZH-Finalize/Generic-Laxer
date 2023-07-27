@@ -8,7 +8,7 @@
 namespace EDL
 {
     Laxer_t::Laxer_t(const std::istream& i, std::ostream& o)
-        :input(i.rdbuf()), debug(o), cur_state(start)
+        :input(i.rdbuf()), debug(o)
     {
         this->init_state_map();
         this->debug << "new laxer" << std::endl;
@@ -26,12 +26,21 @@ namespace EDL
         token_t token;
         memset(&token, 0, sizeof(token));
 
+        state_t cur_state = start;
+
         do
         {
             char ch = this->input->sbumpc();
-            this->cur_state = (state_t) this->state_map[make_id(this->cur_state, ch)];
 
-            switch (this->cur_state)
+            if (-1 == ch)
+            {
+                token.id = eof;
+                return token;
+            }
+
+            cur_state = (state_t) this->state_map[make_id(cur_state, ch)];
+
+            switch (cur_state)
             {
                 case number_iden:
                     token.id = tk_number;
@@ -68,8 +77,6 @@ namespace EDL
 
         if (cur_state == error)
             token.id = invalid;
-
-        this->cur_state = start;
 
         return token;
     }

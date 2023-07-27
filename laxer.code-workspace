@@ -2,7 +2,7 @@
     "folders": [
         {
             "path": ".",
-            "name": "EDL编译器"
+            "name": "EDL编译器-词法分析器组件"
         }
     ],
     "settings": {
@@ -73,10 +73,10 @@
                     "showReuseMessage": true,
                     "clear": true
                 },
-                "group": {
-                    "kind": "test",
-                    "isDefault": true
-                },
+                // "group": {
+                //     "kind": "test",
+                //     "isDefault": true
+                // },
                 "detail": "测试运行"
             }
         ]
