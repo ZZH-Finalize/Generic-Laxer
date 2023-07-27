@@ -13,11 +13,13 @@ int main(const int argc, const char** argv)
     }
 
     EDL::Laxer_t laxer(test_file);
-
-    EDL::Laxer_t::token_t token = laxer.next_token();
-
-    std::cout << "token_type:" << token.id << ", value:" << token.value.integer << std::endl;
-
+    EDL::Laxer_t::token_t token;
+    
+    do
+    {
+        token = laxer.next_token();
+        std::cout << "token_type:" << token.id << ", value:" << token.value.integer << std::endl;
+    } while (token.id != EDL::Laxer_t::invalid);
 
     return 0;
 }

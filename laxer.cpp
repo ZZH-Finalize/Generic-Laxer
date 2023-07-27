@@ -3,7 +3,7 @@
 #include <cassert>
 #include "laxer.h"
 
-#define make_id(a,b) (((uint16_t)(a))<<8|(b))
+#define make_id(a,b) (((uint16_t)(a))<<8|((uint8_t)b))
 
 namespace EDL
 {
@@ -23,19 +23,25 @@ namespace EDL
     Laxer_t::token_t Laxer_t::next_token(void)
     {
         assert(nullptr != this->input);
-
         token_t token;
-        char ch = this->input->sbumpc();
-
         memset(&token, 0, sizeof(token));
 
         do
         {
+            char ch = this->input->sbumpc();
             this->cur_state = (state_t) this->state_map[make_id(this->cur_state, ch)];
 
             switch (this->cur_state)
             {
                 case number_iden:
+                    token.id = tk_number;
+                    break;
+
+                case number_bin:
+                    if (ch == 'b')
+                        break;
+                    token.value.integer <<= 1;
+                    token.value.integer |= ch == '1';
                     break;
 
                 case number_dec:
@@ -43,9 +49,21 @@ namespace EDL
                     token.value.integer *= 10;
                     token.value.integer += ch - '0';
                     break;
-            }
 
-            ch = this->input->sbumpc();
+                case number_hex:
+                    if (ch == 'x')
+                        break;
+
+                    token.value.integer <<= 4;
+                    if (ch >= 'a' && ch <= 'f')
+                        token.value.integer |= (ch - 'a') + 10;
+                    else if (ch >= 'A' && ch <= 'F')
+                        token.value.integer |= (ch - 'A') + 10;
+                    else
+                        token.value.integer |= ch - '0';
+
+                    break;
+            }
         } while (cur_state != error && cur_state != end);
 
         if (cur_state == error)
@@ -71,11 +89,11 @@ namespace EDL
         // start : 0 -> number_iden
         this->state_map[make_id(start, '0')] = number_iden;
         // start : 1-9 -> number_dec
-        for (char ch = '1';ch < '9';ch++)
+        for (char ch = '1';ch <= '9';ch++)
             this->state_map[make_id(start, ch)] = number_dec;
 
         // 0-9
-        for (char ch = '0';ch < '9';ch++)
+        for (char ch = '0';ch <= '9';ch++)
         {
             // nummber_iden : 0 -> number_dec
             this->state_map[make_id(number_iden, ch)] = number_dec;
@@ -93,9 +111,17 @@ namespace EDL
             this->state_map[make_id(string, ch)] = string;
         }
 
+        //a-f
+        for (char ch = 'a';ch <= 'f';ch++)
+            this->state_map[make_id(number_hex, ch)] = number_hex;
+
+        //A-F
+        for (char ch = 'A';ch <= 'F';ch++)
+            this->state_map[make_id(number_hex, ch)] = number_hex;
+
         // number_iden : x -> number_hex
         this->state_map[make_id(number_iden, 'x')] = number_hex;
-        this->state_map[make_id(number_iden, 'b')] = number_dec;
+        this->state_map[make_id(number_iden, 'b')] = number_bin;
 
         // number_bin : 0-1 -> number_bin
         this->state_map[make_id(number_bin, '0')] = number_bin;
