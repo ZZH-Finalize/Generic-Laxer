@@ -4,4 +4,3 @@
 *.stackdump
 *.map
 build/
-test_cases/

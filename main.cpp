@@ -14,11 +14,39 @@ int main(const int argc, const char** argv)
 
     EDL::Laxer_t laxer(test_file);
     EDL::Laxer_t::token_t token;
-    
+
     do
     {
         token = laxer.next_token();
-        std::cout << "token_type:" << token.id << ", value:" << token.value.integer << std::endl;
+
+        if (EDL::Laxer_t::invalid == token.id)
+        {
+            std::cout << "identifer error, skip to next line" << std::endl;
+            laxer.skip_to_next_line();
+            continue;
+        }
+        else if (EDL::Laxer_t::eof == token.id)
+        {
+            std::cout << "achieve the end of the file" << std::endl;
+            break;
+        }
+        else if (EDL::Laxer_t::tk_number == token.id)
+        {
+            std::cout << "value (dec): " << token.value.integer << ", value (hex): " << (void*) token.value.integer << std::endl;
+        }
+        else if (EDL::Laxer_t::tk_symbol == token.id)
+        {
+            std::cout << "identifer: " << *token.value.symbol << std::endl;
+        }
+        else if (EDL::Laxer_t::tk_string == token.id)
+        {
+            std::cout << "string: " << *token.value.string << std::endl;
+        }
+        else
+        {
+            std::cerr << "invalid type: " << token.id << std::endl;
+        }
+
     } while (token.id != EDL::Laxer_t::eof);
 
     return 0;

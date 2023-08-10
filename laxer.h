@@ -6,6 +6,7 @@
 */
 #pragma once
 #include <iostream>
+#include <fstream>
 #include <cstdint>
 
 namespace EDL
@@ -13,7 +14,7 @@ namespace EDL
     class Laxer_t
     {
     private:
-        std::streambuf* input;
+        std::filebuf* input;
         std::ostream& debug;
 
         uint8_t* state_map;
@@ -25,6 +26,7 @@ namespace EDL
             error = 255,
             end = 0,
             start = 1,
+            ignore,
 
             number_iden,// number identifaction
             number_bin,
@@ -33,9 +35,8 @@ namespace EDL
             character,
             identifer,
             string,
-            symbol,//+-*/ etc.
+            operators,//+-*/ etc.
             key_word,
-
         };
 
     protected:
@@ -105,28 +106,49 @@ namespace EDL
 
         typedef union
         {
-            char* string;
-            char* symbol;
+            std::string* string;
+            std::string* symbol;
             std::int64_t integer;
 
         }token_value_t;
 
-        typedef struct
+        class token_t
         {
+        public:
             token_id_t id;
             token_value_t value;
-        }token_t;
 
-        Laxer_t(const std::istream& i, std::ostream& o = std::cout);
+            ~token_t()
+            {
+                if (tk_string == this->id || tk_string == this->id)
+                {
+                    if (nullptr != this->value.string)
+                        delete this->value.symbol;
+                }
+            }
+        };
+
+        Laxer_t(const std::ifstream& i, std::ostream& o = std::cout);
         ~Laxer_t();
 
-        inline void switch_to(const std::istream& i)
+        inline void switch_to(const std::ifstream& i)
         {
             this->input = i.rdbuf();
         }
 
         inline void reset(void)
         {
+        }
+
+        inline void skip_to_next_line()
+        {
+            char ch = this->input->sbumpc();
+
+            if (-1 == ch)
+                return;
+
+            while ('\n' != ch)
+                ch = this->input->sbumpc();
         }
 
         token_t next_token(void);

@@ -1,0 +1,6 @@
+function test_add(a:int, b:int):int
+{
+    return 8;
+}
+
+test_add(5, 7);
