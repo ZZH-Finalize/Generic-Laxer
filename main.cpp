@@ -37,10 +37,12 @@ int main(const int argc, const char** argv)
         else if (EDL::Laxer_t::tk_symbol == token.id)
         {
             std::cout << "identifer: " << *token.value.symbol << std::endl;
+            delete token.value.symbol;
         }
         else if (EDL::Laxer_t::tk_string == token.id)
         {
             std::cout << "string: " << *token.value.string << std::endl;
+            delete token.value.string;
         }
         else
         {

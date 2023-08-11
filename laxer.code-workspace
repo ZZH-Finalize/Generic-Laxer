@@ -36,6 +36,7 @@
                     "kind": "build",
                     "isDefault": true
                 },
+                "problemMatcher" :"$gcc",
                 "presentation": {
                     "echo": true,
                     "reveal": "always",
@@ -89,12 +90,12 @@
                 "request": "launch",
                 "program": "${workspaceFolder}/build/edl-laxer.exe",
                 "args": [
-                    "test_cases/identifiers.edl"
+                    "test_cases/strings.edl"
                 ],
                 "stopAtEntry": true,
                 "cwd": "${workspaceFolder}",
                 "environment": [],
-                "externalConsole": false,
+                "externalConsole": true,
                 "MIMode": "gdb",
                 "miDebuggerPath": "gdb",
                 "setupCommands": [

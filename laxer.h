@@ -14,7 +14,7 @@ namespace EDL
     class Laxer_t
     {
     private:
-        std::filebuf* input;
+        std::basic_istream<char, std::char_traits<char>>& input;
         std::ostream& debug;
 
         uint8_t* state_map;
@@ -32,9 +32,9 @@ namespace EDL
             number_bin,
             number_dec,
             number_hex,
-            character,
             identifer,
-            string,
+            string_double,
+            string_single,
             operators,//+-*/ etc.
             key_word,
         };
@@ -110,45 +110,32 @@ namespace EDL
             std::string* symbol;
             std::int64_t integer;
 
-        }token_value_t;
+        } token_value_t;
 
         class token_t
         {
         public:
             token_id_t id;
             token_value_t value;
-
-            ~token_t()
-            {
-                if (tk_string == this->id || tk_string == this->id)
-                {
-                    if (nullptr != this->value.string)
-                        delete this->value.symbol;
-                }
-            }
         };
 
-        Laxer_t(const std::ifstream& i, std::ostream& o = std::cout);
+        Laxer_t(std::ifstream& i, std::ostream& o = std::cout);
         ~Laxer_t();
-
-        inline void switch_to(const std::ifstream& i)
-        {
-            this->input = i.rdbuf();
-        }
 
         inline void reset(void)
         {
+
         }
 
         inline void skip_to_next_line()
         {
-            char ch = this->input->sbumpc();
+            char ch = this->input.get();
 
             if (-1 == ch)
                 return;
 
             while ('\n' != ch)
-                ch = this->input->sbumpc();
+                ch = this->input.get();
         }
 
         token_t next_token(void);

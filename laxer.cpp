@@ -7,8 +7,8 @@
 
 namespace EDL
 {
-    Laxer_t::Laxer_t(const std::ifstream& i, std::ostream& o)
-        :input(i.rdbuf()), debug(o)
+    Laxer_t::Laxer_t(std::ifstream& i, std::ostream& o)
+        :input(i), debug(o)
     {
 
         this->init_state_map();
@@ -23,30 +23,26 @@ namespace EDL
 
     Laxer_t::token_t Laxer_t::next_token(void)
     {
-        assert(nullptr != this->input);
         assert(nullptr != this->state_map);
 
         token_t token;
-        memset(&token, 0, sizeof(token));
-
         state_t cur_state = start;
+        memset(&token, 0, sizeof(token));
 
         do
         {
-            char ch = this->input->sbumpc();
-
-            if (-1 == ch)
+            if (true == this->input.eof())
             {
                 token.id = eof;
                 return token;
             }
 
+            char ch = this->input.get();
             cur_state = (state_t) this->state_map[make_id(cur_state, ch)];
 
             switch (cur_state)
             {
                 case end:
-                    this->input->sputc(ch);
                     break;
 
                 case number_iden:
@@ -80,11 +76,12 @@ namespace EDL
 
                     break;
 
-                case string:
-                    if ('"' == ch)
+                case string_single:
+                case string_double:
+                    if ('"' == ch || '\'' == ch)
                     {
                         token.id = tk_string;
-                        continue;
+                        break;
                     }
                 case identifer:
                     if (nullptr == token.value.symbol)
@@ -101,7 +98,13 @@ namespace EDL
         } while (cur_state != error && cur_state != end);
 
         if (cur_state == error)
+        {
+            if (tk_string == token.id || tk_symbol == token.id)
+                delete token.value.symbol;
+
             token.id = invalid;
+            token.value.integer = 0;
+        }
 
         return token;
     }
@@ -117,6 +120,9 @@ namespace EDL
         //abcde__
         //_____
         //"abcde"
+
+        // for (char ch = ' ';ch <= '\b';ch++)
+        //     this->state_map[make_id(start, ch)] = ch;
 
         // start : 0 -> number_iden
         this->state_map[make_id(start, '0')] = number_iden;
@@ -136,8 +142,8 @@ namespace EDL
             // _ : a-z -> identifer
             this->state_map[make_id('_', ch)] = identifer;
 
-            // string : a-z -> string
-            this->state_map[make_id(string, ch)] = string;
+            // string_double : a-z -> string_double
+            this->state_map[make_id(string_double, ch)] = string_double;
         }
 
         // A-Z
@@ -152,8 +158,8 @@ namespace EDL
             // _ : A-Z -> identifer
             this->state_map[make_id('_', ch)] = identifer;
 
-            // string : A-Z -> string
-            this->state_map[make_id(string, ch)] = string;
+            // string_double : A-Z -> string_double
+            this->state_map[make_id(string_double, ch)] = string_double;
         }
 
         // start : _ -> identifer
@@ -161,8 +167,10 @@ namespace EDL
         // identifer : _ -> identifer
         this->state_map[make_id(identifer, '_')] = identifer;
 
-        // start : " -> string
-        this->state_map[make_id(start, '"')] = string;
+        // start : " -> string_double
+        this->state_map[make_id(start, '"')] = string_double;
+        // start : " -> string_single
+        this->state_map[make_id(start, '\'')] = string_single;
 
         // 0-9
         for (char ch = '0';ch <= '9';ch++)
@@ -178,9 +186,6 @@ namespace EDL
 
             // identifer : 0-9 -> identifer
             this->state_map[make_id(identifer, ch)] = identifer;
-
-            // string : 0-9 -> string
-            this->state_map[make_id(string, ch)] = string;
         }
 
         // a-f
@@ -199,6 +204,13 @@ namespace EDL
         this->state_map[make_id(number_bin, '0')] = number_bin;
         this->state_map[make_id(number_bin, '1')] = number_bin;
 
+        // string_[double|single] : all ascii -> string_[double|single]
+        for (char ch = ' ';ch <= '~';ch++)
+        {
+            this->state_map[make_id(string_double, ch)] = string_double;
+            this->state_map[make_id(string_single, ch)] = string_single;
+        }// NOTE: for " and ', will override it later.
+
         // ends
         for (const char* ch = this->number_ends;*ch != '\0';ch++)
         {
@@ -209,8 +221,11 @@ namespace EDL
             this->state_map[make_id(identifer, *ch)] = end;
         }
 
-        // string end
-        this->state_map[make_id(string, '"')] = end;
+        // string_double end
+        this->state_map[make_id(string_double, '"')] = end;
+
+        // string_single end
+        this->state_map[make_id(string_single, '\'')] = end;
 
         /*********** ignores ***********/
         this->state_map[make_id(start, ' ')] = ignore;
@@ -231,7 +246,8 @@ namespace EDL
         for (char ch = 'A';ch <= 'Z';ch++)
             this->state_map[make_id(ignore, ch)] = identifer;
 
-        this->state_map[make_id(ignore, '"')] = string;
+        this->state_map[make_id(ignore, '"')] = string_double;
+        this->state_map[make_id(ignore, '\'')] = string_single;
         this->state_map[make_id(ignore, '_')] = identifer;
         this->state_map[make_id(ignore, '0')] = number_iden;
 
