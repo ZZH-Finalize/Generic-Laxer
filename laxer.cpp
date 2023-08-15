@@ -7,10 +7,24 @@
 
 namespace EDL
 {
-    Laxer_t::Laxer_t(std::ifstream& i, std::ostream& o)
-        :input(i), debug(o)
-    {
+    const char* Laxer_t::end_chars = " \t\r\n:;,?+-*/%^&|!#<>()[]{}";
+    const char* Laxer_t::state_names[] = {
+            "end", "start",
+            "ignore",
+            "number_iden",
+            "number_bin",
+            "number_dec",
+            "number_hex",
+            "identifer",
+            "string_double",
+            "string_single",
+            "operators",
+            "key_word",
+    };
 
+    Laxer_t::Laxer_t(std::ifstream& i, std::ostream& o, bool verbose)
+        :input(i), debug(o), verbose(verbose)
+    {
         this->init_state_map();
         this->debug << "new laxer" << std::endl;
     }
@@ -21,24 +35,32 @@ namespace EDL
             delete[] this->state_map;
     }
 
-    Laxer_t::token_t Laxer_t::next_token(void)
+    Laxer_t::token_id_t Laxer_t::next_token(void)
     {
         assert(nullptr != this->state_map);
 
-        token_t token;
+        token_id_t token;
         state_t cur_state = start;
-        memset(&token, 0, sizeof(token));
+        this->clear_token_value();
 
         do
         {
             if (true == this->input.eof())
             {
-                token.id = eof;
+                token = eof;
                 return token;
             }
 
             char ch = this->input.get();
-            cur_state = (state_t) this->state_map[make_id(cur_state, ch)];
+            auto next_state = static_cast<state_t>(this->state_map[make_id(cur_state, ch)]);
+
+            if (this->verbose)
+            {
+                this->debug << "read a char: " << ch << " (" << reinterpret_cast<void*>(ch) << ")\n";
+                this->debug << "cur_state: " << this->get_state_names(cur_state) << " -> " << this->get_state_names(next_state) << "\n" << std::endl;
+            }
+
+            cur_state = next_state;
 
             switch (cur_state)
             {
@@ -46,33 +68,33 @@ namespace EDL
                     break;
 
                 case number_iden:
-                    token.id = tk_number;
+                    token = tk_number;
                     break;
 
                 case number_bin:
                     if (ch == 'b')
                         break;
-                    token.value.integer <<= 1;
-                    token.value.integer |= ch == '1';
+                    this->value.integer <<= 1;
+                    this->value.integer |= ch == '1';
                     break;
 
                 case number_dec:
-                    token.id = tk_number;
-                    token.value.integer *= 10;
-                    token.value.integer += ch - '0';
+                    token = tk_number;
+                    this->value.integer *= 10;
+                    this->value.integer += ch - '0';
                     break;
 
                 case number_hex:
                     if (ch == 'x')
                         break;
 
-                    token.value.integer <<= 4;
+                    this->value.integer <<= 4;
                     if (ch >= 'a' && ch <= 'f')
-                        token.value.integer |= (ch - 'a') + 10;
+                        this->value.integer |= (ch - 'a') + 10;
                     else if (ch >= 'A' && ch <= 'F')
-                        token.value.integer |= (ch - 'A') + 10;
+                        this->value.integer |= (ch - 'A') + 10;
                     else
-                        token.value.integer |= ch - '0';
+                        this->value.integer |= ch - '0';
 
                     break;
 
@@ -80,18 +102,14 @@ namespace EDL
                 case string_double:
                     if ('"' == ch || '\'' == ch)
                     {
-                        token.id = tk_string;
+                        token = tk_string;
                         break;
                     }
                 case identifer:
-                    if (nullptr == token.value.symbol)
-                    {
-                        token.value.symbol = new std::string;
-                        if (tk_string != token.id)
-                            token.id = tk_symbol;
-                    }
+                    if (tk_string != token)
+                        token = tk_symbol;
 
-                    token.value.symbol->push_back(ch);
+                    this->value.string.push_back(ch);
                     break;
 
             }
@@ -99,11 +117,7 @@ namespace EDL
 
         if (cur_state == error)
         {
-            if (tk_string == token.id || tk_symbol == token.id)
-                delete token.value.symbol;
-
-            token.id = invalid;
-            token.value.integer = 0;
+            token = invalid;
         }
 
         return token;
@@ -111,8 +125,8 @@ namespace EDL
 
     void Laxer_t::init_state_map(void)
     {
-        this->state_map = new std::uint8_t[65535];
-        memset(this->state_map, error, 65535);
+        this->state_map = new std::uint8_t[this->state_map_size];
+        memset(this->state_map, error, this->state_map_size);
         //0b01101001
         //0xabcd1234
         //012345
@@ -212,7 +226,7 @@ namespace EDL
         }// NOTE: for " and ', will override it later.
 
         // ends
-        for (const char* ch = this->number_ends;*ch != '\0';ch++)
+        for (const char* ch = this->end_chars;*ch != '\0';ch++)
         {
             this->state_map[make_id(number_dec, *ch)] = end;
             this->state_map[make_id(number_hex, *ch)] = end;

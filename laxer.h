@@ -14,12 +14,15 @@ namespace EDL
     class Laxer_t
     {
     private:
+        const std::size_t token_id_bits = 8;
+        const std::size_t state_map_size = 1 << (token_id_bits * 2);
+
         std::basic_istream<char, std::char_traits<char>>& input;
         std::ostream& debug;
+        bool verbose;
 
         uint8_t* state_map;
-
-        const char* number_ends = " \t\r\n:;,?+-*/%^&|!#<>()[]{}";
+        static const char* end_chars;
 
         enum state_t
         {
@@ -39,8 +42,26 @@ namespace EDL
             key_word,
         };
 
+        static const char* state_names[];
+
+        static inline const char* get_state_names(state_t state)
+        {
+            if (255 == state)
+                return "error";
+
+            return state_names[state];
+        }
+
     protected:
         void init_state_map(void);
+        inline bool get_state_map(uint8_t* buf) const
+        {
+            if (nullptr == this->state_map)
+                return false;
+
+            memcpy(buf, this->state_map, this->state_map_size);
+            return true;
+        }
 
     public:
         typedef enum
@@ -104,22 +125,14 @@ namespace EDL
 
         } token_id_t;
 
-        typedef union
+        typedef struct
         {
-            std::string* string;
-            std::string* symbol;
-            std::int64_t integer;
-
+            std::string string;
+            std::size_t integer;
+            double number;
         } token_value_t;
 
-        class token_t
-        {
-        public:
-            token_id_t id;
-            token_value_t value;
-        };
-
-        Laxer_t(std::ifstream& i, std::ostream& o = std::cout);
+        Laxer_t(std::ifstream& i, std::ostream& o = std::cout, bool verbose = false);
         ~Laxer_t();
 
         inline void reset(void)
@@ -138,6 +151,24 @@ namespace EDL
                 ch = this->input.get();
         }
 
-        token_t next_token(void);
+        token_id_t next_token(void);
+
+        inline void set_verbose(bool ver = true) { this->verbose = ver; }
+
+    private:
+        token_value_t value;
+
+    public:
+        const token_value_t& get_token_value(void) const
+        {
+            return this->value;
+        }
+
+        void clear_token_value(void)
+        {
+            this->value.integer = 0;
+            this->value.number = 0;
+            this->value.string.clear();
+        }
     };
 } // namespace EDL

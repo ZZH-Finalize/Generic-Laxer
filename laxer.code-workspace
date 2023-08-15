@@ -90,7 +90,7 @@
                 "request": "launch",
                 "program": "${workspaceFolder}/build/edl-laxer.exe",
                 "args": [
-                    "test_cases/strings.edl"
+                    "test_cases/identifiers.edl"
                 ],
                 "stopAtEntry": true,
                 "cwd": "${workspaceFolder}",

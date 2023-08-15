@@ -12,44 +12,51 @@ int main(const int argc, const char** argv)
         return -1;
     }
 
-    EDL::Laxer_t laxer(test_file);
-    EDL::Laxer_t::token_t token;
+    EDL::Laxer_t laxer(test_file, std::cout, false);
+    EDL::Laxer_t::token_id_t token;
 
     do
     {
         token = laxer.next_token();
 
-        if (EDL::Laxer_t::invalid == token.id)
+        switch (token)
         {
-            std::cout << "identifer error, skip to next line" << std::endl;
-            laxer.skip_to_next_line();
-            continue;
-        }
-        else if (EDL::Laxer_t::eof == token.id)
-        {
-            std::cout << "achieve the end of the file" << std::endl;
-            break;
-        }
-        else if (EDL::Laxer_t::tk_number == token.id)
-        {
-            std::cout << "value (dec): " << token.value.integer << ", value (hex): " << (void*) token.value.integer << std::endl;
-        }
-        else if (EDL::Laxer_t::tk_symbol == token.id)
-        {
-            std::cout << "identifer: " << *token.value.symbol << std::endl;
-            delete token.value.symbol;
-        }
-        else if (EDL::Laxer_t::tk_string == token.id)
-        {
-            std::cout << "string: " << *token.value.string << std::endl;
-            delete token.value.string;
-        }
-        else
-        {
-            std::cerr << "invalid type: " << token.id << std::endl;
+            case EDL::Laxer_t::invalid: {
+                std::cout << "identifer error, skip to next line" << std::endl;
+                laxer.skip_to_next_line();
+            } break;
+
+            case EDL::Laxer_t::eof: {
+                std::cout << "achieve the end of the file" << std::endl;
+            } break;
+
+            case EDL::Laxer_t::tk_number: {
+                auto number = laxer.get_token_value().integer;
+                std::cout << "value (dec): " << number << ", value (hex): " << (void*) number << std::endl;
+            } break;
+
+            case EDL::Laxer_t::tk_symbol: {
+                const auto& sym = laxer.get_token_value().string;
+                std::cout << "identifer: " << sym << std::endl;
+            } break;
+
+            case EDL::Laxer_t::tk_string: {
+                const auto& str = laxer.get_token_value().string;
+                std::cout << "string: " << str << std::endl;
+            } break;
+
+            case ' ' ... '~': {
+                std::cout << "ascii char: " << (char) token << std::endl;
+            } break;
+
+            default: {
+                std::cerr << "invalid type: " << token << std::endl;
+            } break;
         }
 
-    } while (token.id != EDL::Laxer_t::eof);
+    } while (token != EDL::Laxer_t::eof);
+
+    test_file.close();
 
     return 0;
 }
