@@ -4,6 +4,7 @@
 #include "laxer.h"
 
 #define make_id(a,b) (((uint16_t)(a))<<8|((uint8_t)b))
+#define for_each_ascii(varname) for (char varname = ' ';varname <= '~';varname++)
 
 namespace EDL
 {
@@ -65,6 +66,7 @@ namespace EDL
             switch (cur_state)
             {
                 case end:
+                    this->input.putback(ch);
                     break;
 
                 case number_iden:
@@ -111,7 +113,6 @@ namespace EDL
 
                     this->value.string.push_back(ch);
                     break;
-
             }
         } while (cur_state != error && cur_state != end);
 
@@ -219,7 +220,7 @@ namespace EDL
         this->state_map[make_id(number_bin, '1')] = number_bin;
 
         // string_[double|single] : all ascii -> string_[double|single]
-        for (char ch = ' ';ch <= '~';ch++)
+        for_each_ascii(ch)
         {
             this->state_map[make_id(string_double, ch)] = string_double;
             this->state_map[make_id(string_single, ch)] = string_single;
@@ -233,6 +234,8 @@ namespace EDL
             this->state_map[make_id(number_bin, *ch)] = end;
 
             this->state_map[make_id(identifer, *ch)] = end;
+
+            this->state_map[make_id(start, *ch)] = operators;
         }
 
         // string_double end
@@ -242,17 +245,14 @@ namespace EDL
         this->state_map[make_id(string_single, '\'')] = end;
 
         /*********** ignores ***********/
-        this->state_map[make_id(start, ' ')] = ignore;
-        this->state_map[make_id(ignore, ' ')] = ignore;
-        this->state_map[make_id(start, '\t')] = ignore;
-        this->state_map[make_id(ignore, '\t')] = ignore;
-        this->state_map[make_id(start, '\r')] = ignore;
-        this->state_map[make_id(ignore, '\r')] = ignore;
-        this->state_map[make_id(start, '\n')] = ignore;
-        this->state_map[make_id(ignore, '\n')] = ignore;
+        for_each_ascii(ch) this->state_map[make_id(ignore, ch)] = start;
 
-        this->state_map[make_id(start, ';')] = ignore;
-        this->state_map[make_id(ignore, ';')] = start;// back to start
+        const char* ignore_headers = " \t\r\n;";
+        for (const char* ch = ignore_headers;*ch != '\0';ch++)
+        {
+            this->state_map[make_id(start, *ch)] = ignore;
+            this->state_map[make_id(ignore, *ch)] = ignore;
+        }
 
         for (char ch = 'a';ch <= 'z';ch++)
             this->state_map[make_id(ignore, ch)] = identifer;

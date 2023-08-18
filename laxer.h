@@ -13,56 +13,6 @@ namespace EDL
 {
     class Laxer_t
     {
-    private:
-        const std::size_t token_id_bits = 8;
-        const std::size_t state_map_size = 1 << (token_id_bits * 2);
-
-        std::basic_istream<char, std::char_traits<char>>& input;
-        std::ostream& debug;
-        bool verbose;
-
-        uint8_t* state_map;
-        static const char* end_chars;
-
-        enum state_t
-        {
-            error = 255,
-            end = 0,
-            start = 1,
-            ignore,
-
-            number_iden,// number identifaction
-            number_bin,
-            number_dec,
-            number_hex,
-            identifer,
-            string_double,
-            string_single,
-            operators,//+-*/ etc.
-            key_word,
-        };
-
-        static const char* state_names[];
-
-        static inline const char* get_state_names(state_t state)
-        {
-            if (255 == state)
-                return "error";
-
-            return state_names[state];
-        }
-
-    protected:
-        void init_state_map(void);
-        inline bool get_state_map(uint8_t* buf) const
-        {
-            if (nullptr == this->state_map)
-                return false;
-
-            memcpy(buf, this->state_map, this->state_map_size);
-            return true;
-        }
-
     public:
         typedef enum
         {
@@ -125,6 +75,57 @@ namespace EDL
 
         } token_id_t;
 
+    private:
+        const std::size_t token_id_bits = 8;
+        const std::size_t state_map_size = 1 << (token_id_bits * 2);
+
+        std::basic_istream<char, std::char_traits<char>>& input;
+        std::ostream& debug;
+        bool verbose;
+
+        uint8_t* state_map;
+        static const char* end_chars;
+
+        enum state_t
+        {
+            error = 255,
+            end = 0,
+            start = 1,
+            ignore,
+
+            number_iden,// number identifaction
+            number_bin,
+            number_dec,
+            number_hex,
+            identifer,
+            string_double,
+            string_single,
+            operators,//+-*/ etc.
+            key_word,
+        };
+
+        static const char* state_names[];
+
+        static inline const char* get_state_names(state_t state)
+        {
+            if (255 == state)
+                return "error";
+
+            return state_names[state];
+        }
+
+    protected:
+        void init_state_map(void);
+        inline bool get_state_map(uint8_t* buf) const
+        {
+            if (nullptr == this->state_map)
+                return false;
+
+            memcpy(buf, this->state_map, this->state_map_size);
+            return true;
+        }
+
+    public:
         typedef struct
         {
             std::string string;
