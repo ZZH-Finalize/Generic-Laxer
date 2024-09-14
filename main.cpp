@@ -6,8 +6,7 @@ int main(const int argc, const char** argv)
 {
     std::ifstream test_file(argv[1]);
 
-    if (false == test_file.is_open())
-    {
+    if (false == test_file.is_open()) {
         std::cout << "file open fail" << std::endl;
         return -1;
     }
@@ -15,12 +14,10 @@ int main(const int argc, const char** argv)
     EDL::Laxer_t laxer(test_file, std::cout, false);
     EDL::Laxer_t::token_id_t token;
 
-    do
-    {
+    do {
         token = laxer.next_token();
 
-        switch (token)
-        {
+        switch (token) {
             case EDL::Laxer_t::invalid: {
                 std::cout << "identifer error, skip to next line" << std::endl;
                 laxer.skip_to_next_line();
@@ -32,7 +29,8 @@ int main(const int argc, const char** argv)
 
             case EDL::Laxer_t::tk_number: {
                 auto number = laxer.get_token_value().integer;
-                std::cout << "value (dec): " << number << ", value (hex): " << (void*) number << std::endl;
+                std::cout << "value (dec): " << number
+                          << ", value (hex): " << (void*) number << std::endl;
             } break;
 
             case EDL::Laxer_t::tk_symbol: {

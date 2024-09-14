@@ -5,171 +5,157 @@
 @info: edl语言词法分析器组件
 */
 #pragma once
-#include <iostream>
-#include <fstream>
 #include <cstdint>
+#include <fstream>
+#include <iostream>
 
-namespace EDL
-{
-    class Laxer_t
-    {
-    public:
-        typedef enum
-        {
-            // control token
-            eof = 0,
-            spacer = 1,
-            ascii_end = 127,
-            ascii_char_start = ' ',//32
 
-            // ascii tokens (including a-z A-Z 0-9)
-            comma = ',',
-            dot = '.',
-            dash = '-',
-            slash = '_',
+namespace EDL {
+class Laxer_t {
+public:
+  typedef enum {
+    // control token
+    eof = 0,
+    spacer = 1,
+    ascii_end = 127,
+    ascii_char_start = ' ', // 32
 
-            rbrackets_left = '(',
-            rbrackets_right = ')',
-            brackets_left = '[',
-            brackets_right = ']',
-            brace_left = '{',
-            brace_right = '}',
+    // ascii tokens (including a-z A-Z 0-9)
+    comma = ',',
+    dot = '.',
+    dash = '-',
+    slash = '_',
 
-            operator_add = '+',
-            operator_sub = '-',
-            operator_mul = '*',
-            operator_div = '/',
-            operator_mod = '%',
+    rbrackets_left = '(',
+    rbrackets_right = ')',
+    brackets_left = '[',
+    brackets_right = ']',
+    brace_left = '{',
+    brace_right = '}',
 
-            operator_bnot = '~',
-            operator_band = '&',
-            operator_bor = '|',
-            operator_not = '!',//logical not
+    operator_add = '+',
+    operator_sub = '-',
+    operator_mul = '*',
+    operator_div = '/',
+    operator_mod = '%',
 
-            operator_greater = '>',
-            operator_less = '<',
+    operator_bnot = '~',
+    operator_band = '&',
+    operator_bor = '|',
+    operator_not = '!', // logical not
 
-            // outof ascii tokens
-            operator_and = ascii_end + 1,//logical and
-            operator_or,//logical or
-            operator_equ,//logical equ
+    operator_greater = '>',
+    operator_less = '<',
 
-            // key words
-            kw_function,
-            kw_if,
-            kw_else,
-            kw_elif,
-            kw_for,
-            kw_while,
-            kw_request,
-            kw_until,
-            kw_loop,
+    // outof ascii tokens
+    operator_and = ascii_end + 1, // logical and
+    operator_or,                  // logical or
+    operator_equ,                 // logical equ
 
-            //other tokens
-            tk_symbol,
-            tk_number,
-            tk_string,
+    // key words
+    kw_function,
+    kw_if,
+    kw_else,
+    kw_elif,
+    kw_for,
+    kw_while,
+    kw_request,
+    kw_until,
+    kw_loop,
 
-            //rev invalid token
-            invalid
+    // other tokens
+    tk_symbol,
+    tk_number,
+    tk_string,
 
-        } token_id_t;
+    // rev invalid token
+    invalid
 
-    private:
-        const std::size_t token_id_bits = 8;
-        const std::size_t state_map_size = 1 << (token_id_bits * 2);
+  } token_id_t;
 
-        std::basic_istream<char, std::char_traits<char>>& input;
-        std::ostream& debug;
-        bool verbose;
+private:
+  const std::size_t token_id_bits = 8;
+  const std::size_t state_map_size = 1 << (token_id_bits * 2);
 
-        uint8_t* state_map;
-        static const char* end_chars;
+  std::basic_istream<char, std::char_traits<char>> &input;
+  std::ostream &debug;
+  bool verbose;
 
-        enum state_t
-        {
-            error = 255,
-            end = 0,
-            start = 1,
-            ignore,
+  uint8_t *state_map;
+  static const char *end_chars;
 
-            number_iden,// number identifaction
-            number_bin,
-            number_dec,
-            number_hex,
-            identifer,
-            string_double,
-            string_single,
-            operators,//+-*/ etc.
-            key_word,
-        };
+  enum state_t {
+    error = 255,
+    end = 0,
+    start = 1,
+    ignore,
 
-        static const char* state_names[];
+    number_iden, // number identifaction
+    number_bin,
+    number_dec,
+    number_hex,
+    identifer,
+    string_double,
+    string_single,
+    operators, //+-*/ etc.
+    key_word,
+  };
 
-        static inline const char* get_state_names(state_t state)
-        {
-            if (255 == state)
-                return "error";
+  static const char *state_names[];
 
-            return state_names[state];
-        }
+  static inline const char *get_state_names(state_t state) {
+    if (255 == state)
+      return "error";
 
-    protected:
-        void init_state_map(void);
-        inline bool get_state_map(uint8_t* buf) const
-        {
-            if (nullptr == this->state_map)
-                return false;
+    return state_names[state];
+  }
 
-            memcpy(buf, this->state_map, this->state_map_size);
-            return true;
-        }
+protected:
+  void init_state_map(void);
+  inline bool get_state_map(uint8_t *buf) const {
+    if (nullptr == this->state_map)
+      return false;
 
-    public:
-        typedef struct
-        {
-            std::string string;
-            std::size_t integer;
-            double number;
-        } token_value_t;
+    memcpy(buf, this->state_map, this->state_map_size);
+    return true;
+  }
 
-        Laxer_t(std::ifstream& i, std::ostream& o = std::cout, bool verbose = false);
-        ~Laxer_t();
+public:
+  typedef struct {
+    std::string string;
+    std::size_t integer;
+    double number;
+  } token_value_t;
 
-        inline void reset(void)
-        {
+  Laxer_t(std::ifstream &i, std::ostream &o = std::cout, bool verbose = false);
+  ~Laxer_t();
 
-        }
+  inline void reset(void) {}
 
-        inline void skip_to_next_line()
-        {
-            char ch = this->input.get();
+  inline void skip_to_next_line() {
+    char ch = this->input.get();
 
-            if (-1 == ch)
-                return;
+    if (-1 == ch)
+      return;
 
-            while ('\n' != ch)
-                ch = this->input.get();
-        }
+    while ('\n' != ch)
+      ch = this->input.get();
+  }
 
-        token_id_t next_token(void);
+  token_id_t next_token(void);
 
-        inline void set_verbose(bool ver = true) { this->verbose = ver; }
+  inline void set_verbose(bool ver = true) { this->verbose = ver; }
 
-    private:
-        token_value_t value;
+private:
+  token_value_t value;
 
-    public:
-        const token_value_t& get_token_value(void) const
-        {
-            return this->value;
-        }
+public:
+  const token_value_t &get_token_value(void) const { return this->value; }
 
-        void clear_token_value(void)
-        {
-            this->value.integer = 0;
-            this->value.number = 0;
-            this->value.string.clear();
-        }
-    };
+  void clear_token_value(void) {
+    this->value.integer = 0;
+    this->value.number = 0;
+    this->value.string.clear();
+  }
+};
 } // namespace EDL

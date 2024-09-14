@@ -23,38 +23,68 @@
             "**/.DS_Store": true,
             "**/Thumbs.db": true,
             "**/*.code-workspace": true,
-        }
+        },
+        "C_Cpp.default.compileCommands": "/workspace/proj/W3000/W3000_BM/builddir/compile_commands.json",
+        "C_Cpp.formatting": "clangFormat",
+        "C_Cpp.intelliSenseEngine": "disabled",
+        "clangd.onConfigChanged": "restart",
+        "clangd.arguments": [
+            "--compile-commands-dir=builddir",
+            "--function-arg-placeholders=1",
+            "--header-insertion=iwyu", //enable: iwyu, disable: never
+            "--clang-tidy=1",
+            "--all-scopes-completion",
+            "--enable-config",
+            "--background-index",
+            // "--log=verbose",
+            "--pretty",
+            "--query-driver=D:/mingw64/bin/gcc.exe"
+        ],
+        "clangd.trace": "builddir/clangd.json",
     },
     "tasks": {
         "version": "2.0.0",
         "tasks": [
             {
-                "type": "cmake",
-                "label": "build",
-                "command": "build",
+                "label": "meson-build",
+                "type": "meson",
+                "mode": "build",
+                "problemMatcher": [
+                    "$meson-gcc"
+                ],
+                "presentation": {
+                    "clear": true,
+                    "close": false,
+                    "echo": true,
+                    "focus": true,
+                    "panel": "shared",
+                    "reveal": "always",
+                    "showReuseMessage": false,
+                    "revealProblems": "onProblem"
+                },
                 "group": {
                     "kind": "build",
                     "isDefault": true
-                },
-                "problemMatcher" :"$gcc",
-                "presentation": {
-                    "echo": true,
-                    "reveal": "always",
-                    "focus": false,
-                    "panel": "shared",
-                    "showReuseMessage": true,
-                    "clear": true,
-                },
-                "detail": "构建"
+                }
             },
             {
-                "type": "cmake",
-                "label": "clean",
-                "command": "clean",
+                "label": "meson-clean",
+                "type": "meson",
+                "mode": "clean",
+                "isBackground": true,
                 "presentation": {
+                    "echo": true,
+                    "reveal": "silent",
+                    "focus": true,
+                    "panel": "shared",
+                    "showReuseMessage": false,
+                    "clear": true,
                     "close": true
                 },
-                "detail": "清理"
+                "group": {
+                    "kind": "test",
+                    "isDefault": true
+                }
             },
             {
                 "type": "shell",
