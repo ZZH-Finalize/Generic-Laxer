@@ -46,52 +46,67 @@
         "version": "2.0.0",
         "tasks": [
             {
-                "label": "meson-build",
-                "type": "meson",
-                "mode": "build",
-                "problemMatcher": [
-                    "$meson-gcc"
+                "label": "xmake-build compile_commands.json",
+                "type": "shell",
+                "command": "xmake",
+                "args": [
+                    "project",
+                    "-k",
+                    "compile_commands",
+                    "--lsp=clangd",
+                    "build"
                 ],
-                "presentation": {
-                    "clear": true,
-                    "close": false,
-                    "echo": true,
-                    "focus": true,
-                    "panel": "shared",
-                    "reveal": "always",
-                    "showReuseMessage": false,
-                    "revealProblems": "onProblem"
-                },
-                "group": {
-                    "kind": "build",
-                    "isDefault": true
-                }
-            },
-            {
-                "label": "meson-clean",
-                "type": "meson",
-                "mode": "clean",
-                "isBackground": true,
-                "presentation": {
-                    "echo": true,
-                    "reveal": "silent",
-                    "focus": true,
-                    "panel": "shared",
-                    "showReuseMessage": false,
-                    "clear": true,
-                    "close": true
-                },
-                "group": {
-                    "kind": "test",
-                    "isDefault": true
+                "options": {
+                    "statusbar": {
+                        "hide": true,
+                    }
                 }
             },
             {
                 "type": "shell",
-                "label": "Test Run",
-                "command": "./build/edl-laxer",
+                "label": "configure",
+                "command": "xmake",
                 "args": [
-                    "std.edl"
+                    "f",
+                    "-c"
+                ],
+                "group": "build",
+                "presentation": {
+                    "clear": true,
+                    "focus": true,
+                    "close": true
+                },
+                "detail": "配置"
+            },
+            {
+                "type": "shell",
+                "label": "build",
+                "command": "xmake",
+                "args": [
+                    "b"
+                ],
+                "group": {
+                    "kind": "build",
+                    "isDefault": true
+                },
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": false,
+                    "panel": "shared",
+                    "showReuseMessage": true,
+                    "clear": true,
+                },
+                "problemMatcher": "$gcc",
+                "dependsOn": "xmake-build compile_commands.json",
+                "detail": "构建"
+            },
+            {
+                "type": "shell",
+                "label": "Test Run",
+                "command": "build/mingw/x86_64/debug/laxer-test.exe",
+                "args": [
+                    "test_cases/std.edl"
                 ],
                 "options": {
                     "cwd": "${workspaceFolder}"
@@ -104,10 +119,10 @@
                     "showReuseMessage": true,
                     "clear": true
                 },
-                // "group": {
-                //     "kind": "test",
-                //     "isDefault": true
-                // },
+                "group": {
+                    "kind": "test",
+                    "isDefault": true
+                },
                 "detail": "测试运行"
             }
         ]
@@ -118,7 +133,7 @@
                 "name": "main",
                 "type": "cppdbg",
                 "request": "launch",
-                "program": "${workspaceFolder}/build/edl-laxer.exe",
+                "program": "${workspaceFolder}/build/mingw/x86_64/debug/laxer-test.exe",
                 "args": [
                     "test_cases/identifiers.edl"
                 ],
