@@ -122,14 +122,14 @@ namespace EDL {
             return true;
         }
 
-        static inline constexpr uint16_t make_id(uint16_t current_state, char ch)
+        static inline constexpr uint16_t make_id(uint16_t state, char ch)
         {
-            return (((uint16_t) (current_state)) << 8 | ((uint8_t) ch));
+            return (((uint16_t) (state)) << 8 | ((uint8_t) ch));
         }
 
-        inline void set_state(uint16_t current_state, char ch, state_t next_state)
+        inline void add_rule(uint16_t when, char ch, state_t switch_to)
         {
-            this->state_map[this->make_id(current_state, ch)] = next_state;
+            this->state_map[this->make_id(when, ch)] = switch_to;
         }
 
        public:
