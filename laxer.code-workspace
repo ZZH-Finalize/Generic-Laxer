@@ -29,7 +29,7 @@
         "C_Cpp.intelliSenseEngine": "disabled",
         "clangd.onConfigChanged": "restart",
         "clangd.arguments": [
-            "--compile-commands-dir=builddir",
+            "--compile-commands-dir=build",
             "--function-arg-placeholders=1",
             "--header-insertion=iwyu", //enable: iwyu, disable: never
             "--clang-tidy=1",
@@ -40,7 +40,7 @@
             "--pretty",
             "--query-driver=D:/mingw64/bin/gcc.exe"
         ],
-        "clangd.trace": "builddir/clangd.json",
+        "clangd.trace": "build/clangd.json",
     },
     "tasks": {
         "version": "2.0.0",

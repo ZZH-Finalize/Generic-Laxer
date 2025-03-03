@@ -121,6 +121,8 @@ ForEachMacros:
   - Q_FOREACH
   - BOOST_FOREACH
   - ITER_ARRAY
+  - ITER_BITS
+  - ITER_BITS_1
   - ITER_LIST
   - FOR
   - FOR_I

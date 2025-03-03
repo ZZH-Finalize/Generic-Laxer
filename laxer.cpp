@@ -1,9 +1,9 @@
 #include "laxer.h"
 #include <cassert>
+#include <cstdint>
 #include <cstring>
 #include <exception>
 
-#define make_id(a, b)           (((uint16_t) (a)) << 8 | ((uint8_t) b))
 #define for_each_ascii(varname) for (char varname = ' '; varname <= '~'; varname++)
 
 namespace EDL {
@@ -118,130 +118,130 @@ namespace EDL {
         //"abcde"
 
         // for (char ch = ' ';ch <= '\b';ch++)
-        //     this->state_map[make_id(start, ch)] = ch;
+        //     this->set_state(start,  ch, ch);
 
         // start : 0 -> number_iden
-        this->state_map[make_id(start, '0')] = number_iden;
+        this->set_state(start,  '0', number_iden);
         // start : 1-9 -> number_dec
         for (char ch = '1'; ch <= '9'; ch++)
-            this->state_map[make_id(start, ch)] = number_dec;
+            this->set_state(start,  ch, number_dec);
 
         // a-z
         for (char ch = 'a'; ch <= 'z'; ch++) {
             // start : a-z -> identifer
-            this->state_map[make_id(start, ch)] = identifer;
+            this->set_state(start,  ch, identifer);
 
             // identifer : a-z -> identifer
-            this->state_map[make_id(identifer, ch)] = identifer;
+            this->set_state(identifer,  ch, identifer);
 
             // _ : a-z -> identifer
-            this->state_map[make_id('_', ch)] = identifer;
+            this->set_state('_',  ch, identifer);
 
             // string_double : a-z -> string_double
-            this->state_map[make_id(string_double, ch)] = string_double;
+            this->set_state(string_double,  ch, string_double);
         }
 
         // A-Z
         for (char ch = 'A'; ch <= 'Z'; ch++) {
             // start : A-Z -> identifer
-            this->state_map[make_id(start, ch)] = identifer;
+            this->set_state(start,  ch, identifer);
 
             // identifer : A-Z -> identifer
-            this->state_map[make_id(identifer, ch)] = identifer;
+            this->set_state(identifer,  ch, identifer);
 
             // _ : A-Z -> identifer
-            this->state_map[make_id('_', ch)] = identifer;
+            this->set_state('_',  ch, identifer);
 
             // string_double : A-Z -> string_double
-            this->state_map[make_id(string_double, ch)] = string_double;
+            this->set_state(string_double,  ch, string_double);
         }
 
         // start : _ -> identifer
-        this->state_map[make_id(start, '_')] = identifer;
+        this->set_state(start,  '_', identifer);
         // identifer : _ -> identifer
-        this->state_map[make_id(identifer, '_')] = identifer;
+        this->set_state(identifer,  '_', identifer);
 
         // start : " -> string_double
-        this->state_map[make_id(start, '"')] = string_double;
+        this->set_state(start,  '"', string_double);
         // start : " -> string_single
-        this->state_map[make_id(start, '\'')] = string_single;
+        this->set_state(start,  '\'', string_single);
 
         // 0-9
         for (char ch = '0'; ch <= '9'; ch++) {
             // nummber_iden : 0 -> number_dec
-            this->state_map[make_id(number_iden, ch)] = number_dec;
+            this->set_state(number_iden,  ch, number_dec);
 
             // number_dec : 0-9 -> number_dec
-            this->state_map[make_id(number_dec, ch)] = number_dec;
+            this->set_state(number_dec,  ch, number_dec);
 
             // number_hex : 0-9 -> number_hex
-            this->state_map[make_id(number_hex, ch)] = number_hex;
+            this->set_state(number_hex,  ch, number_hex);
 
             // identifer : 0-9 -> identifer
-            this->state_map[make_id(identifer, ch)] = identifer;
+            this->set_state(identifer,  ch, identifer);
         }
 
         // a-f
         for (char ch = 'a'; ch <= 'f'; ch++)
-            this->state_map[make_id(number_hex, ch)] = number_hex;
+            this->set_state(number_hex,  ch, number_hex);
 
         // A-F
         for (char ch = 'A'; ch <= 'F'; ch++)
-            this->state_map[make_id(number_hex, ch)] = number_hex;
+            this->set_state(number_hex,  ch, number_hex);
 
         // number_iden : x -> number_hex
-        this->state_map[make_id(number_iden, 'x')] = number_hex;
-        this->state_map[make_id(number_iden, 'b')] = number_bin;
+        this->set_state(number_iden,  'x', number_hex);
+        this->set_state(number_iden,  'b', number_bin);
 
         // number_bin : 0-1 -> number_bin
-        this->state_map[make_id(number_bin, '0')] = number_bin;
-        this->state_map[make_id(number_bin, '1')] = number_bin;
+        this->set_state(number_bin,  '0', number_bin);
+        this->set_state(number_bin,  '1', number_bin);
 
         // string_[double|single] : all ascii -> string_[double|single]
         for_each_ascii(ch)
         {
-            this->state_map[make_id(string_double, ch)] = string_double;
-            this->state_map[make_id(string_single, ch)] = string_single;
+            this->set_state(string_double,  ch, string_double);
+            this->set_state(string_single,  ch, string_single);
         } // NOTE: for " and ', will override it later.
 
         // ends
         for (const char *ch = this->end_chars; *ch != '\0'; ch++) {
-            this->state_map[make_id(number_dec, *ch)] = end;
-            this->state_map[make_id(number_hex, *ch)] = end;
-            this->state_map[make_id(number_bin, *ch)] = end;
+            this->set_state(number_dec,  *ch, end);
+            this->set_state(number_hex,  *ch, end);
+            this->set_state(number_bin,  *ch, end);
 
-            this->state_map[make_id(identifer, *ch)]  = end;
+            this->set_state(identifer,  *ch, end);
 
-            this->state_map[make_id(start, *ch)]      = operators;
+            this->set_state(start,  *ch, operators);
         }
 
         // string_double end
-        this->state_map[make_id(string_double, '"')] = end;
+        this->set_state(string_double,  '"', end);
 
         // string_single end
-        this->state_map[make_id(string_single, '\'')] = end;
+        this->set_state(string_single,  '\'', end);
 
         /*********** ignores ***********/
-        for_each_ascii(ch) this->state_map[make_id(ignore, ch)] = start;
+        for_each_ascii(ch) this->set_state(ignore,  ch, start);
 
         const char *ignore_headers                              = " \t\r\n;";
         for (const char *ch = ignore_headers; *ch != '\0'; ch++) {
-            this->state_map[make_id(start, *ch)]  = ignore;
-            this->state_map[make_id(ignore, *ch)] = ignore;
+            this->set_state(start,  *ch, ignore);
+            this->set_state(ignore,  *ch, ignore);
         }
 
         for (char ch = 'a'; ch <= 'z'; ch++)
-            this->state_map[make_id(ignore, ch)] = identifer;
+            this->set_state(ignore,  ch, identifer);
 
         for (char ch = 'A'; ch <= 'Z'; ch++)
-            this->state_map[make_id(ignore, ch)] = identifer;
+            this->set_state(ignore,  ch, identifer);
 
-        this->state_map[make_id(ignore, '"')]  = string_double;
-        this->state_map[make_id(ignore, '\'')] = string_single;
-        this->state_map[make_id(ignore, '_')]  = identifer;
-        this->state_map[make_id(ignore, '0')]  = number_iden;
+        this->set_state(ignore,  '"', string_double);
+        this->set_state(ignore,  '\'', string_single);
+        this->set_state(ignore,  '_', identifer);
+        this->set_state(ignore,  '0', number_iden);
 
         for (char ch = '1'; ch <= '9'; ch++)
-            this->state_map[make_id(ignore, ch)] = number_dec;
+            this->set_state(ignore,  ch, number_dec);
     }
 } // namespace EDL
