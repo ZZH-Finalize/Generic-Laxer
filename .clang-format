@@ -10,7 +10,7 @@ Standard:        Latest
 
 AlignConsecutiveAssignments:
   Enabled: true
-  AcrossEmptyLines: true
+  AcrossEmptyLines: false
   AcrossComments: false
   AlignCompound: false
   PadOperators: true
@@ -132,6 +132,8 @@ ForEachMacros:
   - FOR_ARRAY_I
   - FOR_ARRAY_J
   - FOR_ARRAY_K
+  - foreach_ascii
+  - foreach_ab
   - list_for_each
   - list_for_each_entry_safe
   - list_for_each_entry

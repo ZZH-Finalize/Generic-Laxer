@@ -1,5 +1,7 @@
+#include <format>
 #include <iostream>
 #include <fstream>
+#include <string>
 #include "laxer.h"
 
 int main(const int argc, const char** argv)
@@ -12,39 +14,46 @@ int main(const int argc, const char** argv)
     }
 
     EDL::Laxer_t laxer(test_file, std::cout, false);
-    EDL::Laxer_t::token_id_t token;
+    EDL::Token_t token;
 
     do {
-        token = laxer.next_token();
+        token = std::move(laxer.next_token());
 
         switch (token) {
-            case EDL::Laxer_t::invalid: {
+            case EDL::Token_t::invalid: {
                 std::cout << "identifer error, skip to next line" << std::endl;
                 laxer.skip_to_next_line();
             } break;
 
-            case EDL::Laxer_t::eof: {
+            case EDL::Token_t::eof: {
                 std::cout << "achieve the end of the file" << std::endl;
             } break;
 
-            case EDL::Laxer_t::tk_number: {
-                auto number = laxer.get_token_value().integer;
-                std::cout << "value (dec): " << number
-                          << ", value (hex): " << (void*) number << std::endl;
+            case EDL::Token_t::tk_integer: {
+                auto number = token.value<std::uint64_t>();
+
+                std::cout << std::format("value (dec): {}, value (hex): {:#X}", number,
+                                         number)
+                          << std::endl;
             } break;
 
-            case EDL::Laxer_t::tk_symbol: {
-                const auto& sym = laxer.get_token_value().string;
+            case EDL::Token_t::tk_number: {
+                auto number = token.value<double>();
+                std::cout << "value: " << number << std::endl;
+            } break;
+
+            case EDL::Token_t::tk_symbol: {
+                const auto& sym = token.value<std::string>();
                 std::cout << "identifer: " << sym << std::endl;
             } break;
 
-            case EDL::Laxer_t::tk_string: {
-                const auto& str = laxer.get_token_value().string;
+            case EDL::Token_t::tk_string: {
+                const auto& str = token.value<std::string>();
                 std::cout << "string: " << str << std::endl;
             } break;
 
             case ' ' ... '~': {
-                std::cout << "ascii char: " << (char) token << std::endl;
+                std::cout << "ascii char: " << static_cast<char>(token) << std::endl;
             } break;
 
             default: {
@@ -52,7 +61,7 @@ int main(const int argc, const char** argv)
             } break;
         }
 
-    } while (token != EDL::Laxer_t::eof);
+    } while (token != EDL::Token_t::eof);
 
     test_file.close();
 

@@ -6,15 +6,10 @@
         }
     ],
     "settings": {
-        "C_Cpp.default.cStandard": "gnu99",
-        "C_Cpp.autocomplete": "default",
-        "C_Cpp.default.cppStandard": "gnu++11",
-        "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
         "files.associations": {
             "*.h": "cpp"
         },
         "files.encoding": "utf8",
-        "search.useIgnoreFiles": false,
         "files.exclude": {
             "**/.git": true,
             "**/.svn": true,
@@ -24,7 +19,6 @@
             "**/Thumbs.db": true,
             "**/*.code-workspace": true,
         },
-        "C_Cpp.default.compileCommands": "/workspace/proj/W3000/W3000_BM/builddir/compile_commands.json",
         "C_Cpp.formatting": "clangFormat",
         "C_Cpp.intelliSenseEngine": "disabled",
         "clangd.onConfigChanged": "restart",
@@ -98,7 +92,6 @@
                     "clear": true,
                 },
                 "problemMatcher": "$gcc",
-                "dependsOn": "xmake-build compile_commands.json",
                 "detail": "构建"
             },
             {
@@ -106,7 +99,11 @@
                 "label": "Test Run",
                 "command": "build/mingw/x86_64/debug/laxer-test.exe",
                 "args": [
-                    "test_cases/std.edl"
+                    "test_cases/identifiers.edl",
+                    // "test_cases/keywords.edl",
+                    "test_cases/numbers.edl",
+                    "test_cases/strings.edl",
+                    "test_cases/std.edl",
                 ],
                 "options": {
                     "cwd": "${workspaceFolder}"
@@ -135,12 +132,16 @@
                 "request": "launch",
                 "program": "${workspaceFolder}/build/mingw/x86_64/debug/laxer-test.exe",
                 "args": [
-                    "test_cases/identifiers.edl"
+                    "test_cases/identifiers.edl",
+                    // "test_cases/keywords.edl",
+                    "test_cases/numbers.edl",
+                    "test_cases/strings.edl",
+                    "test_cases/std.edl",
                 ],
                 "stopAtEntry": true,
                 "cwd": "${workspaceFolder}",
                 "environment": [],
-                "externalConsole": true,
+                // "externalConsole": true,
                 "MIMode": "gdb",
                 "miDebuggerPath": "gdb",
                 "setupCommands": [

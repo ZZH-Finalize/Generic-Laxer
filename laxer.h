@@ -5,12 +5,22 @@
 @info: edl语言词法分析器组件
 */
 #pragma once
+#include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
+#include <string>
+#include <type_traits>
+#include <variant>
 
 namespace EDL {
-    class Laxer_t {
+    template<typename T>
+    concept token_value_types =
+        std::is_same_v<T, std::string> || std::is_same_v<T, std::uint64_t>
+        || std::is_same_v<T, double>;
+
+    class Token_t {
        public:
         typedef enum
         {
@@ -21,28 +31,28 @@ namespace EDL {
             ascii_char_start = ' ', // 32
 
             // ascii tokens (including a-z A-Z 0-9)
-            comma            = ',',
-            dot              = '.',
-            dash             = '-',
-            slash            = '_',
+            comma = ',',
+            dot   = '.',
+            dash  = '-',
+            slash = '_',
 
-            rbrackets_left   = '(',
-            rbrackets_right  = ')',
-            brackets_left    = '[',
-            brackets_right   = ']',
-            brace_left       = '{',
-            brace_right      = '}',
+            rbrackets_left  = '(',
+            rbrackets_right = ')',
+            brackets_left   = '[',
+            brackets_right  = ']',
+            brace_left      = '{',
+            brace_right     = '}',
 
-            operator_add     = '+',
-            operator_sub     = '-',
-            operator_mul     = '*',
-            operator_div     = '/',
-            operator_mod     = '%',
+            operator_add = '+',
+            operator_sub = '-',
+            operator_mul = '*',
+            operator_div = '/',
+            operator_mod = '%',
 
-            operator_bnot    = '~',
-            operator_band    = '&',
-            operator_bor     = '|',
-            operator_not     = '!', // logical not
+            operator_bnot = '~',
+            operator_band = '&',
+            operator_bor  = '|',
+            operator_not  = '!', // logical not
 
             operator_greater = '>',
             operator_less    = '<',
@@ -66,13 +76,44 @@ namespace EDL {
             // other tokens
             tk_symbol,
             tk_number,
+            tk_integer,
             tk_string,
 
             // rev invalid token
             invalid
 
-        } token_id_t;
+        } id_t;
 
+        using value_t = std::variant<std::monostate, std::string, std::uint64_t, double>;
+
+       private:
+        id_t __id;
+        value_t __value;
+
+       public:
+        explicit Token_t(const id_t &id = invalid, value_t &&value = std::monostate())
+            : __id(id), __value(value)
+        {
+        }
+
+        inline id_t id(void) const
+        {
+            return this->__id;
+        }
+
+        template<token_value_types T>
+        T value(void) const
+        {
+            return std::get<T>(this->__value);
+        }
+
+        inline operator id_t() const
+        {
+            return this->id();
+        }
+    };
+
+    class Laxer_t {
        private:
         const std::size_t token_id_bits  = 8;
         const std::size_t state_map_size = 1 << (token_id_bits * 2);
@@ -92,14 +133,14 @@ namespace EDL {
             ignore,
 
             number_iden, // number identifaction
-            number_bin,
-            number_dec,
-            number_hex,
+            integer_bin,
+            integer_dec,
+            integer_hex,
             identifer,
             string_double,
             string_single,
             operators, //+-*/ etc.
-            key_word,
+            keyword,
         };
 
         static const char *state_names[];
@@ -133,13 +174,6 @@ namespace EDL {
         }
 
        public:
-        typedef struct
-        {
-            std::string string;
-            std::size_t integer;
-            double number;
-        } token_value_t;
-
         Laxer_t(std::ifstream &i, std::ostream &o = std::cout, bool verbose = false);
         ~Laxer_t();
 
@@ -156,27 +190,11 @@ namespace EDL {
             while ('\n' != ch) ch = this->input.get();
         }
 
-        token_id_t next_token(void);
-
         inline void set_verbose(bool ver = true)
         {
             this->verbose = ver;
         }
 
-       private:
-        token_value_t value;
-
-       public:
-        const token_value_t &get_token_value(void) const
-        {
-            return this->value;
-        }
-
-        void clear_token_value(void)
-        {
-            this->value.integer = 0;
-            this->value.number  = 0;
-            this->value.string.clear();
-        }
+        Token_t next_token(void);
     };
 } // namespace EDL
