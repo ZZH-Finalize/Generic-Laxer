@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <format>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -198,3 +199,69 @@ namespace EDL {
         Token_t next_token(void);
     };
 } // namespace EDL
+
+template<typename CharT>
+struct std::formatter<EDL::Token_t, CharT>
+{
+    bool is_debug;
+
+    template<typename ParseContext>
+    constexpr auto parse(ParseContext &ctx)
+    {
+        auto it = ctx.begin();
+
+        if(*it == '#') this->is_debug = true;
+
+        while (*it != '}' and it != ctx.end()) it++;
+        return it;
+    }
+
+    template<typename FormatContext>
+    auto format(const EDL::Token_t &token, FormatContext &ctx) const
+    {
+        auto out = ctx.out();
+
+        std::format_to(out, "Token(id: ");
+
+        if (true == this->is_debug) {
+            std::format_to(out, "{}:", static_cast<int>(token));
+        }
+
+        switch (token.id()) {
+            case EDL::Token_t::invalid: {
+                std::format_to(out, "invalid token)");
+            } break;
+
+            case EDL::Token_t::eof: {
+                std::format_to(out, "EOF)");
+            } break;
+
+            case EDL::Token_t::tk_integer: {
+                auto number = token.value<std::uint64_t>();
+                std::format_to(out, "integer, value: {}({:#X}))", number, number);
+            } break;
+
+            case EDL::Token_t::tk_number: {
+                std::format_to(out, "double, value: {})", token.value<double>());
+            } break;
+
+            case EDL::Token_t::tk_symbol: {
+                std::format_to(out, "identifer, value: {})", token.value<std::string>());
+            } break;
+
+            case EDL::Token_t::tk_string: {
+                std::format_to(out, "string, value: {})", token.value<std::string>());
+            } break;
+
+            case ' ' ... '~': {
+                std::format_to(out, "ascii char, value: {})", static_cast<char>(token));
+            } break;
+
+            default: {
+                std::format_to(out, "invalid type)");
+            } break;
+        }
+
+        return out;
+    }
+};
