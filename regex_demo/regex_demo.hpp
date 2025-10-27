@@ -90,8 +90,17 @@ namespace Regex {
                 case '[': nfa = parse_char_class(); break;
                 case '\\':
                     if (pos < pattern.length()) {
-                        c   = pattern[pos++];
-                        nfa = create_char_nfa(c);
+                        c = pattern[pos++];
+                        // 处理预定义字符类，复用字符类逻辑
+                        switch (c) {
+                            case 'd': nfa = create_char_class_nfa(get_digit_chars()); break;           // 数字 [0-9]
+                            case 'D': nfa = create_negated_char_class_nfa(get_digit_chars()); break;   // 非数字 [^0-9]
+                            case 'w': nfa = create_char_class_nfa(get_word_chars()); break;            // 单词字符 [a-zA-Z0-9_]
+                            case 'W': nfa = create_negated_char_class_nfa(get_word_chars()); break;    // 非单词字符
+                            case 's': nfa = create_char_class_nfa(get_whitespace_chars()); break;      // 空白字符
+                            case 'S': nfa = create_negated_char_class_nfa(get_whitespace_chars()); break; // 非空白字符
+                            default: nfa = create_char_nfa(c); break;       // 普通转义字符
+                        }
                     } else {
                         nfa = create_char_nfa('\\');
                     }
@@ -114,6 +123,72 @@ namespace Regex {
             return apply_quantifier(inner_nfa);
         }
 
+        // 创建字符类NFA的辅助函数
+        NFA create_char_class_nfa(const std::set<char>& chars) {
+            NFA nfa;
+            int start_state = nfa.add_state();
+            int end_state   = nfa.add_state();
+
+            nfa.set_start(start_state);
+            nfa.set_final(end_state);
+
+            // 为每个字符添加转换
+            for (char c : chars) {
+                nfa.states[start_state]->add_transition(c, end_state);
+            }
+
+            return apply_quantifier(nfa);
+        }
+
+        // 创建否定字符类NFA的辅助函数
+        NFA create_negated_char_class_nfa(const std::set<char>& chars) {
+            NFA nfa;
+            int start_state = nfa.add_state();
+            int end_state   = nfa.add_state();
+
+            nfa.set_start(start_state);
+            nfa.set_final(end_state);
+
+            // 添加所有不在集合中的字符（常见可打印字符范围内）
+            for (int c = 32; c <= 126; c++) {
+                char ch = (char) c;
+                if (chars.find(ch) == chars.end()) {
+                    nfa.states[start_state]->add_transition(ch, end_state);
+                }
+            }
+
+            return apply_quantifier(nfa);
+        }
+
+        // 预定义字符类的辅助函数
+        static std::set<char> get_digit_chars() {
+            std::set<char> result;
+            for (char c = '0'; c <= '9'; c++) {
+                result.insert(c);
+            }
+            return result;
+        }
+
+        static std::set<char> get_word_chars() {
+            std::set<char> result;
+            for (char c = 'a'; c <= 'z'; c++) {
+                result.insert(c);
+            }
+            for (char c = 'A'; c <= 'Z'; c++) {
+                result.insert(c);
+            }
+            for (char c = '0'; c <= '9'; c++) {
+                result.insert(c);
+            }
+            result.insert('_');
+            return result;
+        }
+
+        static std::set<char> get_whitespace_chars() {
+            std::set<char> result = {' ', '\t', '\n', '\r', '\f', '\v'};
+            return result;
+        }
+
         // 解析字符类 [abc] 或 [a-z]
         NFA parse_char_class()
         {
@@ -124,9 +199,10 @@ namespace Regex {
             nfa.set_start(start_state);
             nfa.set_final(end_state);
 
+            bool is_negated = false;
             if (pos < pattern.length() && pattern[pos] == '^') {
                 pos++; // 处理否定字符类 [^abc]
-                // 简化处理，这里只处理基本字符类
+                is_negated = true;
             }
 
             std::set<char> chars;
@@ -147,6 +223,20 @@ namespace Regex {
 
             if (pos < pattern.length() && pattern[pos] == ']') {
                 pos++;
+            }
+
+            // 如果是否定字符类，则使用所有不在集合中的字符
+            if (is_negated) {
+                std::set<char> all_chars;
+                // 添加所有常见可打印字符
+                for (int c = 32; c <= 126; c++) {
+                    all_chars.insert((char) c);
+                }
+                // 从全集中移除指定字符
+                for (char c : chars) {
+                    all_chars.erase(c);
+                }
+                chars = all_chars;
             }
 
             // 为每个字符添加转换
@@ -188,6 +278,7 @@ namespace Regex {
 
             return apply_quantifier(nfa);
         }
+
 
         // 应用量词 (?, *, +)
         NFA apply_quantifier(NFA& nfa)
@@ -453,7 +544,7 @@ namespace Regex {
     };
 
     // NFA状态ID计数器的定义
-    int State::global_id_counter = 0;
+    inline int State::global_id_counter = 0;
 
     // 简化的NFA匹配器
     class NFA_Matcher {

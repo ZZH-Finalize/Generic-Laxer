@@ -32,7 +32,7 @@
             "--background-index",
             // "--log=verbose",
             "--pretty",
-            "--query-driver=D:/mingw64/bin/gcc.exe"
+            "--query-driver=D:/mingw64/bin/g++.exe"
         ],
         "clangd.trace": "build/clangd.json",
     },
