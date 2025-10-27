@@ -62,8 +62,9 @@ namespace regex {
     class nfa {
        private:
         using charset_t = std::bitset<256>;
+        using states_t  = std::vector<state>;
 
-        std::vector<state> states;
+        states_t states;
         state::id_type start, final;
 
         explicit nfa()
@@ -98,21 +99,6 @@ namespace regex {
             this->check_state_valid(final);
 
             this->final = final;
-        }
-
-        state::id_type get_start(void) const noexcept
-        {
-            return this->start;
-        }
-
-        state::id_type get_final(void) const noexcept
-        {
-            return this->final;
-        }
-
-        state& get_state(state::id_type state)
-        {
-            return this->states.at(state);
         }
 
         void add_transition(state::id_type state, char input, state::id_type to)
@@ -156,7 +142,6 @@ namespace regex {
         }
 
         // 内部解析辅助函数
-       private:
         // 解析单个字符（包括转义字符）并推进指针
         static nfa parse_char(std::string_view& exp)
         {
@@ -598,6 +583,27 @@ namespace regex {
             return base;
         }
 
+       protected:
+        state::id_type get_start(void) const noexcept
+        {
+            return this->start;
+        }
+
+        state::id_type get_final(void) const noexcept
+        {
+            return this->final;
+        }
+
+        const state& get_state(state::id_type state) const
+        {
+            return this->states.at(state);
+        }
+
+        const states_t& get_states(void) const
+        {
+            return this->states;
+        }
+
        public:
         class regex_error: public std::runtime_error {
            public:
@@ -619,18 +625,6 @@ namespace regex {
             }
 
             return parsed_nfa;
-        }
-
-        // 获取所有状态ID的函数
-        std::vector<state::id_type> get_all_state_ids(void) const
-        {
-            std::vector<state::id_type> ids;
-
-            for (std::size_t i = 0; i < this->states.size(); ++i) {
-                ids.push_back(static_cast<state::id_type>(i));
-            }
-
-            return ids;
         }
 
         // 打印NFA所有状态ID的函数
