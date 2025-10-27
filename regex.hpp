@@ -62,7 +62,7 @@ namespace regex {
     class nfa {
        private:
         using charset_t = std::bitset<256>;
-    
+
         std::vector<state> states;
         state::id_type start, final;
 
@@ -123,7 +123,8 @@ namespace regex {
         // 将charset中的字符添加为从start到final的转换
         void add_transition(const charset_t& chars, bool is_negated = false)
         {
-            charset_t final_charset = is_negated ? (regex::ascii_printable_chars & ~chars) : chars;
+            charset_t final_charset =
+                is_negated ? (regex::ascii_printable_chars & ~chars) : chars;
             for (std::size_t i = 0; i < 256; i++) {
                 if (final_charset.test(i)) {
                     this->add_transition(this->get_start(), static_cast<char>(i),
@@ -183,7 +184,7 @@ namespace regex {
         // 解析通配符.并推进指针
         static nfa parse_wildcard(std::string_view& exp)
         {
-            if (exp.empty() || exp[0] != '.') {
+            if (exp.empty() or exp[0] != '.') {
                 throw nfa::regex_error("Expected wildcard character '.'");
             }
             exp.remove_prefix(1); // 跳过'.'字符
@@ -197,7 +198,7 @@ namespace regex {
         // 解析字符集[...]并推进指针
         static nfa parse_charset(std::string_view& exp)
         {
-            if (exp.empty() || exp[0] != '[') {
+            if (exp.empty() or exp[0] != '[') {
                 throw nfa::regex_error("Expected character set starting with '['");
             }
 
@@ -299,7 +300,7 @@ namespace regex {
         // 解析单词相关字符集(\w, \W)并推进指针
         static nfa parse_word(std::string_view& exp)
         {
-            if (exp.length() < 2 || exp[0] != '\\' || (exp[1] != 'w' && exp[1] != 'W')) {
+            if (exp.length() < 2 or exp[0] != '\\' or (exp[1] != 'w' and exp[1] != 'W')) {
                 throw nfa::regex_error("Expected word character class '\\w' or '\\W'");
             }
 
@@ -333,7 +334,7 @@ namespace regex {
         // 解析空白字符集(\s, \S)并推进指针
         static nfa parse_space(std::string_view& exp)
         {
-            if (exp.length() < 2 || exp[0] != '\\' || (exp[1] != 's' && exp[1] != 'S')) {
+            if (exp.length() < 2 or exp[0] != '\\' or (exp[1] != 's' and exp[1] != 'S')) {
                 throw nfa::regex_error("Expected space character class '\\s' or '\\S'");
             }
 
@@ -438,7 +439,7 @@ namespace regex {
             nfa result = parse_sequence(exp);
 
             // 处理选择操作(|)
-            while (!exp.empty() && exp[0] == '|') {
+            while (not exp.empty() and exp[0] == '|') {
                 exp.remove_prefix(1); // 跳过'|'
                 nfa right = parse_sequence(exp);
 
@@ -479,7 +480,7 @@ namespace regex {
             nfa result;
 
             // 如果表达式为空或以'|'或')'开头，则返回一个空NFA
-            if (exp.empty() || exp[0] == '|' || exp[0] == ')') {
+            if (exp.empty() or exp[0] == '|' or exp[0] == ')') {
                 nfa empty;
                 empty.add_epsilon_transition(empty.get_start(), empty.get_final());
                 return empty;
@@ -489,7 +490,7 @@ namespace regex {
             nfa current = parse_term(exp);
 
             // 继续解析更多项并连接
-            while (!exp.empty() && exp[0] != '|' && exp[0] != ')') {
+            while (!exp.empty() and exp[0] != '|' and exp[0] != ')') {
                 nfa next = parse_term(exp);
 
                 // 连接当前项和下一项
@@ -522,7 +523,7 @@ namespace regex {
                 exp.remove_prefix(1); // 跳过'('
                 base = parse_expression(exp);
 
-                if (exp.empty() || exp[0] != ')') {
+                if (exp.empty() or exp[0] != ')') {
                     throw nfa::regex_error("Expected closing parenthesis");
                 }
                 exp.remove_prefix(1); // 跳过')'
@@ -554,7 +555,7 @@ namespace regex {
             // 检查是否有量词
             if (!exp.empty()) {
                 char quantifier = exp[0];
-                if (quantifier == '*' || quantifier == '+' || quantifier == '?') {
+                if (quantifier == '*' or quantifier == '+' or quantifier == '?') {
                     exp.remove_prefix(1); // 跳过量词
 
                     // 根据量词类型修改NFA
@@ -598,6 +599,13 @@ namespace regex {
         }
 
        public:
+        class regex_error: public std::runtime_error {
+           public:
+            explicit regex_error(const std::string& msg): std::runtime_error(msg)
+            {
+            }
+        };
+
         static nfa from(std::string_view exp)
         {
             // 使用递归下降解析器解析表达式
@@ -605,7 +613,7 @@ namespace regex {
             nfa parsed_nfa            = parse_expression(exp_copy);
 
             // 检查是否还有未解析的部分
-            if (!exp_copy.empty()) {
+            if (not exp_copy.empty()) {
                 throw nfa::regex_error(std::format(
                     "Unexpected characters at end of expression: {}", exp_copy));
             }
@@ -613,12 +621,39 @@ namespace regex {
             return parsed_nfa;
         }
 
-        class regex_error: public std::runtime_error {
-           public:
-            explicit regex_error(const std::string& msg): std::runtime_error(msg)
-            {
+        // 获取所有状态ID的函数
+        std::vector<state::id_type> get_all_state_ids(void) const
+        {
+            std::vector<state::id_type> ids;
+
+            for (std::size_t i = 0; i < this->states.size(); ++i) {
+                ids.push_back(static_cast<state::id_type>(i));
             }
-        };
+
+            return ids;
+        }
+
+        // 打印NFA所有状态ID的函数
+        std::string to_string(void) const
+        {
+            std::string result =
+                std::format("start: {}, final: {}", this->get_start(), this->get_final());
+
+            result += ", states: {";
+            bool first = true;
+
+            for (std::size_t i = 0; i < this->states.size(); ++i) {
+                if (not first) {
+                    result += ", ";
+                }
+                result += std::to_string(i);
+                first = false;
+            }
+
+            result += "}";
+
+            return result;
+        }
     };
 
     class dfa {
@@ -643,3 +678,19 @@ namespace regex {
         }
     };
 } // namespace regex
+
+// 为 nfa 类提供 std::format 支持
+template<>
+struct std::formatter<regex::nfa>
+{
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        return ctx.begin(); // 简单格式，无需解析额外格式说明符
+    }
+
+    auto format(const regex::nfa& nfa, std::format_context& ctx) const
+    {
+        std::string nfa_str = nfa.to_string();
+        return std::format_to(ctx.out(), "{}", nfa_str);
+    }
+};
