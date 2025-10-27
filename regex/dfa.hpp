@@ -14,6 +14,7 @@
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
+#include <queue>
 
 namespace regex {
 
@@ -36,31 +37,36 @@ namespace regex {
         // 计算epsilon闭包
         state_set epsilon_closure(const state_set& states_set, const nfa& input_nfa) const {
             state_set closure = states_set;
-            std::vector<bool> visited(input_nfa.get_states().size(), false);
+            std::vector<bool> in_closure(input_nfa.get_states().size(), false);
             
-            // 标记初始状态为已访问
+            // 标记初始状态在闭包中
             for (auto state_id : states_set) {
-                if (state_id < visited.size()) {
-                    visited[state_id] = true;
+                if (state_id < in_closure.size()) {
+                    in_closure[state_id] = true;
                 }
             }
             
-            bool changed = true;
-            while (changed) {
-                changed = false;
-                for (auto state_id : closure) {
-                    if (state_id >= input_nfa.get_states().size()) continue;
-                    
-                    const auto& state = input_nfa.get_state(state_id);
-                    const auto& transitions = state.get_transitions();
-                    auto epsilon_it = transitions.find('\0'); // epsilon转换用'\0'表示
-                    if (epsilon_it != transitions.end()) {
-                        for (auto epsilon_target : epsilon_it->second) {
-                            if (epsilon_target < visited.size() && !visited[epsilon_target]) {
-                                visited[epsilon_target] = true;
-                                closure.insert(epsilon_target);
-                                changed = true;
-                            }
+            // 使用队列进行BFS遍历，避免无限循环
+            std::queue<state::id_type> work_queue;
+            for (auto state_id : states_set) {
+                work_queue.push(state_id);
+            }
+            
+            while (!work_queue.empty()) {
+                state::id_type current_state = work_queue.front();
+                work_queue.pop();
+                
+                if (current_state >= input_nfa.get_states().size()) continue;
+                
+                const auto& state = input_nfa.get_state(current_state);
+                const auto& transitions = state.get_transitions();
+                auto epsilon_it = transitions.find(static_cast<char>(255)); // epsilon转换用255表示
+                if (epsilon_it != transitions.end()) {
+                    for (auto epsilon_target : epsilon_it->second) {
+                        if (epsilon_target < in_closure.size() && !in_closure[epsilon_target]) {
+                            in_closure[epsilon_target] = true;
+                            closure.insert(epsilon_target);
+                            work_queue.push(epsilon_target);
                         }
                     }
                 }
@@ -140,7 +146,7 @@ namespace regex {
                     const auto& nfa_state = input_nfa.get_state(nfa_state_id);
                     const auto& transitions = nfa_state.get_transitions();
                     for (const auto& [input, targets] : transitions) {
-                        if (input != '\0') { // 不包括epsilon转换
+                        if (input != static_cast<char>(255)) { // 不包括epsilon转换
                             input_chars.insert(input);
                         }
                     }
@@ -216,6 +222,11 @@ namespace regex {
             dfa_state_id current_state = start_state;
 
             for (char c : str) {
+                // 边界检查：确保current_state在有效范围内
+                if (current_state >= states.size()) {
+                    return false; // 状态越界，匹配失败
+                }
+                
                 const auto& current_dfa_state = states[current_state];
                 auto it = current_dfa_state.transitions.find(c);
                 
@@ -235,6 +246,10 @@ namespace regex {
         bool match_empty() const
         {
             if (states.empty()) {
+                return false;
+            }
+            // 边界检查：确保start_state在有效范围内
+            if (start_state >= states.size()) {
                 return false;
             }
             return std::find(final_states.begin(), final_states.end(), start_state) != final_states.end();

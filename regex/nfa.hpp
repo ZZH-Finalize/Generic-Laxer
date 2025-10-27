@@ -502,32 +502,36 @@ namespace regex {
                     exp.remove_prefix(1); // 跳过量词
 
                     // 根据量词类型修改NFA
+                    // 保存原始的start和final状态ID，因为add_state会改变base的状态
+                    state::id_type original_start = base.get_start();
+                    state::id_type original_final = base.get_final();
+                    
                     state::id_type new_start = base.add_state();
                     state::id_type new_final = base.add_state();
 
                     if (quantifier == '*') {
                         // a* : 可以匹配0次或多次
                         base.add_epsilon_transition(new_start,
-                                                    base.get_start()); // 进入原始NFA
-                        base.add_epsilon_transition(base.get_final(),
+                                                    original_start); // 进入原始NFA
+                        base.add_epsilon_transition(original_final,
                                                     new_final); // 从原始结束到新结束
-                        base.add_epsilon_transition(base.get_final(),
-                                                    base.get_start()); // 循环
+                        base.add_epsilon_transition(original_final,
+                                                    original_start); // 循环
                         base.add_epsilon_transition(new_start,
                                                     new_final); // 直接跳过（0次匹配）
                     } else if (quantifier == '+') {
                         // a+ : 至少匹配一次
                         base.add_epsilon_transition(new_start,
-                                                    base.get_start()); // 进入原始NFA
-                        base.add_epsilon_transition(base.get_final(),
+                                                    original_start); // 进入原始NFA
+                        base.add_epsilon_transition(original_final,
                                                     new_final); // 从原始结束到新结束
-                        base.add_epsilon_transition(base.get_final(),
-                                                    base.get_start()); // 循环
+                        base.add_epsilon_transition(original_final,
+                                                    original_start); // 循环
                     } else if (quantifier == '?') {
                         // a? : 可选，匹配0次或1次
                         base.add_epsilon_transition(new_start,
-                                                    base.get_start()); // 进入原始NFA
-                        base.add_epsilon_transition(base.get_final(),
+                                                    original_start); // 进入原始NFA
+                        base.add_epsilon_transition(original_final,
                                                     new_final); // 从原始结束到新结束
                         base.add_epsilon_transition(new_start,
                                                     new_final); // 直接跳过（0次匹配）
