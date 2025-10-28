@@ -9,6 +9,9 @@ set_defaultmode('debug')
 set_toolchains('gcc')
 set_languages('c++latest')
 
+add_includedirs('.')
+add_includedirs('regex')
+
 -- target('edl-laxer')
 --     set_kind('shared')
 
@@ -21,29 +24,14 @@ set_languages('c++latest')
 --     add_deps('edl-laxer')
 --     add_files('main.cpp')
 
-
-target('regex-main')
-    set_kind('binary')
-    set_default(true)
-    set_enabled(true)
-    add_files('regex_main.cpp')
-
-target('regex-test')
-    set_kind('binary')
-    set_default(false)
-    add_files('regex_demo/regex_test.cpp')
-
-target('simple-test')
-    set_kind('binary')
-    set_default(false)
-    add_files('regex_demo/simple_test.cpp')
-
-target('test-complex')
-    set_kind('binary')
-    set_default(false)
-    add_files('regex_demo/test_complex.cpp')
-
-target('test-dfa')
-    set_kind('binary')
-    set_default(false)
-    add_files('regex_demo/test_dfa.cpp')
+for _, file in ipairs(os.files('regex/testcases/*.cpp')) do
+    local name = path.basename(file)
+    target(name)
+        set_kind('binary')
+        set_default(false)
+        add_files(file)
+        add_tests('default')
+        -- add_tests("args", {runargs = {"foo", "bar"}})
+        -- add_tests("pass_output", {trim_output = true, runargs = "foo", pass_outputs = "hello foo"})
+        -- add_tests("fail_output", {fail_outputs = {"hello2 .*", "hello xmake"}})
+end

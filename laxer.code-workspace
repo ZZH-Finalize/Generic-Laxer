@@ -116,12 +116,37 @@
                     "showReuseMessage": true,
                     "clear": true
                 },
+                // "group": {
+                //     "kind": "test",
+                //     "isDefault": true
+                // },
+                "detail": "测试运行"
+            },
+            {
+                "type": "shell",
+                "label": "xmake test",
+                "command": "xmake",
+                "args": [
+                    "test",
+                    "-vD"
+                ],
+                "options": {
+                    "cwd": "${workspaceFolder}"
+                },
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": false,
+                    "panel": "shared",
+                    "showReuseMessage": true,
+                    "clear": true
+                },
                 "group": {
                     "kind": "test",
                     "isDefault": true
                 },
                 "detail": "测试运行"
-            }
+            },
         ]
     },
     "launch": {
