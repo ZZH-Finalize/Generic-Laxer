@@ -1,35 +1,38 @@
 #pragma once
 
 #include "nfa.hpp"
-#include <bitset>
-#include <cstddef>
-#include <cstdint>
 #include <format>
 #include <iterator>
-#include <map>
 #include <set>
 #include <exception>
 #include <stdexcept>
 #include <string_view>
 #include <type_traits>
-#include <unordered_map>
 #include <vector>
 #include <queue>
 #include <limits>
+#include <algorithm>
 
 namespace regex {
 
     class dfa {
        private:
         using state_set          = std::set<state::id_type>;
-        using dfa_state_id       = std::uint32_t;
-        using dfa_transition_map = std::unordered_map<char, dfa_state_id>;
+        using dfa_state_id       = state::id_type;
+        using dfa_transition_map = std::array<dfa_state_id, 256>;
 
         struct dfa_state
         {
             state_set nfa_states;           // 对应NFA状态集合
             dfa_transition_map transitions; // 转换表
             bool is_final;                  // 是否为最终状态
+
+            // 构造函数初始化转换表为无效值
+            dfa_state(): transitions(), nfa_states(), is_final(false)
+            {
+                std::fill(transitions.begin(), transitions.end(),
+                          std::numeric_limits<dfa_state_id>::max());
+            }
         };
 
         std::vector<dfa_state> states;
@@ -189,7 +192,8 @@ namespace regex {
                     }
 
                     // 添加转换 - 修复：每次都重新获取引用以避免引用失效
-                    states[current_id].transitions[input_char] = next_id;
+                    states[current_id]
+                        .transitions[static_cast<unsigned char>(input_char)] = next_id;
                 }
             }
 
@@ -237,14 +241,15 @@ namespace regex {
                 }
 
                 const auto& current_dfa_state = states[current_state];
-                auto it                       = current_dfa_state.transitions.find(c);
-
-                if (it == current_dfa_state.transitions.end()) {
+                // 检查转换是否有效（使用特殊值表示无效转换）
+                dfa_state_id next_state =
+                    current_dfa_state.transitions[static_cast<unsigned char>(c)];
+                if (next_state == std::numeric_limits<dfa_state_id>::max()) {
                     // 没有对应的转换，匹配失败
                     return false;
                 }
 
-                current_state = it->second;
+                current_state = next_state;
             }
 
             // 检查最终状态是否为接受状态
@@ -288,14 +293,15 @@ namespace regex {
                     }
 
                     const auto& current_dfa_state = states[current_state];
-                    auto it                       = current_dfa_state.transitions.find(c);
-
-                    if (it == current_dfa_state.transitions.end()) {
+                    // 检查转换是否有效（使用特殊值表示无效转换）
+                    dfa_state_id next_state =
+                        current_dfa_state.transitions[static_cast<unsigned char>(c)];
+                    if (next_state == std::numeric_limits<dfa_state_id>::max()) {
                         // 没有对应的转换，匹配失败
                         break;
                     }
 
-                    current_state = it->second;
+                    current_state = next_state;
 
                     // 检查当前位置是否为接受状态
                     if (std::find(final_states.begin(), final_states.end(), current_state)
@@ -320,8 +326,11 @@ namespace regex {
             // 获取所有输入字符
             std::set<char> input_chars;
             for (const auto& dfa_state : states) {
-                for (const auto& [input, _] : dfa_state.transitions) {
-                    input_chars.insert(input);
+                for (size_t i = 0; i < dfa_state.transitions.size(); ++i) {
+                    if (dfa_state.transitions[i]
+                        != std::numeric_limits<dfa_state_id>::max()) {
+                        input_chars.insert(static_cast<char>(i));
+                    }
                 }
             }
 
@@ -370,10 +379,11 @@ namespace regex {
                         std::vector<dfa_state_id> signature;
                         for (char input : input_chars) {
                             // 找到当前状态下通过输入字符转换到的状态
-                            auto it = states[state_id].transitions.find(input);
-                            if (it != states[state_id].transitions.end()) {
-                                dfa_state_id target_state = it->second;
-
+                            dfa_state_id target_state =
+                                states[state_id]
+                                    .transitions[static_cast<unsigned char>(input)];
+                            if (target_state
+                                != std::numeric_limits<dfa_state_id>::max()) {
                                 // 找到目标状态所属的等价类
                                 dfa_state_id target_class_id = 0;
                                 for (size_t i = 0; i < partition.size(); ++i) {
@@ -431,10 +441,10 @@ namespace regex {
 
                 // 构建新状态的转换表
                 for (char input : input_chars) {
-                    auto it = states[representative].transitions.find(input);
-                    if (it != states[representative].transitions.end()) {
-                        dfa_state_id target_state = it->second;
-
+                    dfa_state_id target_state =
+                        states[representative]
+                            .transitions[static_cast<unsigned char>(input)];
+                    if (target_state != std::numeric_limits<dfa_state_id>::max()) {
                         // 找到目标状态所属的等价类ID
                         dfa_state_id target_class_id = 0;
                         for (size_t j = 0; j < partition.size(); ++j) {
@@ -444,7 +454,8 @@ namespace regex {
                             }
                         }
 
-                        new_state.transitions[input] = target_class_id;
+                        new_state.transitions[static_cast<unsigned char>(input)] =
+                            target_class_id;
                     }
                 }
 
