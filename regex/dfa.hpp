@@ -15,6 +15,7 @@
 #include <unordered_map>
 #include <vector>
 #include <queue>
+#include <limits>
 
 namespace regex {
 
@@ -307,6 +308,176 @@ namespace regex {
 
             // 没有找到匹配
             return -1;
+        }
+
+        // DFA最小化函数 - 使用Hopcroft算法
+        void minimize()
+        {
+            if (states.empty()) {
+                return; // 空DFA无需最小化
+            }
+
+            // 获取所有输入字符
+            std::set<char> input_chars;
+            for (const auto& dfa_state : states) {
+                for (const auto& [input, _] : dfa_state.transitions) {
+                    input_chars.insert(input);
+                }
+            }
+
+            // 初始化等价类划分：将状态分为接受状态和非接受状态
+            std::vector<std::set<dfa_state_id>> partition;
+            std::set<dfa_state_id> final_state_set(final_states.begin(), final_states.end());
+            
+            std::set<dfa_state_id> non_final_states;
+            for (dfa_state_id i = 0; i < states.size(); ++i) {
+                if (final_state_set.find(i) == final_state_set.end()) {
+                    non_final_states.insert(i);
+                }
+            }
+
+            // 添加接受状态集合（如果非空）
+            if (!final_state_set.empty()) {
+                partition.push_back(final_state_set);
+            }
+
+            // 添加非接受状态集合（如果非空）
+            if (!non_final_states.empty()) {
+                partition.push_back(non_final_states);
+            }
+
+            bool changed = true;
+            while (changed) {
+                changed = false;
+                
+                std::vector<std::set<dfa_state_id>> new_partition;
+                
+                // 对每个等价类进行细化
+                for (const auto& equiv_class : partition) {
+                    if (equiv_class.size() <= 1) {
+                        // 单元素集合不能再分割
+                        new_partition.push_back(equiv_class);
+                        continue;
+                    }
+
+                    // 使用每个输入字符对等价类进行细分
+                    std::map<std::vector<dfa_state_id>, std::vector<dfa_state_id>> signatures;
+                    
+                    for (dfa_state_id state_id : equiv_class) {
+                        // 为当前状态创建签名：对于每个输入字符，记录转换到的目标等价类
+                        std::vector<dfa_state_id> signature;
+                        for (char input : input_chars) {
+                            // 找到当前状态下通过输入字符转换到的状态
+                            auto it = states[state_id].transitions.find(input);
+                            if (it != states[state_id].transitions.end()) {
+                                dfa_state_id target_state = it->second;
+                                
+                                // 找到目标状态所属的等价类
+                                dfa_state_id target_class_id = 0;
+                                for (size_t i = 0; i < partition.size(); ++i) {
+                                    if (partition[i].find(target_state) != partition[i].end()) {
+                                        target_class_id = static_cast<dfa_state_id>(i);
+                                        break;
+                                    }
+                                }
+                                signature.push_back(target_class_id);
+                            } else {
+                                // 如果没有转换，使用特殊值表示
+                                signature.push_back(std::numeric_limits<dfa_state_id>::max());
+                            }
+                        }
+                        
+                        // 使用签名对状态进行分组
+                        signatures[signature].push_back(state_id);
+                    }
+
+                    // 检查是否需要分割当前等价类
+                    if (signatures.size() > 1) {
+                        changed = true;
+                        for (const auto& [_, state_group] : signatures) {
+                            std::set<dfa_state_id> new_class(state_group.begin(), state_group.end());
+                            new_partition.push_back(new_class);
+                        }
+                    } else {
+                        new_partition.push_back(equiv_class);
+                    }
+                }
+
+                partition = new_partition;
+            }
+
+            // 创建新的最小化DFA
+            std::vector<dfa_state> new_states;
+            std::vector<dfa_state_id> new_final_states;
+            dfa_state_id new_start_state = 0;
+            
+            // 为每个等价类创建一个新状态
+            std::map<dfa_state_id, dfa_state_id> old_to_new; // 旧状态ID到新状态ID的映射
+            
+            for (size_t i = 0; i < partition.size(); ++i) {
+                const auto& equiv_class = partition[i];
+                
+                // 创建新状态，使用等价类中第一个状态的信息
+                dfa_state new_state;
+                dfa_state_id representative = *equiv_class.begin();
+                
+                new_state.nfa_states = states[representative].nfa_states;
+                new_state.is_final = states[representative].is_final;
+                
+                // 构建新状态的转换表
+                for (char input : input_chars) {
+                    auto it = states[representative].transitions.find(input);
+                    if (it != states[representative].transitions.end()) {
+                        dfa_state_id target_state = it->second;
+                        
+                        // 找到目标状态所属的等价类ID
+                        dfa_state_id target_class_id = 0;
+                        for (size_t j = 0; j < partition.size(); ++j) {
+                            if (partition[j].find(target_state) != partition[j].end()) {
+                                target_class_id = static_cast<dfa_state_id>(j);
+                                break;
+                            }
+                        }
+                        
+                        new_state.transitions[input] = target_class_id;
+                    }
+                }
+                
+                new_states.push_back(new_state);
+                
+                // 记录映射关系
+                for (dfa_state_id old_id : equiv_class) {
+                    old_to_new[old_id] = static_cast<dfa_state_id>(new_states.size() - 1);
+                }
+                
+                // 检查这个等价类是否包含原起始状态
+                if (equiv_class.find(start_state) != equiv_class.end()) {
+                    new_start_state = static_cast<dfa_state_id>(new_states.size() - 1);
+                }
+                
+                // 检查这个等价类是否包含最终状态
+                bool has_final = false;
+                for (dfa_state_id old_id : equiv_class) {
+                    if (std::find(final_states.begin(), final_states.end(), old_id) != final_states.end()) {
+                        has_final = true;
+                        break;
+                    }
+                }
+                if (has_final) {
+                    new_final_states.push_back(static_cast<dfa_state_id>(new_states.size() - 1));
+                }
+            }
+
+            // 更新DFA
+            states = std::move(new_states);
+            start_state = new_start_state;
+            final_states = std::move(new_final_states);
+        }
+
+        // 获取DFA的状态数量
+        size_t get_state_count() const
+        {
+            return states.size();
         }
     };
 
