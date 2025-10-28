@@ -47,7 +47,8 @@ namespace regex {
         {
             // 使用特殊值表示epsilon转换，避免与实际字符冲突
             // 使用255作为epsilon转换的标记，这是一个不太可能在正则表达式中使用的字符
-            this->transitions[static_cast<char>(255)].push_back(to); // 使用255表示epsilon转换
+            this->transitions[static_cast<char>(255)].push_back(
+                to); // 使用255表示epsilon转换
         }
 
         // 获取转换映射的常量引用，用于复制NFA结构

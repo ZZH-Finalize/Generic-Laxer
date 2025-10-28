@@ -128,7 +128,7 @@
                 "command": "xmake",
                 "args": [
                     "test",
-                    "-vD"
+                    // "-vD"
                 ],
                 "options": {
                     "cwd": "${workspaceFolder}"
