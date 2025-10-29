@@ -99,8 +99,8 @@ namespace regex {
                 const auto& other_state          = other_nfa.states[i];
                 const auto& other_transition_map = other_state.get_transition_map();
 
-                // 复制除了最后的epsilon转换
-                for (int input_idx = 0; input_idx < other_transition_map.size() - 1;
+                // 复制字符转换
+                for (int input_idx = 0; input_idx < other_transition_map.size();
                      input_idx++) {
                     if (not other_transition_map[input_idx].empty()) {
                         char input_char = static_cast<char>(input_idx);
@@ -112,7 +112,7 @@ namespace regex {
                 }
 
                 // 处理epsilon转换
-                for (auto id : other_transition_map[other_state.epsilon_id]) {
+                for (auto id : other_state.get_epsilon_transition()) {
                     this->add_epsilon_transition(i + offset, id + offset);
                 }
             }

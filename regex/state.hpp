@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <exception>
+#include <limits>
 #include <stdexcept>
 #include <string_view>
 #include <type_traits>
@@ -27,38 +28,37 @@ namespace regex {
        public:
         using id_type          = std::uint32_t;
         using transition_t     = std::vector<id_type>;
-        using transition_map_t = std::array<transition_t, 257>;
-
-        static const id_type epsilon_id = 256;
+        using transition_map_t = std::array<transition_t, 256>;
 
        private:
-        transition_map_t transitions;
+        transition_t epsilon_transitions;
+        transition_map_t char_transitions;
 
        public:
         inline void add_transition(char input, id_type to)
         {
-            this->transitions[input].push_back(to);
+            this->char_transitions[input].push_back(to);
         }
 
         inline void add_epsilon_transition(id_type to)
         {
-            this->transitions[this->epsilon_id].push_back(to);
+            this->epsilon_transitions.push_back(to);
         }
 
         // 获取转换映射的常量引用，用于复制NFA结构
         const transition_map_t& get_transition_map(void) const noexcept
         {
-            return this->transitions;
+            return this->char_transitions;
         }
 
         const transition_t& get_transition(id_type id) const
         {
-            return this->transitions[id];
+            return this->char_transitions[id];
         }
 
         const transition_t& get_epsilon_transition(void) const
         {
-            return this->get_transition(this->epsilon_id);
+            return this->epsilon_transitions;
         }
     };
 
