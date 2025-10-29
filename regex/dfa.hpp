@@ -64,18 +64,15 @@ namespace regex {
 
                 if (current_state >= input_nfa.get_states().size()) continue;
 
-                const auto& state       = input_nfa.get_state(current_state);
-                const auto& transitions = state.get_transitions();
-                auto epsilon_it =
-                    transitions.find(static_cast<char>(255)); // epsilon转换用255表示
-                if (epsilon_it != transitions.end()) {
-                    for (auto epsilon_target : epsilon_it->second) {
-                        if (epsilon_target < in_closure.size()
-                            && !in_closure[epsilon_target]) {
-                            in_closure[epsilon_target] = true;
-                            closure.insert(epsilon_target);
-                            work_queue.push(epsilon_target);
-                        }
+                const auto& state           = input_nfa.get_state(current_state);
+                const auto& epsilon_targets = state.get_epsilon_transition();
+                for (auto epsilon_target : epsilon_targets) {
+                    if (epsilon_target < in_closure.size()
+                        and not in_closure[epsilon_target]) {
+                        in_closure[epsilon_target] = true;
+
+                        closure.insert(epsilon_target);
+                        work_queue.push(epsilon_target);
                     }
                 }
             }
@@ -96,15 +93,17 @@ namespace regex {
             for (auto state_id : states_set) {
                 if (state_id >= input_nfa.get_states().size()) continue;
 
-                const auto& state       = input_nfa.get_state(state_id);
-                const auto& transitions = state.get_transitions();
-                auto it                 = transitions.find(input);
-                if (it != transitions.end()) {
-                    for (auto target : it->second) {
+                const auto& state          = input_nfa.get_state(state_id);
+                const auto& transition_map = state.get_transition_map();
+
+                if (input >= 0) {
+                    for (auto target :
+                         transition_map[static_cast<unsigned char>(input)]) {
                         result.insert(target);
                     }
                 }
             }
+
             return result;
         }
 
@@ -155,10 +154,10 @@ namespace regex {
                     if (nfa_state_id >= input_nfa.get_states().size()) continue;
 
                     const auto& nfa_state   = input_nfa.get_state(nfa_state_id);
-                    const auto& transitions = nfa_state.get_transitions();
-                    for (const auto& [input, targets] : transitions) {
-                        if (input != static_cast<char>(255)) { // 不包括epsilon转换
-                            input_chars.insert(input);
+                    const auto& transitions = nfa_state.get_transition_map();
+                    for (int input_idx = 0; input_idx < 256; ++input_idx) {
+                        if (!transitions[input_idx].empty()) {
+                            input_chars.insert(static_cast<char>(input_idx));
                         }
                     }
                 }

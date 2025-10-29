@@ -96,11 +96,24 @@ namespace regex {
 
             // 复制other_nfa的转换，但需要调整ID偏移
             for (state::id_type i = 0; i < other_nfa.states.size(); ++i) {
-                const auto& other_state = other_nfa.states[i];
-                for (const auto& [input, id_list] : other_state.get_transitions()) {
-                    for (auto id : id_list) {
-                        this->add_transition(i + offset, input, id + offset);
+                const auto& other_state          = other_nfa.states[i];
+                const auto& other_transition_map = other_state.get_transition_map();
+
+                // 复制除了最后的epsilon转换
+                for (int input_idx = 0; input_idx < other_transition_map.size() - 1;
+                     input_idx++) {
+                    if (not other_transition_map[input_idx].empty()) {
+                        char input_char = static_cast<char>(input_idx);
+
+                        for (auto id : other_transition_map[input_idx]) {
+                            this->add_transition(i + offset, input_char, id + offset);
+                        }
                     }
+                }
+
+                // 处理epsilon转换
+                for (auto id : other_transition_map[other_state.epsilon_id]) {
+                    this->add_epsilon_transition(i + offset, id + offset);
                 }
             }
 
