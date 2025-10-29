@@ -21,15 +21,25 @@ namespace regex {
        private:
         class state {
            public:
-            using id_t        = nfa::state::id_t;
+            // DFA状态id采用和NFA状态id相同类型, 但二者是是两个不同的概念
+            using id_t = nfa::state::id_t;
+
+            // NFA状态集类型
             using state_set_t = std::set<id_t>;
+
+            // DFA状态转换表类型
             using transition_map_t =
                 std::array<id_t, std::tuple_size_v<nfa::state::transition_map_t>>;
 
            private:
-            state_set_t nfa_states;       // 对应NFA状态集合
-            transition_map_t transitions; // 转换表
-            bool final;                   // 是否为最终状态
+            // 对应NFA状态集合
+            state_set_t nfa_states;
+
+            // DFA状态转换表
+            transition_map_t transitions;
+
+            // 是否为最终状态
+            bool final;
 
            public:
             // 构造函数初始化转换表为无效值
@@ -212,14 +222,14 @@ namespace regex {
                     }
 
                     // 添加转换 - 修复：每次都重新获取引用以避免引用失效
-                    states[current_id].set_transition(input_char, next_id);
+                    this->states[current_id].set_transition(input_char, next_id);
                 }
             }
 
             // 记录最终状态
-            for (state::id_t i = 0; i < states.size(); ++i) {
-                if (states[i].is_final()) {
-                    final_states.push_back(i);
+            for (state::id_t i = 0; i < this->states.size(); ++i) {
+                if (this->states[i].is_final()) {
+                    this->final_states.push_back(i);
                 }
             }
         }
@@ -247,7 +257,7 @@ namespace regex {
         // 匹配算法：检查字符串是否与DFA匹配
         bool match(std::string_view str) const
         {
-            if (states.empty()) {
+            if (this->states.empty()) {
                 return false; // 没有状态，无法匹配
             }
 
@@ -255,11 +265,11 @@ namespace regex {
 
             for (char c : str) {
                 // 边界检查：确保current_state在有效范围内
-                if (current_state >= states.size()) {
+                if (current_state >= this->states.size()) {
                     return false; // 状态越界，匹配失败
                 }
 
-                const auto& current_dfa_state = states[current_state];
+                const auto& current_dfa_state = this->states[current_state];
                 // 检查转换是否有效（使用特殊值表示无效转换）
                 state::id_t next_state = current_dfa_state.get_transition(c);
                 if (next_state == std::numeric_limits<state::id_t>::max()) {
@@ -271,29 +281,31 @@ namespace regex {
             }
 
             // 检查最终状态是否为接受状态
-            return std::find(final_states.begin(), final_states.end(), current_state)
-                   != final_states.end();
+            return std::find(this->final_states.begin(), this->final_states.end(),
+                             current_state)
+                   != this->final_states.end();
         }
 
         // 检查是否匹配空字符串
         bool match_empty() const
         {
-            if (states.empty()) {
+            if (this->states.empty()) {
                 return false;
             }
             // 边界检查：确保this->start_state在有效范围内
-            if (this->start_state >= states.size()) {
+            if (this->start_state >= this->states.size()) {
                 return false;
             }
-            return std::find(final_states.begin(), final_states.end(), this->start_state)
-                   != final_states.end();
+            return std::find(this->final_states.begin(), this->final_states.end(),
+                             this->start_state)
+                   != this->final_states.end();
         }
 
         // 查找匹配：检查输入字符串中是否存在匹配模式的子串
         // 返回匹配的起始位置，-1表示未找到匹配
         int find_match(std::string_view str) const
         {
-            if (states.empty()) {
+            if (this->states.empty()) {
                 return -1; // 没有状态，无法匹配
             }
 
@@ -306,11 +318,11 @@ namespace regex {
                     char c = str[i];
 
                     // 边界检查：确保current_state在有效范围内
-                    if (current_state >= states.size()) {
+                    if (current_state >= this->states.size()) {
                         break; // 状态越界，此路径匹配失败
                     }
 
-                    const auto& current_dfa_state = states[current_state];
+                    const auto& current_dfa_state = this->states[current_state];
                     // 检查转换是否有效（使用特殊值表示无效转换）
                     state::id_t next_state = current_dfa_state.get_transition(c);
                     if (next_state == std::numeric_limits<state::id_t>::max()) {
@@ -321,8 +333,9 @@ namespace regex {
                     current_state = next_state;
 
                     // 检查当前位置是否为接受状态
-                    if (std::find(final_states.begin(), final_states.end(), current_state)
-                        != final_states.end()) {
+                    if (std::find(this->final_states.begin(), this->final_states.end(),
+                                  current_state)
+                        != this->final_states.end()) {
                         // 找到匹配，返回起始位置
                         return static_cast<int>(start_pos);
                     }
@@ -340,7 +353,7 @@ namespace regex {
         // 获取DFA的状态数量
         size_t get_state_count() const
         {
-            return states.size();
+            return this->states.size();
         }
     };
 
