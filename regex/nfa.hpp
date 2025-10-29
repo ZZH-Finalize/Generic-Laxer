@@ -1,29 +1,74 @@
 #pragma once
 
-#include "state.hpp"
 #include <bitset>
 #include <cstddef>
 #include <cstdint>
 #include <format>
 #include <iterator>
-#include <map>
-#include <set>
 #include <exception>
+#include <limits>
 #include <stdexcept>
 #include <string_view>
 #include <type_traits>
-#include <unordered_map>
 #include <vector>
 
 namespace regex {
 
+    inline constexpr std::bitset<256> ascii_printable_chars = [] {
+        std::bitset<256> bs;
+        for (int i = ' '; i <= '~'; ++i) {
+            bs.set(i);
+        }
+        return bs;
+    }();
+
     class nfa {
+       public:
+        class state {
+           public:
+            using id_t         = std::uint32_t;
+            using transition_t = std::vector<id_t>;
+            using transition_map_t =
+                std::array<transition_t, std::numeric_limits<unsigned char>::max() + 1>;
+
+           private:
+            transition_t epsilon_transitions;
+            transition_map_t char_transitions;
+
+           public:
+            inline void add_transition(char input, id_t to)
+            {
+                this->char_transitions[input].push_back(to);
+            }
+
+            inline void add_epsilon_transition(id_t to)
+            {
+                this->epsilon_transitions.push_back(to);
+            }
+
+            // 获取转换映射的常量引用，用于复制NFA结构
+            const transition_map_t& get_transition_map(void) const noexcept
+            {
+                return this->char_transitions;
+            }
+
+            const transition_t& get_transition(id_t id) const
+            {
+                return this->char_transitions[id];
+            }
+
+            const transition_t& get_epsilon_transition(void) const
+            {
+                return this->epsilon_transitions;
+            }
+        };
+
        private:
         using charset_t = std::bitset<256>;
         using states_t  = std::vector<state>;
 
         states_t states;
-        state::id_type start, final;
+        state::id_t start, final;
 
         explicit nfa()
         {
@@ -31,13 +76,13 @@ namespace regex {
             this->set_final(this->add_state());
         }
 
-        state::id_type add_state(void)
+        state::id_t add_state(void)
         {
             this->states.emplace_back();
             return this->states.size() - 1;
         }
 
-        void check_state_valid(state::id_type state_n) const
+        void check_state_valid(state::id_t state_n) const
         {
             if (state_n >= this->states.size()) {
                 throw std::out_of_range(std::format("state_n({}) >= states.size({})",
@@ -45,21 +90,21 @@ namespace regex {
             }
         }
 
-        void set_start(state::id_type start)
+        void set_start(state::id_t start)
         {
             this->check_state_valid(start);
 
             this->start = start;
         }
 
-        void set_final(state::id_type final)
+        void set_final(state::id_t final)
         {
             this->check_state_valid(final);
 
             this->final = final;
         }
 
-        void add_transition(state::id_type state, char input, state::id_type to)
+        void add_transition(state::id_t state, char input, state::id_t to)
         {
             this->states.at(state).add_transition(input, to);
         }
@@ -78,7 +123,7 @@ namespace regex {
             }
         }
 
-        void add_epsilon_transition(state::id_type state, state::id_type to)
+        void add_epsilon_transition(state::id_t state, state::id_t to)
         {
             this->states.at(state).add_epsilon_transition(to);
         }
@@ -96,7 +141,7 @@ namespace regex {
             }
 
             // 复制other_nfa的转换，但需要调整ID偏移
-            for (state::id_type i = 0; i < other_nfa.states.size(); ++i) {
+            for (state::id_t i = 0; i < other_nfa.states.size(); ++i) {
                 const auto& other_state          = other_nfa.states[i];
                 const auto& other_transition_map = other_state.get_transition_map();
 
@@ -142,15 +187,15 @@ namespace regex {
         void select_with(const nfa& other)
         {
             // 保存当前NFA的原始起始和最终状态
-            state::id_type original_start = this->get_start();
-            state::id_type original_final = this->get_final();
+            state::id_t original_start = this->get_start();
+            state::id_t original_final = this->get_final();
 
             // 使用公共方法合并other的状态和转换
             std::size_t offset = this->merge_nfa_states(other);
 
             // 创建新的起始状态和最终状态
-            state::id_type new_start = this->add_state();
-            state::id_type new_final = this->add_state();
+            state::id_t new_start = this->add_state();
+            state::id_t new_final = this->add_state();
 
             // 从新的起始状态到原来的两个NFA的起始状态添加epsilon转换
             this->add_epsilon_transition(new_start, original_start);
@@ -195,17 +240,17 @@ namespace regex {
             return result;
         }
 
-        state::id_type get_start(void) const noexcept
+        state::id_t get_start(void) const noexcept
         {
             return this->start;
         }
 
-        state::id_type get_final(void) const noexcept
+        state::id_t get_final(void) const noexcept
         {
             return this->final;
         }
 
-        const state& get_state(state::id_type state) const noexcept
+        const state& get_state(state::id_t state) const noexcept
         {
             return this->states.at(state);
         }
@@ -221,16 +266,16 @@ namespace regex {
             nfa result;
 
             // 保存当前NFA的原始起始和最终状态
-            state::id_type original_start = this->get_start();
-            state::id_type original_final = this->get_final();
+            state::id_t original_start = this->get_start();
+            state::id_t original_final = this->get_final();
 
             // 使用公共方法合并other的状态和转换
             std::size_t offset       = result.merge_nfa_states(*this);
             std::size_t other_offset = result.merge_nfa_states(other);
 
             // 创建新的起始状态和最终状态
-            state::id_type new_start = result.add_state();
-            state::id_type new_final = result.add_state();
+            state::id_t new_start = result.add_state();
+            state::id_t new_final = result.add_state();
 
             // 从新的起始状态到原来的两个NFA的起始状态添加epsilon转换
             result.add_epsilon_transition(new_start, original_start + offset);
@@ -502,8 +547,8 @@ namespace regex {
                     std::size_t right_offset = choice_nfa.merge_nfa_states(right);
 
                     // 创建新的起始和结束状态
-                    state::id_type new_start = choice_nfa.add_state();
-                    state::id_type new_final = choice_nfa.add_state();
+                    state::id_t new_start = choice_nfa.add_state();
+                    state::id_t new_final = choice_nfa.add_state();
 
                     // 从新起始状态到左右NFA的起始状态添加epsilon转换
                     choice_nfa.add_epsilon_transition(new_start,
@@ -613,11 +658,11 @@ namespace regex {
 
                         // 根据量词类型修改NFA
                         // 保存原始的start和final状态ID，因为add_state会改变base的状态
-                        state::id_type original_start = base.get_start();
-                        state::id_type original_final = base.get_final();
+                        state::id_t original_start = base.get_start();
+                        state::id_t original_final = base.get_final();
 
-                        state::id_type new_start = base.add_state();
-                        state::id_type new_final = base.add_state();
+                        state::id_t new_start = base.add_state();
+                        state::id_t new_final = base.add_state();
 
                         if (quantifier == '*') {
                             // a* : 可以匹配0次或多次

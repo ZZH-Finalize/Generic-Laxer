@@ -7,42 +7,47 @@
 #include <exception>
 #include <stdexcept>
 #include <string_view>
+#include <tuple>
 #include <type_traits>
 #include <vector>
 #include <queue>
 #include <limits>
 #include <algorithm>
+#include <map>
 
 namespace regex {
 
     class dfa {
-       private:
-        using state_set          = std::set<state::id_type>;
-        using dfa_state_id       = state::id_type;
-        using dfa_transition_map = std::array<dfa_state_id, 256>;
+       public:
+        class state {
+           public:
+            using id_t        = nfa::state::id_t;
+            using state_set_t = std::set<id_t>;
+            using transition_map_t =
+                std::array<id_t, std::tuple_size_v<nfa::state::transition_map_t>>;
 
-        struct dfa_state
-        {
-            state_set nfa_states;           // 对应NFA状态集合
-            dfa_transition_map transitions; // 转换表
-            bool is_final;                  // 是否为最终状态
+            state_set_t nfa_states;       // 对应NFA状态集合
+            transition_map_t transitions; // 转换表
+            bool is_final;                // 是否为最终状态
 
             // 构造函数初始化转换表为无效值
-            dfa_state(): transitions(), nfa_states(), is_final(false)
+            explicit state(): transitions(), nfa_states(), is_final(false)
             {
                 std::fill(transitions.begin(), transitions.end(),
-                          std::numeric_limits<dfa_state_id>::max());
+                          std::numeric_limits<id_t>::max());
             }
         };
 
-        std::vector<dfa_state> states;
-        dfa_state_id start_state;
-        std::vector<dfa_state_id> final_states;
+       private:
+        std::vector<state> states;
+        state::id_t start_state;
+        std::vector<state::id_t> final_states;
 
         // 计算epsilon闭包
-        state_set epsilon_closure(const state_set& states_set, const nfa& input_nfa) const
+        state::state_set_t epsilon_closure(const state::state_set_t& states_set,
+                                           const nfa& input_nfa) const
         {
-            state_set closure = states_set;
+            state::state_set_t closure = states_set;
             std::vector<bool> in_closure(input_nfa.get_states().size(), false);
 
             // 标记初始状态在闭包中
@@ -53,13 +58,13 @@ namespace regex {
             }
 
             // 使用队列进行BFS遍历，避免无限循环
-            std::queue<state::id_type> work_queue;
+            std::queue<state::id_t> work_queue;
             for (auto state_id : states_set) {
                 work_queue.push(state_id);
             }
 
             while (!work_queue.empty()) {
-                state::id_type current_state = work_queue.front();
+                state::id_t current_state = work_queue.front();
                 work_queue.pop();
 
                 if (current_state >= input_nfa.get_states().size()) continue;
@@ -79,17 +84,18 @@ namespace regex {
             return closure;
         }
 
-        state_set epsilon_closure(state::id_type state_id, const nfa& input_nfa) const
+        state::state_set_t epsilon_closure(state::id_t state_id,
+                                           const nfa& input_nfa) const
         {
-            state_set single_set = {state_id};
+            state::state_set_t single_set = {state_id};
             return epsilon_closure(single_set, input_nfa);
         }
 
         // 计算从给定状态集通过指定输入字符能到达的状态集的epsilon闭包
-        state_set move(const state_set& states_set, char input,
-                       const nfa& input_nfa) const
+        state::state_set_t move(const state::state_set_t& states_set, char input,
+                                const nfa& input_nfa) const
         {
-            state_set result;
+            state::state_set_t result;
             for (auto state_id : states_set) {
                 if (state_id >= input_nfa.get_states().size()) continue;
 
@@ -112,7 +118,7 @@ namespace regex {
         {
             if (input_nfa.get_states().empty()) {
                 // 如果NFA没有状态，创建一个空的DFA
-                dfa_state initial_state;
+                state initial_state;
                 initial_state.nfa_states = {};
                 initial_state.is_final   = false;
                 states.push_back(initial_state);
@@ -121,12 +127,14 @@ namespace regex {
             }
 
             // 计算初始状态的epsilon闭包
-            state_set initial_closure = epsilon_closure(input_nfa.get_start(), input_nfa);
-            std::map<state_set, dfa_state_id> state_map; // 映射NFA状态集到DFA状态ID
-            std::vector<state_set> unmarked;             // 未标记的DFA状态
+            state::state_set_t initial_closure =
+                epsilon_closure(input_nfa.get_start(), input_nfa);
+            std::map<state::state_set_t, state::id_t>
+                state_map;                            // 映射NFA状态集到DFA状态ID
+            std::vector<state::state_set_t> unmarked; // 未标记的DFA状态
 
             // 创建初始DFA状态
-            dfa_state initial_dfa_state;
+            state initial_dfa_state;
             initial_dfa_state.nfa_states = initial_closure;
             initial_dfa_state.is_final   = false;
             for (auto nfa_state : initial_closure) {
@@ -143,10 +151,10 @@ namespace regex {
 
             // 子集构造算法
             while (!unmarked.empty()) {
-                state_set current_set = unmarked.back();
+                state::state_set_t current_set = unmarked.back();
                 unmarked.pop_back();
 
-                dfa_state_id current_id = state_map[current_set];
+                state::id_t current_id = state_map[current_set];
 
                 // 尝试所有可能的输入字符
                 std::set<char> input_chars;
@@ -164,15 +172,15 @@ namespace regex {
 
                 // 对每个输入字符计算下一个状态
                 for (char input_char : input_chars) {
-                    state_set next_set = epsilon_closure(
+                    state::state_set_t next_set = epsilon_closure(
                         move(current_set, input_char, input_nfa), input_nfa);
                     if (next_set.empty()) continue;
 
-                    dfa_state_id next_id;
+                    state::id_t next_id;
                     auto it = state_map.find(next_set);
                     if (it == state_map.end()) {
                         // 创建新的DFA状态
-                        dfa_state new_dfa_state;
+                        state new_dfa_state;
                         new_dfa_state.nfa_states = next_set;
                         new_dfa_state.is_final   = false;
                         for (auto nfa_state : next_set) {
@@ -197,7 +205,7 @@ namespace regex {
             }
 
             // 记录最终状态
-            for (dfa_state_id i = 0; i < states.size(); ++i) {
+            for (state::id_t i = 0; i < states.size(); ++i) {
                 if (states[i].is_final) {
                     final_states.push_back(i);
                 }
@@ -231,7 +239,7 @@ namespace regex {
                 return false; // 没有状态，无法匹配
             }
 
-            dfa_state_id current_state = start_state;
+            state::id_t current_state = start_state;
 
             for (char c : str) {
                 // 边界检查：确保current_state在有效范围内
@@ -241,9 +249,9 @@ namespace regex {
 
                 const auto& current_dfa_state = states[current_state];
                 // 检查转换是否有效（使用特殊值表示无效转换）
-                dfa_state_id next_state =
+                state::id_t next_state =
                     current_dfa_state.transitions[static_cast<unsigned char>(c)];
-                if (next_state == std::numeric_limits<dfa_state_id>::max()) {
+                if (next_state == std::numeric_limits<state::id_t>::max()) {
                     // 没有对应的转换，匹配失败
                     return false;
                 }
@@ -280,7 +288,7 @@ namespace regex {
 
             // 尝试从每个位置开始匹配
             for (size_t start_pos = 0; start_pos < str.length(); ++start_pos) {
-                dfa_state_id current_state = start_state;
+                state::id_t current_state = start_state;
 
                 // 从当前位置开始尝试匹配
                 for (size_t i = start_pos; i < str.length(); ++i) {
@@ -293,9 +301,9 @@ namespace regex {
 
                     const auto& current_dfa_state = states[current_state];
                     // 检查转换是否有效（使用特殊值表示无效转换）
-                    dfa_state_id next_state =
+                    state::id_t next_state =
                         current_dfa_state.transitions[static_cast<unsigned char>(c)];
-                    if (next_state == std::numeric_limits<dfa_state_id>::max()) {
+                    if (next_state == std::numeric_limits<state::id_t>::max()) {
                         // 没有对应的转换，匹配失败
                         break;
                     }
@@ -327,19 +335,19 @@ namespace regex {
             for (const auto& dfa_state : states) {
                 for (size_t i = 0; i < dfa_state.transitions.size(); ++i) {
                     if (dfa_state.transitions[i]
-                        != std::numeric_limits<dfa_state_id>::max()) {
+                        != std::numeric_limits<state::id_t>::max()) {
                         input_chars.insert(static_cast<char>(i));
                     }
                 }
             }
 
             // 初始化等价类划分：将状态分为接受状态和非接受状态
-            std::vector<std::set<dfa_state_id>> partition;
-            std::set<dfa_state_id> final_state_set(final_states.begin(),
-                                                   final_states.end());
+            std::vector<std::set<state::id_t>> partition;
+            std::set<state::id_t> final_state_set(final_states.begin(),
+                                                  final_states.end());
 
-            std::set<dfa_state_id> non_final_states;
-            for (dfa_state_id i = 0; i < states.size(); ++i) {
+            std::set<state::id_t> non_final_states;
+            for (state::id_t i = 0; i < states.size(); ++i) {
                 if (final_state_set.find(i) == final_state_set.end()) {
                     non_final_states.insert(i);
                 }
@@ -359,7 +367,7 @@ namespace regex {
             while (changed) {
                 changed = false;
 
-                std::vector<std::set<dfa_state_id>> new_partition;
+                std::vector<std::set<state::id_t>> new_partition;
 
                 // 对每个等价类进行细化
                 for (const auto& equiv_class : partition) {
@@ -370,25 +378,24 @@ namespace regex {
                     }
 
                     // 使用每个输入字符对等价类进行细分
-                    std::map<std::vector<dfa_state_id>, std::vector<dfa_state_id>>
+                    std::map<std::vector<state::id_t>, std::vector<state::id_t>>
                         signatures;
 
-                    for (dfa_state_id state_id : equiv_class) {
+                    for (state::id_t state_id : equiv_class) {
                         // 为当前状态创建签名：对于每个输入字符，记录转换到的目标等价类
-                        std::vector<dfa_state_id> signature;
+                        std::vector<state::id_t> signature;
                         for (char input : input_chars) {
                             // 找到当前状态下通过输入字符转换到的状态
-                            dfa_state_id target_state =
+                            state::id_t target_state =
                                 states[state_id]
                                     .transitions[static_cast<unsigned char>(input)];
-                            if (target_state
-                                != std::numeric_limits<dfa_state_id>::max()) {
+                            if (target_state != std::numeric_limits<state::id_t>::max()) {
                                 // 找到目标状态所属的等价类
-                                dfa_state_id target_class_id = 0;
+                                state::id_t target_class_id = 0;
                                 for (size_t i = 0; i < partition.size(); ++i) {
                                     if (partition[i].find(target_state)
                                         != partition[i].end()) {
-                                        target_class_id = static_cast<dfa_state_id>(i);
+                                        target_class_id = static_cast<state::id_t>(i);
                                         break;
                                     }
                                 }
@@ -396,7 +403,7 @@ namespace regex {
                             } else {
                                 // 如果没有转换，使用特殊值表示
                                 signature.push_back(
-                                    std::numeric_limits<dfa_state_id>::max());
+                                    std::numeric_limits<state::id_t>::max());
                             }
                         }
 
@@ -408,8 +415,8 @@ namespace regex {
                     if (signatures.size() > 1) {
                         changed = true;
                         for (const auto& [_, state_group] : signatures) {
-                            std::set<dfa_state_id> new_class(state_group.begin(),
-                                                             state_group.end());
+                            std::set<state::id_t> new_class(state_group.begin(),
+                                                            state_group.end());
                             new_partition.push_back(new_class);
                         }
                     } else {
@@ -421,34 +428,34 @@ namespace regex {
             }
 
             // 创建新的最小化DFA
-            std::vector<dfa_state> new_states;
-            std::vector<dfa_state_id> new_final_states;
-            dfa_state_id new_start_state = 0;
+            std::vector<state> new_states;
+            std::vector<state::id_t> new_final_states;
+            state::id_t new_start_state = 0;
 
             // 为每个等价类创建一个新状态
-            std::map<dfa_state_id, dfa_state_id> old_to_new; // 旧状态ID到新状态ID的映射
+            std::map<state::id_t, state::id_t> old_to_new; // 旧状态ID到新状态ID的映射
 
             for (size_t i = 0; i < partition.size(); ++i) {
                 const auto& equiv_class = partition[i];
 
                 // 创建新状态，使用等价类中第一个状态的信息
-                dfa_state new_state;
-                dfa_state_id representative = *equiv_class.begin();
+                state new_state;
+                state::id_t representative = *equiv_class.begin();
 
                 new_state.nfa_states = states[representative].nfa_states;
                 new_state.is_final   = states[representative].is_final;
 
                 // 构建新状态的转换表
                 for (char input : input_chars) {
-                    dfa_state_id target_state =
+                    state::id_t target_state =
                         states[representative]
                             .transitions[static_cast<unsigned char>(input)];
-                    if (target_state != std::numeric_limits<dfa_state_id>::max()) {
+                    if (target_state != std::numeric_limits<state::id_t>::max()) {
                         // 找到目标状态所属的等价类ID
-                        dfa_state_id target_class_id = 0;
+                        state::id_t target_class_id = 0;
                         for (size_t j = 0; j < partition.size(); ++j) {
                             if (partition[j].find(target_state) != partition[j].end()) {
-                                target_class_id = static_cast<dfa_state_id>(j);
+                                target_class_id = static_cast<state::id_t>(j);
                                 break;
                             }
                         }
@@ -461,18 +468,18 @@ namespace regex {
                 new_states.push_back(new_state);
 
                 // 记录映射关系
-                for (dfa_state_id old_id : equiv_class) {
-                    old_to_new[old_id] = static_cast<dfa_state_id>(new_states.size() - 1);
+                for (state::id_t old_id : equiv_class) {
+                    old_to_new[old_id] = static_cast<state::id_t>(new_states.size() - 1);
                 }
 
                 // 检查这个等价类是否包含原起始状态
                 if (equiv_class.find(start_state) != equiv_class.end()) {
-                    new_start_state = static_cast<dfa_state_id>(new_states.size() - 1);
+                    new_start_state = static_cast<state::id_t>(new_states.size() - 1);
                 }
 
                 // 检查这个等价类是否包含最终状态
                 bool has_final = false;
-                for (dfa_state_id old_id : equiv_class) {
+                for (state::id_t old_id : equiv_class) {
                     if (std::find(final_states.begin(), final_states.end(), old_id)
                         != final_states.end()) {
                         has_final = true;
@@ -481,7 +488,7 @@ namespace regex {
                 }
                 if (has_final) {
                     new_final_states.push_back(
-                        static_cast<dfa_state_id>(new_states.size() - 1));
+                        static_cast<state::id_t>(new_states.size() - 1));
                 }
             }
 
