@@ -69,7 +69,8 @@ namespace regex {
         {
             charset_t final_charset =
                 is_negated ? (regex::ascii_printable_chars & ~chars) : chars;
-            for (std::size_t i = 0; i < 256; i++) {
+
+            for (std::size_t i = 0; i < final_charset.size(); i++) {
                 if (final_charset.test(i)) {
                     this->add_transition(this->get_start(), static_cast<char>(i),
                                          this->get_final());
