@@ -88,8 +88,8 @@ namespace regex {
         }
 
         // 计算epsilon闭包
-        state::state_set_t epsilon_closure(const state::state_set_t& states_set,
-                                           const nfa& input_nfa) const
+        static state::state_set_t epsilon_closure(const state::state_set_t& states_set,
+                                                  const nfa& input_nfa)
         {
             state::state_set_t closure = states_set;
             std::vector<bool> in_closure(input_nfa.get_states().size(), false);
@@ -128,16 +128,16 @@ namespace regex {
             return closure;
         }
 
-        state::state_set_t epsilon_closure(state::id_t state_id,
-                                           const nfa& input_nfa) const
+        static state::state_set_t epsilon_closure(state::id_t state_id,
+                                                  const nfa& input_nfa)
         {
             state::state_set_t single_set = {state_id};
-            return epsilon_closure(single_set, input_nfa);
+            return dfa::epsilon_closure(single_set, input_nfa);
         }
 
         // 计算从给定状态集通过指定输入字符能到达的状态集的epsilon闭包
-        state::state_set_t move(const state::state_set_t& states_set, char input,
-                                const nfa& input_nfa) const
+        static state::state_set_t move(const state::state_set_t& states_set, char input,
+                                       const nfa& input_nfa)
         {
             state::state_set_t result;
             for (auto state_id : states_set) {
@@ -168,7 +168,7 @@ namespace regex {
 
             // 计算初始状态的epsilon闭包
             state::state_set_t initial_closure =
-                epsilon_closure(input_nfa.get_start(), input_nfa);
+                dfa::epsilon_closure(input_nfa.get_start(), input_nfa);
             std::map<state::state_set_t, state::id_t>
                 state_map;                            // 映射NFA状态集到DFA状态ID
             std::vector<state::state_set_t> unmarked; // 未标记的DFA状态
@@ -204,8 +204,8 @@ namespace regex {
 
                 // 对每个输入字符计算下一个状态
                 for (char input_char : input_chars) {
-                    state::state_set_t next_set = epsilon_closure(
-                        move(current_set, input_char, input_nfa), input_nfa);
+                    state::state_set_t next_set = dfa::epsilon_closure(
+                        dfa::move(current_set, input_char, input_nfa), input_nfa);
                     if (next_set.empty()) continue;
 
                     state::id_t next_id;
