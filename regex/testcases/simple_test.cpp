@@ -1,6 +1,7 @@
 #include <iostream>
 #include <format>
 #include <string_view>
+#include <cassert>
 #include "regex/regex.hpp"
 
 int main(const int argc, const char** argv)
@@ -17,11 +18,28 @@ int main(const int argc, const char** argv)
         regex::dfa dfa_obj = regex::build_dfa(nfa_obj);
         std::cout << "DFA构造成功" << std::endl;
         
-        // 测试匹配
-        std::cout << "测试匹配 'a': " << dfa_obj.match("a") << std::endl;
-        std::cout << "测试匹配 'b': " << dfa_obj.match("b") << std::endl;
+        // 测试匹配并添加断言来验证结果
+        bool match_a = dfa_obj.match("a");
+        std::cout << "测试匹配 'a': " << match_a << std::endl;
+        assert(match_a == true);
+        
+        bool match_b = dfa_obj.match("b");
+        std::cout << "测试匹配 'b': " << match_b << std::endl;
+        assert(match_b == false);
+        
+        // 添加更多测试用例
+        bool match_aa = dfa_obj.match("aa");
+        std::cout << "测试匹配 'aa': " << match_aa << std::endl;
+        assert(match_aa == false);
+        
+        bool match_empty = dfa_obj.match("");
+        std::cout << "测试匹配 '': " << match_empty << std::endl;
+        assert(match_empty == false);
+
+        std::cout << "简单测试通过!" << std::endl;
     } catch (const std::exception& e) {
         std::cout << "异常: " << e.what() << std::endl;
+        return 1; // 测试失败返回非零值
     }
 
     return 0;

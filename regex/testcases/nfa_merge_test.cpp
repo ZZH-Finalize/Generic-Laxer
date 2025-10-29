@@ -1,6 +1,7 @@
 #include <iostream>
 #include <format>
 #include <string_view>
+#include <cassert>
 #include "regex/regex.hpp"
 
 void test_nfa_merge()
@@ -28,13 +29,27 @@ void test_nfa_merge()
     // 将合并后的NFA转换为DFA
     regex::dfa combined_dfa = regex::build_dfa(final_nfa);
 
-    // 测试合并后的DFA
+    // 测试合并后的DFA并添加断言
     std::cout << "\n--- 测试合并后的DFA ---" << std::endl;
-    std::cout << "匹配 'if': " << combined_dfa.match("if") << std::endl;
-    std::cout << "匹配 'variable': " << combined_dfa.match("variable") << std::endl;
-    std::cout << "匹配 '123': " << combined_dfa.match("123") << std::endl;
-    std::cout << "匹配 'else': " << combined_dfa.match("else") << std::endl; // 不应该匹配
-    std::cout << "匹配 '456': " << combined_dfa.match("456") << std::endl;   // 不应该匹配
+    bool result1 = combined_dfa.match("if");
+    std::cout << "匹配 'if': " << result1 << std::endl;
+    assert(result1 == true);
+    
+    bool result2 = combined_dfa.match("variable");
+    std::cout << "匹配 'variable': " << result2 << std::endl;
+    assert(result2 == true);
+    
+    bool result3 = combined_dfa.match("123");
+    std::cout << "匹配 '123': " << result3 << std::endl;
+    assert(result3 == true);
+    
+    bool result4 = combined_dfa.match("else"); // 不应该匹配
+    std::cout << "匹配 'else': " << result4 << std::endl;
+    assert(result4 == false);
+    
+    bool result5 = combined_dfa.match("456");   // 不应该匹配
+    std::cout << "匹配 '456': " << result5 << std::endl;
+    assert(result5 == false);
 
     // 测试更复杂的合并
     std::cout << "\n--- 测试复杂合并 ---" << std::endl;
@@ -49,10 +64,21 @@ void test_nfa_merge()
     regex::dfa complex_dfa = regex::build_dfa(complex_nfa);
 
     std::cout << "复杂合并DFA测试:" << std::endl;
-    std::cout << "匹配 'abc': " << complex_dfa.match("abc") << std::endl;
-    std::cout << "匹配 'xyz': " << complex_dfa.match("xyz") << std::endl;
-    std::cout << "匹配 '789': " << complex_dfa.match("789") << std::endl;
-    std::cout << "匹配 'hello': " << complex_dfa.match("hello") << std::endl;
+    bool result6 = complex_dfa.match("abc");
+    std::cout << "匹配 'abc': " << result6 << std::endl;
+    assert(result6 == true);
+    
+    bool result7 = complex_dfa.match("xyz");
+    std::cout << "匹配 'xyz': " << result7 << std::endl;
+    assert(result7 == true);
+    
+    bool result8 = complex_dfa.match("789");
+    std::cout << "匹配 '789': " << result8 << std::endl;
+    assert(result8 == true);
+    
+    bool result9 = complex_dfa.match("hello");
+    std::cout << "匹配 'hello': " << result9 << std::endl;
+    assert(result9 == false);
 
     // 验证每个单独的NFA仍然有效
     std::cout << "\n--- 验证原NFA未被修改 ---" << std::endl;
@@ -60,15 +86,29 @@ void test_nfa_merge()
     regex::dfa original_identifier_dfa = regex::build_dfa(identifier_nfa);
     regex::dfa original_number_dfa     = regex::build_dfa(number_nfa);
 
-    std::cout << "原关键字NFA匹配'if': " << original_keyword_dfa.match("if") << std::endl;
-    std::cout << "原关键字NFA匹配'variable': " << original_keyword_dfa.match("variable")
-              << std::endl;
-    std::cout << "原标识符NFA匹配'variable': "
-              << original_identifier_dfa.match("variable") << std::endl;
-    std::cout << "原标识符NFA匹配'if': " << original_identifier_dfa.match("if")
-              << std::endl;
-    std::cout << "原数字NFA匹配'123': " << original_number_dfa.match("123") << std::endl;
-    std::cout << "原数字NFA匹配'456': " << original_number_dfa.match("456") << std::endl;
+    bool result10 = original_keyword_dfa.match("if");
+    std::cout << "原关键字NFA匹配'if': " << result10 << std::endl;
+    assert(result10 == true);
+    
+    bool result11 = original_keyword_dfa.match("variable");
+    std::cout << "原关键字NFA匹配'variable': " << result11 << std::endl;
+    assert(result11 == false);
+    
+    bool result12 = original_identifier_dfa.match("variable");
+    std::cout << "原标识符NFA匹配'variable': " << result12 << std::endl;
+    assert(result12 == true);
+    
+    bool result13 = original_identifier_dfa.match("if");
+    std::cout << "原标识符NFA匹配'if': " << result13 << std::endl;
+    assert(result13 == false);
+    
+    bool result14 = original_number_dfa.match("123");
+    std::cout << "原数字NFA匹配'123': " << result14 << std::endl;
+    assert(result14 == true);
+    
+    bool result15 = original_number_dfa.match("456");
+    std::cout << "原数字NFA匹配'456': " << result15 << std::endl;
+    assert(result15 == false);
 }
 
 // 测试NFA合并的顺序是否影响结果
@@ -88,13 +128,39 @@ void test_merge_associativity()
     regex::nfa right_assoc = a_nfa | (b_nfa | c_nfa);
     regex::dfa right_dfa   = regex::build_dfa(right_assoc);
 
-    std::cout << "左侧结合 (a|b)|c 匹配 'a': " << left_dfa.match("a") << std::endl;
-    std::cout << "左侧结合 (a|b)|c 匹配 'b': " << left_dfa.match("b") << std::endl;
-    std::cout << "左侧结合 (a|b)|c 匹配 'c': " << left_dfa.match("c") << std::endl;
+    // 测试左侧结合的结果
+    bool left_result1 = left_dfa.match("a");
+    std::cout << "左侧结合 (a|b)|c 匹配 'a': " << left_result1 << std::endl;
+    assert(left_result1 == true);
+    
+    bool left_result2 = left_dfa.match("b");
+    std::cout << "左侧结合 (a|b)|c 匹配 'b': " << left_result2 << std::endl;
+    assert(left_result2 == true);
+    
+    bool left_result3 = left_dfa.match("c");
+    std::cout << "左侧结合 (a|b)|c 匹配 'c': " << left_result3 << std::endl;
+    assert(left_result3 == true);
+    
+    bool left_result4 = left_dfa.match("d");
+    std::cout << "左侧结合 (a|b)|c 匹配 'd': " << left_result4 << std::endl;
+    assert(left_result4 == false);
 
-    std::cout << "右侧结合 a|(b|c) 匹配 'a': " << right_dfa.match("a") << std::endl;
-    std::cout << "右侧结合 a|(b|c) 匹配 'b': " << right_dfa.match("b") << std::endl;
-    std::cout << "右侧结合 a|(b|c) 匹配 'c': " << right_dfa.match("c") << std::endl;
+    // 测试右侧结合的结果
+    bool right_result1 = right_dfa.match("a");
+    std::cout << "右侧结合 a|(b|c) 匹配 'a': " << right_result1 << std::endl;
+    assert(right_result1 == true);
+    
+    bool right_result2 = right_dfa.match("b");
+    std::cout << "右侧结合 a|(b|c) 匹配 'b': " << right_result2 << std::endl;
+    assert(right_result2 == true);
+    
+    bool right_result3 = right_dfa.match("c");
+    std::cout << "右侧结合 a|(b|c) 匹配 'c': " << right_result3 << std::endl;
+    assert(right_result3 == true);
+    
+    bool right_result4 = right_dfa.match("d");
+    std::cout << "右侧结合 a|(b|c) 匹配 'd': " << right_result4 << std::endl;
+    assert(right_result4 == false);
 }
 
 int main()
@@ -102,7 +168,7 @@ int main()
     test_nfa_merge();
     test_merge_associativity();
 
-    std::cout << "\n=== NFA直接合并测试完成 ===" << std::endl;
+    std::cout << "\n=== 所有NFA直接合并测试通过 ===" << std::endl;
     std::cout << "结论：NFA类现在支持直接合并操作，可以实现类似Flex的多规则并行匹配。"
               << std::endl;
 
