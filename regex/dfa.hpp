@@ -18,7 +18,7 @@
 namespace regex {
 
     class dfa {
-       public:
+       private:
         class state {
            public:
             using id_t        = nfa::state::id_t;
@@ -26,22 +26,56 @@ namespace regex {
             using transition_map_t =
                 std::array<id_t, std::tuple_size_v<nfa::state::transition_map_t>>;
 
+           private:
             state_set_t nfa_states;       // 对应NFA状态集合
             transition_map_t transitions; // 转换表
-            bool is_final;                // 是否为最终状态
+            bool final;                   // 是否为最终状态
 
+           public:
             // 构造函数初始化转换表为无效值
-            explicit state(): transitions(), nfa_states(), is_final(false)
+            explicit state(const state_set_t& nfa_states, bool is_final = false)
+                : nfa_states(nfa_states), final(is_final)
             {
                 std::fill(transitions.begin(), transitions.end(),
                           std::numeric_limits<id_t>::max());
             }
+
+            void set_final(bool is_final)
+            {
+                this->final = is_final;
+            }
+
+            bool is_final(void) const
+            {
+                return this->final;
+            }
+
+            void set_transition(char ch, id_t id)
+            {
+                this->transitions[ch] = id;
+            }
+
+            id_t get_transition(char ch) const
+            {
+                return this->transitions[ch];
+            }
+
+            const transition_map_t& get_transition_map(void) const
+            {
+                return this->transitions;
+            }
         };
 
-       private:
         std::vector<state> states;
         state::id_t start_state;
         std::vector<state::id_t> final_states;
+
+        state::id_t add_state(const state::state_set_t& nfa_states, bool is_final = false)
+        {
+            this->states.emplace_back(nfa_states, is_final);
+
+            return this->states.size() - 1;
+        }
 
         // 计算epsilon闭包
         state::state_set_t epsilon_closure(const state::state_set_t& states_set,
@@ -118,11 +152,7 @@ namespace regex {
         {
             if (input_nfa.get_states().empty()) {
                 // 如果NFA没有状态，创建一个空的DFA
-                state initial_state;
-                initial_state.nfa_states = {};
-                initial_state.is_final   = false;
-                states.push_back(initial_state);
-                start_state = 0;
+                this->start_state = this->add_state({});
                 return;
             }
 
@@ -134,23 +164,15 @@ namespace regex {
             std::vector<state::state_set_t> unmarked; // 未标记的DFA状态
 
             // 创建初始DFA状态
-            state initial_dfa_state;
-            initial_dfa_state.nfa_states = initial_closure;
-            initial_dfa_state.is_final   = false;
-            for (auto nfa_state : initial_closure) {
-                if (nfa_state == input_nfa.get_final()) {
-                    initial_dfa_state.is_final = true;
-                    break;
-                }
-            }
+            bool is_final     = initial_closure.contains(input_nfa.get_final());
+            this->start_state = this->add_state(initial_closure, is_final);
 
-            states.push_back(initial_dfa_state);
             state_map[initial_closure] = 0;
-            start_state                = 0;
+
             unmarked.push_back(initial_closure);
 
             // 子集构造算法
-            while (!unmarked.empty()) {
+            while (not unmarked.empty()) {
                 state::state_set_t current_set = unmarked.back();
                 unmarked.pop_back();
 
@@ -180,18 +202,9 @@ namespace regex {
                     auto it = state_map.find(next_set);
                     if (it == state_map.end()) {
                         // 创建新的DFA状态
-                        state new_dfa_state;
-                        new_dfa_state.nfa_states = next_set;
-                        new_dfa_state.is_final   = false;
-                        for (auto nfa_state : next_set) {
-                            if (nfa_state == input_nfa.get_final()) {
-                                new_dfa_state.is_final = true;
-                                break;
-                            }
-                        }
 
-                        next_id = states.size();
-                        states.push_back(new_dfa_state);
+                        next_id = this->add_state(
+                            next_set, next_set.contains(input_nfa.get_final()));
                         state_map[next_set] = next_id;
                         unmarked.push_back(next_set);
                     } else {
@@ -199,14 +212,13 @@ namespace regex {
                     }
 
                     // 添加转换 - 修复：每次都重新获取引用以避免引用失效
-                    states[current_id]
-                        .transitions[static_cast<unsigned char>(input_char)] = next_id;
+                    states[current_id].set_transition(input_char, next_id);
                 }
             }
 
             // 记录最终状态
             for (state::id_t i = 0; i < states.size(); ++i) {
-                if (states[i].is_final) {
+                if (states[i].is_final()) {
                     final_states.push_back(i);
                 }
             }
@@ -239,7 +251,7 @@ namespace regex {
                 return false; // 没有状态，无法匹配
             }
 
-            state::id_t current_state = start_state;
+            state::id_t current_state = this->start_state;
 
             for (char c : str) {
                 // 边界检查：确保current_state在有效范围内
@@ -249,8 +261,7 @@ namespace regex {
 
                 const auto& current_dfa_state = states[current_state];
                 // 检查转换是否有效（使用特殊值表示无效转换）
-                state::id_t next_state =
-                    current_dfa_state.transitions[static_cast<unsigned char>(c)];
+                state::id_t next_state = current_dfa_state.get_transition(c);
                 if (next_state == std::numeric_limits<state::id_t>::max()) {
                     // 没有对应的转换，匹配失败
                     return false;
@@ -270,11 +281,11 @@ namespace regex {
             if (states.empty()) {
                 return false;
             }
-            // 边界检查：确保start_state在有效范围内
-            if (start_state >= states.size()) {
+            // 边界检查：确保this->start_state在有效范围内
+            if (this->start_state >= states.size()) {
                 return false;
             }
-            return std::find(final_states.begin(), final_states.end(), start_state)
+            return std::find(final_states.begin(), final_states.end(), this->start_state)
                    != final_states.end();
         }
 
@@ -288,7 +299,7 @@ namespace regex {
 
             // 尝试从每个位置开始匹配
             for (size_t start_pos = 0; start_pos < str.length(); ++start_pos) {
-                state::id_t current_state = start_state;
+                state::id_t current_state = this->start_state;
 
                 // 从当前位置开始尝试匹配
                 for (size_t i = start_pos; i < str.length(); ++i) {
@@ -301,8 +312,7 @@ namespace regex {
 
                     const auto& current_dfa_state = states[current_state];
                     // 检查转换是否有效（使用特殊值表示无效转换）
-                    state::id_t next_state =
-                        current_dfa_state.transitions[static_cast<unsigned char>(c)];
+                    state::id_t next_state = current_dfa_state.get_transition(c);
                     if (next_state == std::numeric_limits<state::id_t>::max()) {
                         // 没有对应的转换，匹配失败
                         break;
@@ -323,179 +333,8 @@ namespace regex {
             return -1;
         }
 
-        // DFA最小化函数 - 使用Hopcroft算法
         void minimize()
         {
-            if (states.empty()) {
-                return; // 空DFA无需最小化
-            }
-
-            // 获取所有输入字符
-            std::set<char> input_chars;
-            for (const auto& dfa_state : states) {
-                for (size_t i = 0; i < dfa_state.transitions.size(); ++i) {
-                    if (dfa_state.transitions[i]
-                        != std::numeric_limits<state::id_t>::max()) {
-                        input_chars.insert(static_cast<char>(i));
-                    }
-                }
-            }
-
-            // 初始化等价类划分：将状态分为接受状态和非接受状态
-            std::vector<std::set<state::id_t>> partition;
-            std::set<state::id_t> final_state_set(final_states.begin(),
-                                                  final_states.end());
-
-            std::set<state::id_t> non_final_states;
-            for (state::id_t i = 0; i < states.size(); ++i) {
-                if (final_state_set.find(i) == final_state_set.end()) {
-                    non_final_states.insert(i);
-                }
-            }
-
-            // 添加接受状态集合（如果非空）
-            if (!final_state_set.empty()) {
-                partition.push_back(final_state_set);
-            }
-
-            // 添加非接受状态集合（如果非空）
-            if (!non_final_states.empty()) {
-                partition.push_back(non_final_states);
-            }
-
-            bool changed = true;
-            while (changed) {
-                changed = false;
-
-                std::vector<std::set<state::id_t>> new_partition;
-
-                // 对每个等价类进行细化
-                for (const auto& equiv_class : partition) {
-                    if (equiv_class.size() <= 1) {
-                        // 单元素集合不能再分割
-                        new_partition.push_back(equiv_class);
-                        continue;
-                    }
-
-                    // 使用每个输入字符对等价类进行细分
-                    std::map<std::vector<state::id_t>, std::vector<state::id_t>>
-                        signatures;
-
-                    for (state::id_t state_id : equiv_class) {
-                        // 为当前状态创建签名：对于每个输入字符，记录转换到的目标等价类
-                        std::vector<state::id_t> signature;
-                        for (char input : input_chars) {
-                            // 找到当前状态下通过输入字符转换到的状态
-                            state::id_t target_state =
-                                states[state_id]
-                                    .transitions[static_cast<unsigned char>(input)];
-                            if (target_state != std::numeric_limits<state::id_t>::max()) {
-                                // 找到目标状态所属的等价类
-                                state::id_t target_class_id = 0;
-                                for (size_t i = 0; i < partition.size(); ++i) {
-                                    if (partition[i].find(target_state)
-                                        != partition[i].end()) {
-                                        target_class_id = static_cast<state::id_t>(i);
-                                        break;
-                                    }
-                                }
-                                signature.push_back(target_class_id);
-                            } else {
-                                // 如果没有转换，使用特殊值表示
-                                signature.push_back(
-                                    std::numeric_limits<state::id_t>::max());
-                            }
-                        }
-
-                        // 使用签名对状态进行分组
-                        signatures[signature].push_back(state_id);
-                    }
-
-                    // 检查是否需要分割当前等价类
-                    if (signatures.size() > 1) {
-                        changed = true;
-                        for (const auto& [_, state_group] : signatures) {
-                            std::set<state::id_t> new_class(state_group.begin(),
-                                                            state_group.end());
-                            new_partition.push_back(new_class);
-                        }
-                    } else {
-                        new_partition.push_back(equiv_class);
-                    }
-                }
-
-                partition = new_partition;
-            }
-
-            // 创建新的最小化DFA
-            std::vector<state> new_states;
-            std::vector<state::id_t> new_final_states;
-            state::id_t new_start_state = 0;
-
-            // 为每个等价类创建一个新状态
-            std::map<state::id_t, state::id_t> old_to_new; // 旧状态ID到新状态ID的映射
-
-            for (size_t i = 0; i < partition.size(); ++i) {
-                const auto& equiv_class = partition[i];
-
-                // 创建新状态，使用等价类中第一个状态的信息
-                state new_state;
-                state::id_t representative = *equiv_class.begin();
-
-                new_state.nfa_states = states[representative].nfa_states;
-                new_state.is_final   = states[representative].is_final;
-
-                // 构建新状态的转换表
-                for (char input : input_chars) {
-                    state::id_t target_state =
-                        states[representative]
-                            .transitions[static_cast<unsigned char>(input)];
-                    if (target_state != std::numeric_limits<state::id_t>::max()) {
-                        // 找到目标状态所属的等价类ID
-                        state::id_t target_class_id = 0;
-                        for (size_t j = 0; j < partition.size(); ++j) {
-                            if (partition[j].find(target_state) != partition[j].end()) {
-                                target_class_id = static_cast<state::id_t>(j);
-                                break;
-                            }
-                        }
-
-                        new_state.transitions[static_cast<unsigned char>(input)] =
-                            target_class_id;
-                    }
-                }
-
-                new_states.push_back(new_state);
-
-                // 记录映射关系
-                for (state::id_t old_id : equiv_class) {
-                    old_to_new[old_id] = static_cast<state::id_t>(new_states.size() - 1);
-                }
-
-                // 检查这个等价类是否包含原起始状态
-                if (equiv_class.find(start_state) != equiv_class.end()) {
-                    new_start_state = static_cast<state::id_t>(new_states.size() - 1);
-                }
-
-                // 检查这个等价类是否包含最终状态
-                bool has_final = false;
-                for (state::id_t old_id : equiv_class) {
-                    if (std::find(final_states.begin(), final_states.end(), old_id)
-                        != final_states.end()) {
-                        has_final = true;
-                        break;
-                    }
-                }
-                if (has_final) {
-                    new_final_states.push_back(
-                        static_cast<state::id_t>(new_states.size() - 1));
-                }
-            }
-
-            // 更新DFA
-            states       = std::move(new_states);
-            start_state  = new_start_state;
-            final_states = std::move(new_final_states);
         }
 
         // 获取DFA的状态数量
