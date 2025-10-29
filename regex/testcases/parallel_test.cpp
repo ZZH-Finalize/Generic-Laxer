@@ -27,7 +27,7 @@ void test_parallel_nfa()
     std::cout << "组合NFA: " << combined_nfa.to_string() << std::endl;
     
     // 将NFA转换为DFA进行测试
-    regex::dfa combined_dfa = regex::build_dfa(combined_nfa);
+    regex::dfa combined_dfa = regex::to_dfa(combined_nfa);
     
     // 测试各种输入并添加断言
     std::cout << "\n--- 测试组合DFA ---" << std::endl;

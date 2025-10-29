@@ -93,7 +93,7 @@ namespace regex {
         }
 
        public:
-        friend dfa build_dfa(const nfa& nfa);
+        friend dfa to_dfa(const nfa& nfa);
         friend dfa minimize(const dfa& dfa); // 添加友元函数用于最小化
 
         // 匹配算法：检查字符串是否与DFA匹配

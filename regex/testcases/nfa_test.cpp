@@ -25,7 +25,7 @@ int main(const int argc, const char** argv)
         std::cout << "最终状态ID: " << nfa_obj.get_final() << std::endl;
 
         // 将NFA转换为DFA并测试匹配
-        regex::dfa dfa_obj = regex::build_dfa(nfa_obj);
+        regex::dfa dfa_obj = regex::to_dfa(nfa_obj);
         
         // 测试匹配结果
         bool match_a = dfa_obj.match("a");
