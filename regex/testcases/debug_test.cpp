@@ -12,7 +12,7 @@ int main(const int argc, const char** argv)
 {
     // 基本测试
     std::cout << "=== 基本测试 ===" << std::endl;
-    regex::dfa dfa("hello world");
+    regex::dfa dfa = regex::build_dfa("hello world");
     print_match(dfa, "hello world");
     print_match(dfa, "hello");
     print_match(dfa, "world");
@@ -21,14 +21,14 @@ int main(const int argc, const char** argv)
 
     // 单字符测试
     std::cout << "\n=== 单字符测试 ===" << std::endl;
-    regex::dfa dfa_single("a");
+    regex::dfa dfa_single = regex::build_dfa("a");
     print_match(dfa_single, "a");
     print_match(dfa_single, "b");
     print_match(dfa_single, "aa");
 
     // 简单模式测试
     std::cout << "\n=== 简单模式测试 ===" << std::endl;
-    regex::dfa dfa_simple("ab");
+    regex::dfa dfa_simple = regex::build_dfa("ab");
     print_match(dfa_simple, "ab");
     print_match(dfa_simple, "a");
     print_match(dfa_simple, "b");

@@ -15,20 +15,20 @@ int main(const int argc, const char** argv)
 
     // 测试1: 简单字符串匹配
     std::cout << "\n--- 测试1: 简单字符串 ---" << std::endl;
-    regex::dfa dfa1("abc");
+    regex::dfa dfa1 = regex::build_dfa("abc");
     print_match(dfa1, "abc", "abc匹配abc");
     print_match(dfa1, "ab", "abc匹配ab");
     print_match(dfa1, "abcd", "abc匹配abcd");
 
     // 测试2: 单字符匹配
     std::cout << "\n--- 测试2: 单字符 ---" << std::endl;
-    regex::dfa dfa2("x");
+    regex::dfa dfa2 = regex::build_dfa("x");
     print_match(dfa2, "x", "x匹配x");
     print_match(dfa2, "y", "x匹配y");
 
     // 测试3: 特殊字符（如果支持的话）
     std::cout << "\n--- 测试3: 点号通配符 ---" << std::endl;
-    regex::dfa dfa3(".");
+    regex::dfa dfa3 = regex::build_dfa(".");
     print_match(dfa3, "a", ".匹配a");
     print_match(dfa3, "z", ".匹配z");
     print_match(dfa3, "1", ".匹配1");

@@ -34,7 +34,7 @@ int main(const int argc, const char** argv)
     // 测试模式 "abc"
     std::cout << "\n--- 测试模式 'abc' ---" << std::endl;
     {
-        regex::dfa dfa("abc");
+        regex::dfa dfa = regex::build("abc");
         
         // 完全匹配测试
         print_match_result(dfa, "abc", "abc完全匹配abc", true);
@@ -54,7 +54,7 @@ int main(const int argc, const char** argv)
     // 测试模式 "a"
     std::cout << "\n--- 测试模式 'a' ---" << std::endl;
     {
-        regex::dfa dfa("a");
+        regex::dfa dfa = regex::build("a");
         
         print_match_result(dfa, "a", "a完全匹配a", true);
         print_match_result(dfa, "aa", "a完全匹配aa", false);  // 整个aa不匹配模式a
@@ -69,7 +69,7 @@ int main(const int argc, const char** argv)
     // 测试模式 "ab*c" (包含量词)
     std::cout << "\n--- 测试模式 'ab*c' ---" << std::endl;
     {
-        regex::dfa dfa("ab*c");
+        regex::dfa dfa = regex::build("ab*c");
         
         print_match_result(dfa, "ac", "ab*c完全匹配ac", true);
         print_match_result(dfa, "abc", "ab*c完全匹配abc", true);

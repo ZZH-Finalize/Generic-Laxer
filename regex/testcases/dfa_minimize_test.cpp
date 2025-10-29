@@ -1,4 +1,4 @@
-#include "dfa.hpp"
+#include "regex.hpp"
 #include <iostream>
 
 int main() {
@@ -6,7 +6,7 @@ int main() {
     // 例如: (a|b)*a(a|b) - 匹配以'a'为倒数第二个字符的字符串
     
     try {
-        regex::dfa dfa = regex::dfa::from("(a|b)*a(a|b)");
+        regex::dfa dfa = regex::build_dfa("(a|b)*a(a|b)");
         
         std::cout << "原始DFA状态数: " << dfa.get_state_count() << std::endl;
         
@@ -20,7 +20,7 @@ int main() {
         std::cout << "原始DFA匹配 'aab': " << dfa.match("aab") << std::endl;
         
         // 最小化DFA
-        dfa.minimize();
+        dfa = regex::minimize(dfa);
         
         std::cout << "最小化后DFA状态数: " << dfa.get_state_count() << std::endl;
         

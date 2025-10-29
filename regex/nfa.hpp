@@ -14,6 +14,8 @@
 
 namespace regex {
 
+    class builder;
+
     inline constexpr std::bitset<256> ascii_printable_chars = [] {
         std::bitset<256> bs;
         for (int i = ' '; i <= '~'; ++i) {
@@ -211,6 +213,8 @@ namespace regex {
         }
 
        public:
+        friend regex::builder;
+
         class regex_error: public std::runtime_error {
            public:
             explicit regex_error(const std::string& msg): std::runtime_error(msg)
@@ -292,6 +296,7 @@ namespace regex {
             return result;
         }
 
+       private:
         // NFA builder类，包含所有构造相关的静态方法
         class builder {
            public:

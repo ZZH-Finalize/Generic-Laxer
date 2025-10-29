@@ -3,3 +3,4 @@
 #include "nfa.hpp"
 #include "dfa.hpp"
 #include "formatter.hpp"
+#include "builder.hpp"

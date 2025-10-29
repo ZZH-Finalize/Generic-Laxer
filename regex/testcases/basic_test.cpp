@@ -10,7 +10,7 @@ void print_match(const regex::dfa& dfa, const std::string_view& str)
 
 int main(const int argc, const char** argv)
 {
-    regex::dfa dfa("hello world");
+    regex::dfa dfa = regex::build_dfa("hello world");
 
     print_match(dfa, "hello world");
 
