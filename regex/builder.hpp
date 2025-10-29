@@ -3,32 +3,15 @@
 #include "dfa.hpp"
 
 namespace regex {
-    class builder {
-       public:
-        static inline nfa from(std::string_view exp)
-        {
-            return nfa::builder::build(exp);
-        }
 
-        static inline dfa from(const nfa& nfa)
-        {
-            return dfa::builder::build(nfa);
-        }
-
-        static inline dfa minimize(const dfa& dfa)
-        {
-            return dfa;
-        }
-    };
-
-    static inline nfa build_nfa(std::string_view exp)
+    inline nfa build_nfa(std::string_view exp)
     {
-        return builder::from(exp);
+        return nfa::builder::build(exp);
     }
 
-    static inline dfa build_dfa(const nfa& nfa)
+    inline dfa build_dfa(const nfa& nfa)
     {
-        return builder::from(nfa);
+        return dfa::builder::build(nfa);
     }
 
     static inline dfa build_dfa(std::string_view exp)
@@ -46,9 +29,9 @@ namespace regex {
         return build_dfa(exp);
     }
 
-    static inline dfa minimize(const dfa& dfa)
+    inline dfa minimize(const dfa& dfa)
     {
-        return builder::minimize(dfa);
+        return dfa::builder::minimize(dfa);
     }
 
 } // namespace regex

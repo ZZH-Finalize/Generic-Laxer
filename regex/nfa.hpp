@@ -14,8 +14,6 @@
 
 namespace regex {
 
-    class builder;
-
     inline constexpr std::bitset<256> ascii_printable_chars = [] {
         std::bitset<256> bs;
         for (int i = ' '; i <= '~'; ++i) {
@@ -213,7 +211,7 @@ namespace regex {
         }
 
        public:
-        friend regex::builder;
+        friend nfa build_nfa(std::string_view exp);
 
         class regex_error: public std::runtime_error {
            public:
