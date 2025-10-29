@@ -30,7 +30,7 @@ for _, file in ipairs(os.files('regex/testcases/*.cpp')) do
         set_kind('binary')
         set_default(false)
         add_files(file)
-        add_tests('default')
+        add_tests('default', {timeout = 1})
         -- add_tests("args", {runargs = {"foo", "bar"}})
         -- add_tests("pass_output", {trim_output = true, runargs = "foo", pass_outputs = "hello foo"})
         -- add_tests("fail_output", {fail_outputs = {"hello2 .*", "hello xmake"}})
