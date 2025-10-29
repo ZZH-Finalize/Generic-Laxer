@@ -38,7 +38,7 @@ namespace regex {
     template<typename T>
     concept regexp_res = std::is_same_v<T, nfa> || std::is_same_v<T, dfa>;
 
-    // 2. 定义 regexp_op：F 必须能接受 T 并返回 dfa
+    // 定义 regexp_op：F 必须能接受 const nfa& | const dfa& 并返回 dfa
     template<typename F, typename T>
     concept regexp_op = regexp_res<T> && std::invocable<F, const T&>
                         && std::same_as<std::invoke_result_t<F, const T&>, dfa>;
