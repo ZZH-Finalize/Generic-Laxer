@@ -188,8 +188,13 @@ namespace regex {
             return -1;
         }
 
+        const auto& get_final_states(void) const
+        {
+            return this->final_states;
+        }
+
         // 获取DFA的状态数量
-        size_t get_state_count() const
+        size_t get_state_count(void) const
         {
             return this->states.size();
         }
@@ -347,7 +352,7 @@ namespace regex {
                 }
 
                 // 记录最终状态
-                for (dfa::state::id_t i = 0; i < result_dfa.states.size(); ++i) {
+                for (dfa::state::id_t i = 0; i < result_dfa.states.size(); i++) {
                     if (result_dfa.states[i].is_final()) {
                         result_dfa.final_states.push_back(i);
                     }
@@ -369,7 +374,7 @@ namespace regex {
                                                            input_dfa.final_states.end());
 
                 std::set<dfa::state::id_t> non_final_states;
-                for (dfa::state::id_t i = 0; i < input_dfa.states.size(); ++i) {
+                for (dfa::state::id_t i = 0; i < input_dfa.states.size(); i++) {
                     if (final_state_set.find(i) == final_state_set.end()) {
                         non_final_states.insert(i);
                     }
@@ -505,14 +510,14 @@ namespace regex {
                 // 创建映射：原状态ID -> 最小化后状态ID
                 std::map<dfa::state::id_t, dfa::state::id_t> state_mapping;
 
-                for (dfa::state::id_t i = 0; i < partition.size(); ++i) {
+                for (dfa::state::id_t i = 0; i < partition.size(); i++) {
                     for (auto state_id : partition[i]) {
                         state_mapping[state_id] = i;
                     }
                 }
 
                 // 构建最小化的DFA状态
-                for (dfa::state::id_t i = 0; i < partition.size(); ++i) {
+                for (dfa::state::id_t i = 0; i < partition.size(); i++) {
                     // 从等价类中任选一个状态来决定新状态的属性
                     dfa::state::id_t representative = *partition[i].begin();
                     bool is_final = input_dfa.states[representative].is_final();

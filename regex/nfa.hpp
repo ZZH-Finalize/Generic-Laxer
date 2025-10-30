@@ -70,7 +70,7 @@ namespace regex {
         states_t states;
         state::id_t start, final;
 
-        explicit nfa()
+        explicit nfa(void)
         {
             this->set_start(this->add_state());
             this->set_final(this->add_state());
@@ -141,7 +141,7 @@ namespace regex {
             }
 
             // 复制other_nfa的转换，但需要调整ID偏移
-            for (state::id_t i = 0; i < other_nfa.states.size(); ++i) {
+            for (state::id_t i = 0; i < other_nfa.states.size(); i++) {
                 const auto& other_state          = other_nfa.states[i];
                 const auto& other_transition_map = other_state.get_transition_map();
 
@@ -722,3 +722,19 @@ namespace regex {
     };
 
 } // namespace regex
+
+// 为 nfa 类提供 std::format 支持
+template<>
+struct std::formatter<regex::nfa>
+{
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        return ctx.begin(); // 简单格式，无需解析额外格式说明符
+    }
+
+    auto format(const regex::nfa& nfa, std::format_context& ctx) const
+    {
+        std::string nfa_str = nfa.to_string();
+        return std::format_to(ctx.out(), "{}", nfa_str);
+    }
+};

@@ -97,6 +97,7 @@
             {
                 "type": "shell",
                 "label": "Test Run",
+                "dependsOn": "build",
                 "command": "build/mingw/x86_64/debug/laxer-test.exe",
                 "args": [
                     "test_cases/identifiers.edl",
@@ -116,10 +117,10 @@
                     "showReuseMessage": true,
                     "clear": true
                 },
-                // "group": {
-                //     "kind": "test",
-                //     "isDefault": true
-                // },
+                "group": {
+                    "kind": "test",
+                    "isDefault": true
+                },
                 "detail": "测试运行"
             },
             {
@@ -141,10 +142,10 @@
                     "showReuseMessage": true,
                     "clear": true
                 },
-                "group": {
-                    "kind": "test",
-                    "isDefault": true
-                },
+                // "group": {
+                //     "kind": "test",
+                //     "isDefault": true
+                // },
                 "detail": "测试运行"
             },
         ]

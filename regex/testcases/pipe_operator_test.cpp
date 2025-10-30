@@ -106,7 +106,7 @@ int main()
             std::cout << "\n测试6: 复杂正则表达式 (a|b)+c(d|e)*f" << std::endl;
             regex::nfa nfa = regex::build_nfa("(a|b)+c(d|e)*f");
             regex::dfa dfa = nfa | regex::to_dfa;
-            regex::dfa minimized_dfa = dfa | regex::minimize;
+            regex::dfa minimized_dfa = nfa | regex::to_dfa | regex::minimize;
             
             // 比较原始DFA和最小化DFA的匹配结果，应该相同
             assert(dfa.match("acdf") == minimized_dfa.match("acdf"));
