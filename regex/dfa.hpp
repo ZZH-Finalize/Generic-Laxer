@@ -626,7 +626,9 @@ struct std::formatter<regex::dfa>
 
         auto& states = dfa.get_states();
 
-        for (auto current_state_id = 0; current_state_id < states.size();
+        std::map<std::size_t, std::set<char>> merge_map;
+
+        for (regex::dfa::id_t current_state_id = 0; current_state_id < states.size();
              current_state_id++) {
             auto& state     = states[current_state_id];
             auto& trans_map = state.get_transition_map();
@@ -634,6 +636,9 @@ struct std::formatter<regex::dfa>
             for (auto input_char = 0; input_char < trans_map.size(); input_char++) {
                 auto to_state_id = trans_map[input_char];
                 if (to_state_id == regex::dfa::invalid_state) {
+                    continue;
+                } else if (current_state_id == to_state_id) {
+                    merge_map[current_state_id].insert(input_char);
                     continue;
                 }
 
@@ -643,6 +648,19 @@ struct std::formatter<regex::dfa>
                 result += std::format("{} --> {} : {}\n", from, to,
                                       static_cast<char>(input_char));
             }
+        }
+
+        for (auto& [state_id, input_chars] : merge_map) {
+            std::string state_str = get_state_str(state_id);
+            std::string input_char;
+
+            for (char ch : input_chars) {
+                input_char += std::format("{},", ch);
+            }
+
+            input_char.pop_back();
+
+            result += std::format("{} --> {} : {}\n", state_str, state_str, input_char);
         }
 
         result += "```";

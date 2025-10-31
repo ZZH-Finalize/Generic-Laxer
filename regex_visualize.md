@@ -140,8 +140,8 @@ minimized_dfa:
 stateDiagram-v2
 direction LR
 
-final_0 --> final_0 : a
 start_1 --> final_0 : a
+final_0 --> final_0 : a
 ```
 
 ### 3.3. *
@@ -322,9 +322,6 @@ start_0 --> final_1 : c
 start_0 --> state_2 : d
 start_0 --> state_3 : e
 start_0 --> state_4 : f
-final_1 --> final_1 : a
-final_1 --> final_1 : b
-final_1 --> final_1 : c
 state_2 --> state_5 : g
 state_3 --> state_5 : g
 state_4 --> state_5 : g
@@ -334,10 +331,8 @@ state_7 --> final_8 : 2
 state_7 --> final_8 : 3
 state_7 --> final_8 : 4
 state_7 --> final_8 : 5
-final_8 --> final_8 : 2
-final_8 --> final_8 : 3
-final_8 --> final_8 : 4
-final_8 --> final_8 : 5
+final_1 --> final_1 : a,b,c
+final_8 --> final_8 : 2,3,4,5
 ```
 
 minimized_dfa:
@@ -352,13 +347,6 @@ start_0 --> final_1 : c
 start_0 --> state_3 : d
 start_0 --> state_3 : e
 start_0 --> state_3 : f
-final_1 --> final_1 : a
-final_1 --> final_1 : b
-final_1 --> final_1 : c
-final_2 --> final_2 : 2
-final_2 --> final_2 : 3
-final_2 --> final_2 : 4
-final_2 --> final_2 : 5
 state_3 --> state_4 : g
 state_4 --> state_5 : h
 state_5 --> state_6 : i
@@ -366,5 +354,7 @@ state_6 --> final_2 : 2
 state_6 --> final_2 : 3
 state_6 --> final_2 : 4
 state_6 --> final_2 : 5
+final_1 --> final_1 : a,b,c
+final_2 --> final_2 : 2,3,4,5
 ```
 
