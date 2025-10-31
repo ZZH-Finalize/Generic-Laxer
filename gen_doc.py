@@ -19,7 +19,7 @@ SECTIONS = {
     },
     '字符集': ['[abc]'],
     '选择': ['a|b|c'],
-    '复杂案例': ['[abc]*|(d|e|f)ghi[2-5]+'],
+    '复杂案例': ['([abc]abc)*|(d|e|f)ghi[2-5]+'],
 }
 
 def run_visualizer(exp: str) -> str:
