@@ -8,6 +8,7 @@
 #include <exception>
 #include <limits>
 #include <stdexcept>
+#include <string>
 #include <string_view>
 #include <type_traits>
 #include <vector>
@@ -52,9 +53,9 @@ namespace regex {
                 return this->char_transitions;
             }
 
-            const transition_t& get_transition(id_t id) const
+            const transition_t& get_transition(char input) const
             {
-                return this->char_transitions[id];
+                return this->char_transitions[input];
             }
 
             const transition_t& get_epsilon_transition(void) const
@@ -219,28 +220,6 @@ namespace regex {
             {
             }
         };
-
-        // 打印NFA所有状态ID的函数
-        std::string to_string(void) const
-        {
-            std::string result =
-                std::format("start: {}, final: {}", this->get_start(), this->get_final());
-
-            result += ", states: {";
-            bool first = true;
-
-            for (std::size_t i = 0; i < this->states.size(); ++i) {
-                if (not first) {
-                    result += ", ";
-                }
-                result += std::to_string(i);
-                first = false;
-            }
-
-            result += "}";
-
-            return result;
-        }
 
         state::id_t get_start(void) const noexcept
         {
@@ -727,14 +706,81 @@ namespace regex {
 template<>
 struct std::formatter<regex::nfa>
 {
+    std::string direction;
+
     constexpr auto parse(std::format_parse_context& ctx)
     {
-        return ctx.begin(); // 简单格式，无需解析额外格式说明符
+        auto it = ctx.begin();
+
+        while (*it != '}') {
+            this->direction.push_back(*it++);
+        }
+
+        // 检查方向字符串是否有效
+        if (this->direction != "LR" and this->direction != "TB"
+            and this->direction != "RL") {
+            return ctx.end();
+        }
+
+        return it;
     }
 
     auto format(const regex::nfa& nfa, std::format_context& ctx) const
     {
-        std::string nfa_str = nfa.to_string();
-        return std::format_to(ctx.out(), "{}", nfa_str);
+        std::string result = "```mermaid\n";
+
+        result += "stateDiagram-v2\n";
+
+        if (not this->direction.empty()) {
+            result += std::format("direction {}\n", this->direction);
+        }
+
+        result += "\n";
+
+        auto& states = nfa.get_states();
+
+        auto get_state_str = [&nfa](regex::nfa::state::id_t id) {
+            if (id == nfa.get_start() || id == nfa.get_final()) {
+                return std::string("[*]");
+            } else {
+                return std::format("state_{}", id);
+            }
+        };
+
+        for (auto current_state_id = 0; current_state_id < states.size();
+             current_state_id++) {
+            if (current_state_id == nfa.get_final()) {
+                continue;
+            }
+
+            const regex::nfa::state& state = states.at(current_state_id);
+            std::string from               = get_state_str(current_state_id);
+
+            // handle epsilon transitions
+            for (auto& to_state : state.get_epsilon_transition()) {
+                std::string to = get_state_str(to_state);
+
+                result += std::format("{} --> {}\n", from, to);
+            }
+
+            // handle char transitions
+            auto trans_map = state.get_transition_map();
+            // 遍历所有可能的输入
+            for (auto input = 0; input < trans_map.size(); input++) {
+                auto& trans = trans_map.at(input);
+
+                // 对输入字符, 遍历可能的目标状态
+                for (auto& to_state : trans) {
+                    std::string to = get_state_str(to_state);
+
+                    result += std::format("{} --> {} : {}\n", from, to,
+                                          static_cast<char>(input));
+                }
+            }
+        }
+
+        result += "```";
+
+        return std::format_to(ctx.out(), "{}", result);
     }
 };
