@@ -6,6 +6,7 @@
 #include <set>
 #include <exception>
 #include <stdexcept>
+#include <string>
 #include <string_view>
 #include <tuple>
 #include <type_traits>
@@ -93,8 +94,33 @@ namespace regex {
         }
 
        public:
+        using id_t = state::id_t;
         friend dfa to_dfa(const nfa& nfa);
         friend dfa minimize(const dfa& dfa); // 添加友元函数用于最小化
+
+        inline static const state::id_t invalid_state =
+            std::numeric_limits<state::id_t>::max();
+
+        const auto& get_states(void) const
+        {
+            return this->states;
+        }
+
+        auto get_start_state(void) const
+        {
+            return this->start_state;
+        }
+
+        const auto& get_final_states(void) const
+        {
+            return this->final_states;
+        }
+
+        // 获取DFA的状态数量
+        size_t get_state_count(void) const
+        {
+            return this->states.size();
+        }
 
         // 匹配算法：检查字符串是否与DFA匹配
         bool match(std::string_view str) const
@@ -114,7 +140,7 @@ namespace regex {
                 const auto& current_dfa_state = this->states[current_state];
                 // 检查转换是否有效（使用特殊值表示无效转换）
                 state::id_t next_state = current_dfa_state.get_transition(c);
-                if (next_state == std::numeric_limits<state::id_t>::max()) {
+                if (next_state == dfa::invalid_state) {
                     // 没有对应的转换，匹配失败
                     return false;
                 }
@@ -167,7 +193,7 @@ namespace regex {
                     const auto& current_dfa_state = this->states[current_state];
                     // 检查转换是否有效（使用特殊值表示无效转换）
                     state::id_t next_state = current_dfa_state.get_transition(c);
-                    if (next_state == std::numeric_limits<state::id_t>::max()) {
+                    if (next_state == dfa::invalid_state) {
                         // 没有对应的转换，匹配失败
                         break;
                     }
@@ -186,17 +212,6 @@ namespace regex {
 
             // 没有找到匹配
             return -1;
-        }
-
-        const auto& get_final_states(void) const
-        {
-            return this->final_states;
-        }
-
-        // 获取DFA的状态数量
-        size_t get_state_count(void) const
-        {
-            return this->states.size();
         }
 
        private:
@@ -559,3 +574,79 @@ namespace regex {
     };
 
 } // namespace regex
+
+template<>
+struct std::formatter<regex::dfa>
+{
+    std::string direction;
+
+    constexpr auto parse(std::format_parse_context& ctx)
+    {
+        auto it = ctx.begin();
+
+        while (*it != '}') {
+            this->direction.push_back(*it++);
+        }
+
+        // 检查方向字符串是否有效
+        if (this->direction != "LR" and this->direction != "TB"
+            and this->direction != "RL" and not this->direction.empty()) {
+            return ctx.end();
+        }
+
+        return it;
+    }
+
+    auto format(const regex::dfa& dfa, std::format_context& ctx) const
+    {
+        std::string result = "```mermaid\n";
+
+        result += "stateDiagram-v2\n";
+
+        if (not this->direction.empty()) {
+            result += std::format("direction {}\n", this->direction);
+        }
+
+        result += "\n";
+
+        auto get_state_str = [&dfa](regex::dfa::id_t id) {
+            auto& final_states = dfa.get_final_states();
+
+            if (id == dfa.get_start_state()) {
+                // return std::string("[*]");
+                return std::format("start_{}", id);
+            } else if (std::find(final_states.begin(), final_states.end(), id)
+                       != final_states.end()) {
+                // return std::string("[*]");
+                return std::format("final_{}", id);
+            }
+
+            return std::format("state_{}", id);
+        };
+
+        auto& states = dfa.get_states();
+
+        for (auto current_state_id = 0; current_state_id < states.size();
+             current_state_id++) {
+            auto& state     = states[current_state_id];
+            auto& trans_map = state.get_transition_map();
+
+            for (auto input_char = 0; input_char < trans_map.size(); input_char++) {
+                auto to_state_id = trans_map[input_char];
+                if (to_state_id == regex::dfa::invalid_state) {
+                    continue;
+                }
+
+                const auto& from = get_state_str(current_state_id);
+                const auto& to   = get_state_str(to_state_id);
+
+                result += std::format("{} --> {} : {}\n", from, to,
+                                      static_cast<char>(input_char));
+            }
+        }
+
+        result += "```";
+
+        return std::format_to(ctx.out(), "{}", result);
+    }
+};

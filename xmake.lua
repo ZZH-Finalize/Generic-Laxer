@@ -23,6 +23,10 @@ target('laxer-test')
     add_deps('edl-laxer')
     add_files('main.cpp')
 
+target('vreg')
+    set_kind('binary')
+    add_files('visualize_regexp.cpp')
+
 for _, file in ipairs(os.files('regex/testcases/*.cpp')) do
     local name = path.basename(file)
     target(name)

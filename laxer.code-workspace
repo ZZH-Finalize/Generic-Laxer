@@ -40,39 +40,6 @@
         "version": "2.0.0",
         "tasks": [
             {
-                "label": "xmake-build compile_commands.json",
-                "type": "shell",
-                "command": "xmake",
-                "args": [
-                    "project",
-                    "-k",
-                    "compile_commands",
-                    "--lsp=clangd",
-                    "build"
-                ],
-                "options": {
-                    "statusbar": {
-                        "hide": true,
-                    }
-                }
-            },
-            {
-                "type": "shell",
-                "label": "configure",
-                "command": "xmake",
-                "args": [
-                    "f",
-                    "-c"
-                ],
-                "group": "build",
-                "presentation": {
-                    "clear": true,
-                    "focus": true,
-                    "close": true
-                },
-                "detail": "配置"
-            },
-            {
                 "type": "shell",
                 "label": "build",
                 "command": "xmake",

@@ -718,7 +718,7 @@ struct std::formatter<regex::nfa>
 
         // 检查方向字符串是否有效
         if (this->direction != "LR" and this->direction != "TB"
-            and this->direction != "RL") {
+            and this->direction != "RL" and not this->direction.empty()) {
             return ctx.end();
         }
 
