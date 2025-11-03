@@ -611,14 +611,21 @@ struct std::formatter<regex::dfa>
 
         auto get_state_str = [&dfa](regex::dfa::id_t id) {
             auto& final_states = dfa.get_final_states();
+            std::string state_str;
 
             if (id == dfa.get_start_state()) {
                 // return std::string("[*]");
-                return std::format("start_{}", id);
-            } else if (std::find(final_states.begin(), final_states.end(), id)
-                       != final_states.end()) {
+                state_str += "start_";
+            }
+
+            if (std::find(final_states.begin(), final_states.end(), id)
+                != final_states.end()) {
                 // return std::string("[*]");
-                return std::format("final_{}", id);
+                state_str += "final_";
+            }
+
+            if (not state_str.empty()) {
+                return std::format("{}{}", state_str, id);
             }
 
             return std::format("state_{}", id);

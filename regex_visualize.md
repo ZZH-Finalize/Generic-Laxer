@@ -96,7 +96,7 @@ dfa:
 stateDiagram-v2
 direction LR
 
-start_0 --> final_1 : a
+start_final_0 --> final_1 : a
 ```
 
 minimized_dfa:
@@ -105,7 +105,7 @@ minimized_dfa:
 stateDiagram-v2
 direction LR
 
-start_0 --> final_1 : a
+start_final_0 --> final_1 : a
 ```
 
 ### 3.2. +
@@ -167,7 +167,7 @@ dfa:
 stateDiagram-v2
 direction LR
 
-start_0 --> final_1 : a
+start_final_0 --> final_1 : a
 final_1 --> final_1 : a
 ```
 
@@ -177,7 +177,7 @@ minimized_dfa:
 stateDiagram-v2
 direction LR
 
-start_0 --> start_0 : a
+start_final_0 --> start_final_0 : a
 ```
 
 ## 4. 字符集
@@ -322,12 +322,12 @@ dfa:
 stateDiagram-v2
 direction LR
 
-start_0 --> state_1 : a
-start_0 --> state_1 : b
-start_0 --> state_1 : c
-start_0 --> state_2 : d
-start_0 --> state_3 : e
-start_0 --> state_4 : f
+start_final_0 --> state_1 : a
+start_final_0 --> state_1 : b
+start_final_0 --> state_1 : c
+start_final_0 --> state_2 : d
+start_final_0 --> state_3 : e
+start_final_0 --> state_4 : f
 state_1 --> state_9 : a
 state_2 --> state_5 : g
 state_3 --> state_5 : g
@@ -352,12 +352,12 @@ minimized_dfa:
 stateDiagram-v2
 direction LR
 
-start_0 --> state_3 : a
-start_0 --> state_3 : b
-start_0 --> state_3 : c
-start_0 --> state_4 : d
-start_0 --> state_4 : e
-start_0 --> state_4 : f
+start_final_0 --> state_3 : a
+start_final_0 --> state_3 : b
+start_final_0 --> state_3 : c
+start_final_0 --> state_4 : d
+start_final_0 --> state_4 : e
+start_final_0 --> state_4 : f
 final_2 --> state_3 : a
 final_2 --> state_3 : b
 final_2 --> state_3 : c
