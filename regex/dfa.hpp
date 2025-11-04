@@ -308,7 +308,7 @@ namespace regex {
                 // 计算初始状态的epsilon闭包
                 state_set_t initial_closure =
                     builder::epsilon_closure(input_nfa.get_start(), input_nfa);
-                std::map<state_set_t, typename dfa::state::id_t>
+                std::map<state_set_t, dfa::state::id_t>
                     state_map;                     // 映射NFA状态集到DFA状态ID
                 std::vector<state_set_t> unmarked; // 未标记的DFA状态
 
@@ -325,7 +325,7 @@ namespace regex {
                     state_set_t current_set = unmarked.back();
                     unmarked.pop_back();
 
-                    typename dfa::state::id_t current_id = state_map[current_set];
+                    dfa::state::id_t current_id = state_map[current_set];
 
                     // 尝试所有可能的输入字符
                     std::set<char> input_chars;
@@ -348,7 +348,7 @@ namespace regex {
                             builder::move(current_set, input_char, input_nfa), input_nfa);
                         if (next_set.empty()) continue;
 
-                        typename dfa::state::id_t next_id;
+                        dfa::state::id_t next_id;
                         auto it = state_map.find(next_set);
                         if (it == state_map.end()) {
                             // 创建新的DFA状态

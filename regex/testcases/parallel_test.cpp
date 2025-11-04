@@ -15,16 +15,16 @@ void test_parallel_nfa()
     regex::nfa number_nfa = regex::build_nfa("[0-9]+");
     regex::nfa whitespace_nfa = regex::build_nfa("[ \t\n\r]+");
     
-    std::cout << "关键字NFA: " << keyword_nfa.to_string() << std::endl;
-    std::cout << "标识符NFA: " << identifier_nfa.to_string() << std::endl;
-    std::cout << "数字NFA: " << number_nfa.to_string() << std::endl;
-    std::cout << "空白NFA: " << whitespace_nfa.to_string() << std::endl;
+    std::cout << "关键字NFA: " << std::format("{}", keyword_nfa) << std::endl;
+    std::cout << "标识符NFA: " << std::format("{}", identifier_nfa) << std::endl;
+    std::cout << "数字NFA: " << std::format("{}", number_nfa) << std::endl;
+    std::cout << "空白NFA: " << std::format("{}", whitespace_nfa) << std::endl;
     
     // 使用NFA的builder来创建一个大的选择NFA，模拟多个规则的并行匹配
     // 在内部，这会使用select_with方法来连接多个NFA
     regex::nfa combined_nfa = regex::build_nfa("(if|else|while|for)|([a-zA-Z_][a-zA-Z0-9_]*)|([0-9]+)|([ \t\n\r]+)");
     
-    std::cout << "组合NFA: " << combined_nfa.to_string() << std::endl;
+    std::cout << "组合NFA: " << std::format("{}", combined_nfa) << std::endl;
     
     // 将NFA转换为DFA进行测试
     regex::dfa combined_dfa = regex::to_dfa(combined_nfa);

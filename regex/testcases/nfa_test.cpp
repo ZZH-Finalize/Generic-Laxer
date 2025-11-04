@@ -12,7 +12,7 @@ int main(const int argc, const char** argv)
         // 测试NFA构造
         std::cout << "尝试构建NFA..." << std::flush;
         regex::nfa nfa_obj = regex::build_nfa("a");
-        std::cout << "NFA构造成功: " << nfa_obj.to_string() << std::endl;
+        std::cout << "NFA构造成功: " << std::format("{}", nfa_obj) << std::endl;
 
         // 验证NFA基本信息
         assert(nfa_obj.get_states().size() > 0);

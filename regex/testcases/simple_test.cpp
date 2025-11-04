@@ -11,7 +11,7 @@ int main(const int argc, const char** argv)
     try {
         // 先测试NFA构造
         regex::nfa nfa_obj = regex::build_nfa("a");
-        std::cout << "NFA构造成功: " << nfa_obj.to_string() << std::endl;
+        std::cout << "NFA构造成功: " << std::format("{}", nfa_obj) << std::endl;
         
         std::cout << "测试DFA构造..." << std::endl;
         // 测试DFA构造

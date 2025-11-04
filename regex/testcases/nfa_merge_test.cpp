@@ -13,17 +13,17 @@ void test_nfa_merge()
     regex::nfa identifier_nfa = regex::build_nfa("variable");
     regex::nfa number_nfa     = regex::build_nfa("123");
 
-    std::cout << "原始关键字NFA: " << keyword_nfa.to_string() << std::endl;
-    std::cout << "原始标识符NFA: " << identifier_nfa.to_string() << std::endl;
-    std::cout << "原始数字NFA: " << number_nfa.to_string() << std::endl;
+    std::cout << "原始关键字NFA: " << std::format("{}", keyword_nfa) << std::endl;
+    std::cout << "原始标识符NFA: " << std::format("{}", identifier_nfa) << std::endl;
+    std::cout << "原始数字NFA: " << std::format("{}", number_nfa) << std::endl;
 
     // 使用新的 | 操作符合并NFA
     regex::nfa combined_nfa = keyword_nfa | identifier_nfa;
-    std::cout << "关键字|标识符 NFA: " << combined_nfa.to_string() << std::endl;
+    std::cout << "关键字|标识符 NFA: " << std::format("{}", combined_nfa) << std::endl;
 
     // 再合并第三个NFA
     regex::nfa final_nfa = combined_nfa | number_nfa;
-    std::cout << "最终合并NFA (关键字|标识符|数字): " << final_nfa.to_string()
+    std::cout << "最终合并NFA (关键字|标识符|数字): " << std::format("{}", final_nfa)
               << std::endl;
 
     // 将合并后的NFA转换为DFA
@@ -34,20 +34,20 @@ void test_nfa_merge()
     bool result1 = combined_dfa.match("if");
     std::cout << "匹配 'if': " << result1 << std::endl;
     assert(result1 == true);
-    
+
     bool result2 = combined_dfa.match("variable");
     std::cout << "匹配 'variable': " << result2 << std::endl;
     assert(result2 == true);
-    
+
     bool result3 = combined_dfa.match("123");
     std::cout << "匹配 '123': " << result3 << std::endl;
     assert(result3 == true);
-    
+
     bool result4 = combined_dfa.match("else"); // 不应该匹配
     std::cout << "匹配 'else': " << result4 << std::endl;
     assert(result4 == false);
-    
-    bool result5 = combined_dfa.match("456");   // 不应该匹配
+
+    bool result5 = combined_dfa.match("456"); // 不应该匹配
     std::cout << "匹配 '456': " << result5 << std::endl;
     assert(result5 == false);
 
@@ -67,15 +67,15 @@ void test_nfa_merge()
     bool result6 = complex_dfa.match("abc");
     std::cout << "匹配 'abc': " << result6 << std::endl;
     assert(result6 == true);
-    
+
     bool result7 = complex_dfa.match("xyz");
     std::cout << "匹配 'xyz': " << result7 << std::endl;
     assert(result7 == true);
-    
+
     bool result8 = complex_dfa.match("789");
     std::cout << "匹配 '789': " << result8 << std::endl;
     assert(result8 == true);
-    
+
     bool result9 = complex_dfa.match("hello");
     std::cout << "匹配 'hello': " << result9 << std::endl;
     assert(result9 == false);
@@ -89,23 +89,23 @@ void test_nfa_merge()
     bool result10 = original_keyword_dfa.match("if");
     std::cout << "原关键字NFA匹配'if': " << result10 << std::endl;
     assert(result10 == true);
-    
+
     bool result11 = original_keyword_dfa.match("variable");
     std::cout << "原关键字NFA匹配'variable': " << result11 << std::endl;
     assert(result11 == false);
-    
+
     bool result12 = original_identifier_dfa.match("variable");
     std::cout << "原标识符NFA匹配'variable': " << result12 << std::endl;
     assert(result12 == true);
-    
+
     bool result13 = original_identifier_dfa.match("if");
     std::cout << "原标识符NFA匹配'if': " << result13 << std::endl;
     assert(result13 == false);
-    
+
     bool result14 = original_number_dfa.match("123");
     std::cout << "原数字NFA匹配'123': " << result14 << std::endl;
     assert(result14 == true);
-    
+
     bool result15 = original_number_dfa.match("456");
     std::cout << "原数字NFA匹配'456': " << result15 << std::endl;
     assert(result15 == false);
@@ -132,15 +132,15 @@ void test_merge_associativity()
     bool left_result1 = left_dfa.match("a");
     std::cout << "左侧结合 (a|b)|c 匹配 'a': " << left_result1 << std::endl;
     assert(left_result1 == true);
-    
+
     bool left_result2 = left_dfa.match("b");
     std::cout << "左侧结合 (a|b)|c 匹配 'b': " << left_result2 << std::endl;
     assert(left_result2 == true);
-    
+
     bool left_result3 = left_dfa.match("c");
     std::cout << "左侧结合 (a|b)|c 匹配 'c': " << left_result3 << std::endl;
     assert(left_result3 == true);
-    
+
     bool left_result4 = left_dfa.match("d");
     std::cout << "左侧结合 (a|b)|c 匹配 'd': " << left_result4 << std::endl;
     assert(left_result4 == false);
@@ -149,15 +149,15 @@ void test_merge_associativity()
     bool right_result1 = right_dfa.match("a");
     std::cout << "右侧结合 a|(b|c) 匹配 'a': " << right_result1 << std::endl;
     assert(right_result1 == true);
-    
+
     bool right_result2 = right_dfa.match("b");
     std::cout << "右侧结合 a|(b|c) 匹配 'b': " << right_result2 << std::endl;
     assert(right_result2 == true);
-    
+
     bool right_result3 = right_dfa.match("c");
     std::cout << "右侧结合 a|(b|c) 匹配 'c': " << right_result3 << std::endl;
     assert(right_result3 == true);
-    
+
     bool right_result4 = right_dfa.match("d");
     std::cout << "右侧结合 a|(b|c) 匹配 'd': " << right_result4 << std::endl;
     assert(right_result4 == false);
