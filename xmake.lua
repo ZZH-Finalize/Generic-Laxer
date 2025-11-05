@@ -11,8 +11,21 @@ set_languages('c++latest')
 
 add_includedirs('.')
 
+target('regex-engine')
+    set_kind('shared')
+    add_includedirs('regex', {public=true})
+
+    add_files(
+        'regex/nfa.cpp',
+        'regex/nfa_builder.cpp',
+        'regex/dfa.cpp',
+        'regex/dfa_builder.cpp'
+    )
+
 target('edl-laxer')
     set_kind('shared')
+
+    add_deps('regex-engine')
 
     add_packages('nlohmann_json')
     set_default(true)
@@ -25,6 +38,7 @@ target('laxer-test')
 
 target('vreg')
     set_kind('binary')
+    add_deps('regex-engine')
     add_files('visualize_regexp.cpp')
 
 for _, file in ipairs(os.files('regex/testcases/*.cpp')) do
@@ -32,7 +46,7 @@ for _, file in ipairs(os.files('regex/testcases/*.cpp')) do
     target(name)
         set_kind('binary')
         set_default(false)
-        add_includedirs('regex')
+        add_deps('regex-engine')
         add_files(file)
         add_tests('default', {timeout = 1})
         -- add_tests("args", {runargs = {"foo", "bar"}})
