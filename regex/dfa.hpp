@@ -79,7 +79,7 @@ namespace regex {
 
         std::vector<state> states;
         state::id_t start_state;
-        std::vector<state::id_t> final_states;
+        std::set<state::id_t> final_states;
 
         // 默认构造函数，用于builder类创建实例
         dfa(): start_state(0)
@@ -209,8 +209,7 @@ struct std::formatter<regex::dfa>
                 state_str += "start_";
             }
 
-            if (std::find(final_states.begin(), final_states.end(), id)
-                != final_states.end()) {
+            if (final_states.contains(id)) {
                 // return std::string("[*]");
                 state_str += "final_";
             }

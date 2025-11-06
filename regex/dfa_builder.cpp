@@ -135,7 +135,7 @@ namespace regex {
         // 记录最终状态
         for (dfa::state::id_t i = 0; i < result_dfa.states.size(); i++) {
             if (result_dfa.states[i].is_final()) {
-                result_dfa.final_states.push_back(i);
+                result_dfa.final_states.insert(i);
             }
         }
 
@@ -150,8 +150,7 @@ namespace regex {
 
         // 初始化等价类划分：将状态分为最终状态和非最终状态
         std::vector<std::set<dfa::state::id_t>> partition;
-        std::set<dfa::state::id_t> final_state_set(input_dfa.final_states.begin(),
-                                                   input_dfa.final_states.end());
+        std::set<dfa::state::id_t> final_state_set = input_dfa.final_states;
 
         std::set<dfa::state::id_t> non_final_states;
         for (dfa::state::id_t i = 0; i < input_dfa.states.size(); i++) {
@@ -316,11 +315,7 @@ namespace regex {
         // 设置最终状态列表
         for (auto final_id : input_dfa.final_states) {
             dfa::state::id_t new_final_id = state_mapping[final_id];
-            if (std::find(minimized_dfa.final_states.begin(),
-                          minimized_dfa.final_states.end(), new_final_id)
-                == minimized_dfa.final_states.end()) {
-                minimized_dfa.final_states.push_back(new_final_id);
-            }
+            minimized_dfa.final_states.insert(new_final_id);
         }
 
         return minimized_dfa;

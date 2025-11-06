@@ -28,9 +28,7 @@ namespace regex {
         }
 
         // 检查最终状态是否为接受状态
-        return std::find(this->final_states.begin(), this->final_states.end(),
-                         current_state)
-               != this->final_states.end();
+        return this->final_states.contains(current_state);
     }
 
     bool dfa::match_empty() const
@@ -42,9 +40,7 @@ namespace regex {
         if (this->start_state >= this->states.size()) {
             return false;
         }
-        return std::find(this->final_states.begin(), this->final_states.end(),
-                         this->start_state)
-               != this->final_states.end();
+        return this->final_states.contains(this->start_state);
     }
 
     int dfa::find_match(std::string_view str) const
@@ -77,9 +73,7 @@ namespace regex {
                 current_state = next_state;
 
                 // 检查当前位置是否为接受状态
-                if (std::find(this->final_states.begin(), this->final_states.end(),
-                              current_state)
-                    != this->final_states.end()) {
+                if (this->final_states.contains(current_state)) {
                     // 找到匹配，返回起始位置
                     return static_cast<int>(start_pos);
                 }
