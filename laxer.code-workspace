@@ -1,8 +1,7 @@
 {
     "folders": [
         {
-            "path": ".",
-            "name": "EDL编译器-词法分析器组件"
+            "path": "."
         }
     ],
     "settings": {

@@ -64,10 +64,10 @@ namespace regex {
             }
         };
 
-       private:
         using charset_t = std::bitset<256>;
         using states_t  = std::vector<state>;
 
+       private:
         states_t states;
         state::id_t start, final;
 

@@ -13,21 +13,31 @@ add_includedirs('.')
 
 includes('regex')
 
-target('edl-laxer')
-    set_kind('shared')
-
-    add_deps('regex-engine')
-
-    add_packages('nlohmann_json')
-    set_default(true)
-    add_files('laxer.cpp')
-
-target('laxer-test')
-    set_kind('binary')
-    add_deps('edl-laxer')
-    add_files('main.cpp')
-
 target('vreg')
     set_kind('binary')
     add_deps('regex-engine')
     add_files('visualize_regexp.cpp')
+
+target('laxer-engine')
+    set_kind('shared')
+    add_deps('regex-engine')
+
+    add_files(
+        'nfa.cpp'
+    )
+
+target('laxer')
+    set_kind('binary')
+    add_deps('laxer-engine')
+
+    add_files('main.cpp')
+
+for _, file in ipairs(os.files('testcases/*.cpp')) do
+    local name = path.basename(file)
+    target('laxer_' .. name)
+        set_kind('binary')
+        set_default(false)
+        add_deps('laxer-engine')
+        add_files(file)
+        add_tests('laxer', {timeout = 1})
+end

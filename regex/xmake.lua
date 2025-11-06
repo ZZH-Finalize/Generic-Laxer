@@ -20,7 +20,7 @@ target('regex-engine')
 
 for _, file in ipairs(os.files('testcases/*.cpp')) do
     local name = path.basename(file)
-    target(name)
+    target('regex_' .. name)
         set_kind('binary')
         set_default(false)
         add_deps('regex-engine')
