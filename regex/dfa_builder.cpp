@@ -33,16 +33,13 @@ namespace regex {
                                                  char input, const nfa& input_nfa)
     {
         state_set_t result;
-        for (auto state_id : states_set) {
-            if (state_id >= input_nfa.get_states().size()) continue;
 
+        for (auto state_id : states_set) {
             const auto& state          = input_nfa.get_state(state_id);
             const auto& transition_map = state.get_transition_map();
 
-            if (input >= 0) {
-                for (auto target : transition_map[static_cast<unsigned char>(input)]) {
-                    result.insert(target);
-                }
+            for (auto target : transition_map[static_cast<unsigned char>(input)]) {
+                result.insert(target);
             }
         }
 
