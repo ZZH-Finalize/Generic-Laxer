@@ -6,14 +6,6 @@ namespace regex {
                                                             const nfa& input_nfa)
     {
         state_set_t closure = states_set;
-        std::vector<bool> in_closure(input_nfa.get_states().size(), false);
-
-        // 标记初始状态在闭包中
-        for (auto state_id : states_set) {
-            if (state_id < in_closure.size()) {
-                in_closure[state_id] = true;
-            }
-        }
 
         // 使用队列进行BFS遍历，避免无限循环
         std::queue<nfa::state::id_t> work_queue;
@@ -21,25 +13,19 @@ namespace regex {
             work_queue.push(state_id);
         }
 
-        while (!work_queue.empty()) {
+        while (not work_queue.empty()) {
             nfa::state::id_t current_state = work_queue.front();
             work_queue.pop();
-
-            if (current_state >= input_nfa.get_states().size()) continue;
 
             const auto& state           = input_nfa.get_state(current_state);
             const auto& epsilon_targets = state.get_epsilon_transition();
 
             for (auto epsilon_target : epsilon_targets) {
-                if (epsilon_target < in_closure.size()
-                    and not in_closure[epsilon_target]) {
-                    in_closure[epsilon_target] = true;
-
-                    closure.insert(epsilon_target);
-                    work_queue.push(epsilon_target);
-                }
+                closure.insert(epsilon_target);
+                work_queue.push(epsilon_target);
             }
         }
+
         return closure;
     }
 
