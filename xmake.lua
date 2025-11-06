@@ -11,16 +11,7 @@ set_languages('c++latest')
 
 add_includedirs('.')
 
-target('regex-engine')
-    set_kind('shared')
-    add_includedirs('regex', {public=true})
-
-    add_files(
-        'regex/nfa.cpp',
-        'regex/nfa_builder.cpp',
-        'regex/dfa.cpp',
-        'regex/dfa_builder.cpp'
-    )
+includes('regex')
 
 target('edl-laxer')
     set_kind('shared')
@@ -40,16 +31,3 @@ target('vreg')
     set_kind('binary')
     add_deps('regex-engine')
     add_files('visualize_regexp.cpp')
-
-for _, file in ipairs(os.files('regex/testcases/*.cpp')) do
-    local name = path.basename(file)
-    target(name)
-        set_kind('binary')
-        set_default(false)
-        add_deps('regex-engine')
-        add_files(file)
-        add_tests('default', {timeout = 1})
-        -- add_tests("args", {runargs = {"foo", "bar"}})
-        -- add_tests("pass_output", {trim_output = true, runargs = "foo", pass_outputs = "hello foo"})
-        -- add_tests("fail_output", {fail_outputs = {"hello2 .*", "hello xmake"}})
-end
