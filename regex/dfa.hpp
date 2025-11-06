@@ -93,6 +93,11 @@ namespace regex {
             return this->states.size() - 1;
         }
 
+        void set_transition(state::id_t current, char ch, state::id_t to)
+        {
+            this->states[current].set_transition(ch, to);
+        }
+
        public:
         using id_t = state::id_t;
         friend dfa to_dfa(const nfa& nfa);

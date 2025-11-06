@@ -66,7 +66,7 @@ namespace regex {
         bool is_final          = initial_closure.contains(input_nfa.get_final());
         result_dfa.start_state = result_dfa.add_state(initial_closure, is_final);
 
-        state_map[initial_closure] = 0;
+        state_map[initial_closure] = result_dfa.start_state;
 
         unmarked.push_back(initial_closure);
 
@@ -80,10 +80,9 @@ namespace regex {
             // 尝试所有可能的输入字符
             std::set<char> input_chars;
             for (auto nfa_state_id : current_set) {
-                if (nfa_state_id >= input_nfa.get_states().size()) continue;
-
                 const auto& nfa_state   = input_nfa.get_state(nfa_state_id);
                 const auto& transitions = nfa_state.get_transition_map();
+
                 for (int input_idx = 0; input_idx < transitions.size(); input_idx++) {
                     if (not transitions[input_idx].empty()) {
                         input_chars.insert(static_cast<char>(input_idx));
@@ -110,8 +109,8 @@ namespace regex {
                     next_id = it->second;
                 }
 
-                // 添加转换 - 修复：每次都重新获取引用以避免引用失效
-                result_dfa.states[current_id].set_transition(input_char, next_id);
+                // 添加转换
+                result_dfa.set_transition(current_id, input_char, next_id);
             }
         }
 
