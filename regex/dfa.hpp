@@ -140,7 +140,7 @@ namespace regex {
        private:
         class builder {
            private:
-            using state_set_t = std::set<nfa::state::id_t>;
+            using state_set_t = nfa::state_set_t;
             using transition_map_t =
                 std::array<nfa::state::id_t,
                            std::tuple_size_v<nfa::state::transition_map_t>>;

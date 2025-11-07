@@ -44,10 +44,9 @@ namespace laxer {
             }
         }
 
-        // 获取接受状态
-        const accept_states_t& get_accept_states(void) const
+        bool has_final(const state_set_t& states) const
         {
-            return this->accept_states;
+            return this->accept_states & states;
         }
     };
 } // namespace laxer

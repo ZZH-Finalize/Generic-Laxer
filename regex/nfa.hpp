@@ -12,6 +12,7 @@
 #include <string_view>
 #include <type_traits>
 #include <vector>
+#include <set>
 
 namespace regex {
 
@@ -66,6 +67,7 @@ namespace regex {
 
         using charset_t = std::bitset<256>;
         using states_t  = std::vector<state>;
+        using state_set_t = std::set<state::id_t>;
 
        private:
         states_t states;
@@ -152,6 +154,11 @@ namespace regex {
         state::id_t get_final(void) const noexcept
         {
             return this->final;
+        }
+
+        bool has_final(const state_set_t& states) const
+        {
+            return states.contains(this->get_final());
         }
 
         const state& get_state(state::id_t state) const noexcept
