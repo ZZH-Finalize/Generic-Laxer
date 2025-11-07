@@ -9,8 +9,6 @@ set_defaultmode('debug')
 set_toolchains('gcc')
 set_languages('c++latest')
 
-add_includedirs('.')
-
 includes('regex')
 
 target('vreg')
@@ -20,11 +18,8 @@ target('vreg')
 
 target('laxer-engine')
     set_kind('shared')
+    add_includedirs('.', {public=true})
     add_deps('regex-engine')
-
-    add_files(
-        'nfa.cpp'
-    )
 
 target('laxer')
     set_kind('binary')

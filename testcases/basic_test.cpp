@@ -1,5 +1,6 @@
 #include "nfa.hpp"
 #include "regex/regex.hpp"
+#include <cassert>
 #include <iostream>
 
 int main()
@@ -30,22 +31,18 @@ int main()
     laxer_nfa.add_nfa(number_nfa);
     std::cout << "Add number NFA completed" << std::endl;
 
+    auto totol = keyword_nfa.get_states().size() + identifier_nfa.get_states().size()
+                 + number_nfa.get_states().size();
+
     // 验证状态数量
+    std::cout << "Three nfa state count: " << totol << std::endl;
     std::cout << "Total state count: " << laxer_nfa.get_states().size() << std::endl;
     std::cout << "Accept state count: " << laxer_nfa.get_accept_states().size()
               << std::endl;
     std::cout << "Start state ID: " << laxer_nfa.get_start() << std::endl;
 
-    auto totol = keyword_nfa.get_states().size() + identifier_nfa.get_states().size()
-                 + number_nfa.get_states().size();
+    assert(laxer_nfa.get_states().size() == totol + 2);
+    assert(laxer_nfa.get_accept_states().size() == 3);
 
-    // 验证接受状态数量应该为3（每个NFA一个）
-    if (laxer_nfa.get_accept_states().size() == 3
-        and laxer_nfa.get_states().size() == totol + 1) {
-        std::cout << "Accept state count validation passed!" << std::endl;
-        return 0; // Success
-    } else {
-        std::cout << "Accept state count validation failed!" << std::endl;
-        return 1; // Failure
-    }
+    return 0;
 }

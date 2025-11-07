@@ -71,6 +71,7 @@ namespace regex {
         states_t states;
         state::id_t start, final;
 
+       protected:
         explicit nfa(void)
         {
             this->set_start(this->add_state());
