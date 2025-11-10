@@ -7,7 +7,7 @@ namespace regex {
     std::optional<final_state> dfa::match(std::string_view str) const
     {
         if (this->states.empty()) {
-            return false; // 没有状态，无法匹配
+            return std::nullopt; // 没有状态，无法匹配
         }
 
         state::id_t current_state = this->start_state;
@@ -15,7 +15,7 @@ namespace regex {
         for (char c : str) {
             // 边界检查：确保current_state在有效范围内
             if (current_state >= this->states.size()) {
-                return false; // 状态越界，匹配失败
+                return std::nullopt; // 状态越界，匹配失败
             }
 
             const auto& current_dfa_state = this->states[current_state];
@@ -23,13 +23,13 @@ namespace regex {
             state::id_t next_state = current_dfa_state.get_transition(c);
             if (next_state == dfa::invalid_state) {
                 // 没有对应的转换，匹配失败
-                return false;
+                return std::nullopt;
             }
 
             current_state = next_state;
         }
 
-        const auto& find_state = this->final_states.find(current_state);
+        const auto& find_state = this->final_states.find(final_state(current_state));
 
         // 检查最终状态是否为接受状态
         if (find_state != this->final_states.end()) {
@@ -48,7 +48,7 @@ namespace regex {
         if (this->start_state >= this->states.size()) {
             return false;
         }
-        return this->final_states.contains(this->start_state);
+        return this->final_states.contains(final_state(this->start_state));
     }
 
     int dfa::find_match(std::string_view str) const
@@ -81,7 +81,7 @@ namespace regex {
                 current_state = next_state;
 
                 // 检查当前位置是否为接受状态
-                if (this->final_states.contains(current_state)) {
+                if (this->final_states.contains(final_state(current_state))) {
                     // 找到匹配，返回起始位置
                     return static_cast<int>(start_pos);
                 }

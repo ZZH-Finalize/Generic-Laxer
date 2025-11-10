@@ -109,7 +109,7 @@ namespace regex {
         {
             this->check_state_valid(final);
 
-            this->final = final;
+            this->final = final_state(final);
         }
 
         void add_transition(state::id_t state, char input, state::id_t to)

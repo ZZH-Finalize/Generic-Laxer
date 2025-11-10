@@ -15,11 +15,11 @@ namespace regex {
         using closure    = std::set<id_t>;
         using metadata_t = std::any;
 
-        final_state(id_t id): id(id)
+        explicit final_state(id_t id): id(id)
         {
         }
 
-        final_state(id_t id, metadata_t metadata): id(id), metadata(metadata)
+        explicit final_state(id_t id, metadata_t metadata): id(id), metadata(metadata)
         {
         }
 
