@@ -3,12 +3,12 @@
 #include <vector>
 #include <set>
 #include "regex/nfa.hpp"
-#include "accept_state.hpp"
+#include "regex/final_state.hpp"
 
 namespace laxer {
-    class nfa: public regex::nfa {
+    class nfa: protected regex::nfa {
        public:
-        using accept_states_t = std::set<accept_state_t>;
+        using accept_states_t = std::set<regex::final_state>;
 
        private:
         // 所有NFA的终态以及规则id
@@ -44,9 +44,15 @@ namespace laxer {
             }
         }
 
-        bool has_final(const state_set_t& states) const
+        bool has_final(const closure& states) const
         {
-            return this->accept_states & states;
+            for (auto state : states) {
+                if (this->accept_states.contains(state)) {
+                    return true;
+                }
+            }
+
+            return false;
         }
     };
 } // namespace laxer

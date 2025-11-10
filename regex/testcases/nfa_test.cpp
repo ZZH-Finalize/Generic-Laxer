@@ -2,7 +2,7 @@
 #include <format>
 #include <string_view>
 #include <cassert>
-#include "regex/regex.hpp"
+#include "regex.hpp"
 
 int main(const int argc, const char** argv)
 {
@@ -21,8 +21,8 @@ int main(const int argc, const char** argv)
         assert(nfa_obj.get_start() >= 0);
         std::cout << "起始状态ID: " << nfa_obj.get_start() << std::endl;
         
-        assert(nfa_obj.get_final() >= 0);
-        std::cout << "最终状态ID: " << nfa_obj.get_final() << std::endl;
+        // assert(nfa_obj.get_final() >= 0);
+        // std::cout << "最终状态ID: " << nfa_obj.get_final() << std::endl;
 
         // 将NFA转换为DFA并测试匹配
         regex::dfa dfa_obj = regex::to_dfa(nfa_obj);

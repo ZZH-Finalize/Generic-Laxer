@@ -2,7 +2,7 @@
 #include <format>
 #include <string_view>
 #include <cassert>
-#include "regex/regex.hpp"
+#include "regex.hpp"
 
 // 测试多个规则的并行匹配（类似Flex的功能）
 void test_parallel_nfa()

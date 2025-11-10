@@ -16,6 +16,8 @@
 #include <algorithm>
 #include <map>
 
+#include "final_state.hpp"
+
 namespace regex {
 
     class dfa {
@@ -26,7 +28,7 @@ namespace regex {
             using id_t = nfa::state::id_t;
 
             // NFA状态集类型
-            using state_set_t = std::set<id_t>;
+            using closure = nfa::closure;
 
             // DFA状态转换表类型
             using transition_map_t =
@@ -34,7 +36,7 @@ namespace regex {
 
            private:
             // 对应NFA状态集合
-            state_set_t nfa_states;
+            closure nfa_states;
 
             // DFA状态转换表
             transition_map_t transitions;
@@ -44,7 +46,7 @@ namespace regex {
 
            public:
             // 构造函数初始化转换表为无效值
-            explicit state(const state_set_t& nfa_states, bool is_final = false)
+            explicit state(const closure& nfa_states, bool is_final = false)
                 : nfa_states(nfa_states), final(is_final)
             {
                 std::fill(transitions.begin(), transitions.end(),
@@ -77,16 +79,18 @@ namespace regex {
             }
         };
 
+        using final_states_t = std::set<final_state>;
+
         std::vector<state> states;
         state::id_t start_state;
-        std::set<state::id_t> final_states;
+        final_states_t final_states;
 
         // 默认构造函数，用于builder类创建实例
         dfa(): start_state(0)
         {
         }
 
-        state::id_t add_state(const state::state_set_t& nfa_states, bool is_final = false)
+        state::id_t add_state(const state::closure& nfa_states, bool is_final = false)
         {
             this->states.emplace_back(nfa_states, is_final);
 
@@ -137,32 +141,156 @@ namespace regex {
         // 返回匹配的起始位置，-1表示未找到匹配
         int find_match(std::string_view str) const;
 
-       private:
+       public:
         class builder {
            private:
-            using state_set_t = nfa::state_set_t;
+            using closure = dfa::state::closure;
             using transition_map_t =
                 std::array<nfa::state::id_t,
                            std::tuple_size_v<nfa::state::transition_map_t>>;
 
+           public:
             // 计算epsilon闭包
-            static state_set_t epsilon_closure(const state_set_t& states_set,
-                                               const nfa& input_nfa);
-
-            static state_set_t epsilon_closure(nfa::state::id_t state_id,
-                                               const nfa& input_nfa)
+            template<typename NFA>
+            requires is_nfa<NFA>
+            static dfa::builder::closure epsilon_closure(const closure& states_set,
+                                                         const NFA& input_nfa)
             {
-                state_set_t single_set = {state_id};
+                closure closure = states_set;
+
+                // 使用队列进行BFS遍历，避免无限循环
+                std::queue<nfa::state::id_t> work_queue;
+                for (auto state_id : states_set) {
+                    work_queue.push(state_id);
+                }
+
+                while (not work_queue.empty()) {
+                    nfa::state::id_t current_state = work_queue.front();
+                    work_queue.pop();
+
+                    const auto& state           = input_nfa.get_state(current_state);
+                    const auto& epsilon_targets = state.get_epsilon_transition();
+
+                    for (auto epsilon_target : epsilon_targets) {
+                        closure.insert(epsilon_target);
+                        work_queue.push(epsilon_target);
+                    }
+                }
+
+                return closure;
+            }
+
+            template<typename NFA>
+            requires is_nfa<NFA>
+            static closure epsilon_closure(nfa::state::id_t state_id,
+                                           const NFA& input_nfa)
+            {
+                closure single_set = {state_id};
                 return builder::epsilon_closure(single_set, input_nfa);
             }
 
-            // 计算从给定状态集通过指定输入字符能到达的状态集的epsilon闭包
-            static state_set_t move(const state_set_t& states_set, char input,
-                                    const nfa& input_nfa);
+            template<typename NFA>
+            requires is_nfa<NFA>
+            static dfa::builder::closure move(const closure& states_set, char input,
+                                              const NFA& input_nfa)
+            {
+                closure result;
 
-           public:
-            // 将NFA转换为DFA的核心算法
-            static dfa build(const nfa& input_nfa);
+                for (auto state_id : states_set) {
+                    const auto& state          = input_nfa.get_state(state_id);
+                    const auto& transition_map = state.get_transition_map();
+
+                    for (auto target :
+                         transition_map[static_cast<unsigned char>(input)]) {
+                        result.insert(target);
+                    }
+                }
+
+                return result;
+            }
+
+            template<typename NFA>
+            requires is_nfa<NFA>
+            static dfa build(const NFA& input_nfa)
+            {
+                dfa result_dfa;
+
+                if (input_nfa.get_states().empty()) {
+                    // 如果NFA没有状态，创建一个空的DFA
+                    result_dfa.start_state = result_dfa.add_state({});
+                    return result_dfa;
+                }
+
+                // 计算初始状态的epsilon闭包
+                closure initial_closure =
+                    builder::epsilon_closure(input_nfa.get_start(), input_nfa);
+                std::map<closure, dfa::state::id_t> state_map; // 映射NFA状态集到DFA状态ID
+                std::vector<closure> unmarked;                 // 未标记的DFA状态
+
+                // 创建初始DFA状态
+                bool is_final          = input_nfa.has_final(initial_closure);
+                result_dfa.start_state = result_dfa.add_state(initial_closure, is_final);
+
+                state_map[initial_closure] = result_dfa.start_state;
+
+                unmarked.push_back(initial_closure);
+
+                // 子集构造算法
+                while (not unmarked.empty()) {
+                    closure current_set = unmarked.back();
+                    unmarked.pop_back();
+
+                    dfa::state::id_t current_id = state_map[current_set];
+
+                    // 尝试所有可能的输入字符
+                    std::set<char> input_chars;
+                    for (auto nfa_state_id : current_set) {
+                        const auto& nfa_state   = input_nfa.get_state(nfa_state_id);
+                        const auto& transitions = nfa_state.get_transition_map();
+
+                        for (int input_idx = 0; input_idx < transitions.size();
+                             input_idx++) {
+                            if (not transitions[input_idx].empty()) {
+                                input_chars.insert(static_cast<char>(input_idx));
+                            }
+                        }
+                    }
+
+                    // 对每个输入字符计算下一个状态
+                    for (char input_char : input_chars) {
+                        closure next_set = builder::epsilon_closure(
+                            builder::move(current_set, input_char, input_nfa), input_nfa);
+                        if (next_set.empty()) continue;
+
+                        dfa::state::id_t next_id;
+                        auto it = state_map.find(next_set);
+                        if (it == state_map.end()) {
+                            // 创建新的DFA状态
+                            next_id             = result_dfa.add_state(next_set,
+                                                                       input_nfa.has_final(next_set));
+                            state_map[next_set] = next_id;
+                            unmarked.push_back(next_set);
+                        } else {
+                            next_id = it->second;
+                        }
+
+                        // 添加转换
+                        result_dfa.set_transition(current_id, input_char, next_id);
+                    }
+                }
+
+                // 记录最终状态
+                for (dfa::state::id_t i = 0; i < result_dfa.states.size(); i++) {
+                    if (result_dfa.states[i].is_final()) {
+                        final_state state(i);
+                        // get metadata from nfa
+
+                        result_dfa.final_states.insert(state);
+                    }
+                }
+
+                return result_dfa;
+            }
 
             // DFA最小化算法 - 使用Hopcroft算法
             static dfa minimize(const dfa& input_dfa);

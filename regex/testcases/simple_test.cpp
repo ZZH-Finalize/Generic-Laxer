@@ -2,7 +2,7 @@
 #include <format>
 #include <string_view>
 #include <cassert>
-#include "regex/regex.hpp"
+#include "regex.hpp"
 
 int main(const int argc, const char** argv)
 {

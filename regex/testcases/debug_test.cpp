@@ -2,7 +2,7 @@
 #include <format>
 #include <string_view>
 #include <cassert>
-#include "regex/regex.hpp"
+#include "regex.hpp"
 
 void print_match(const regex::dfa& dfa, const std::string_view& str)
 {

@@ -1,18 +1,23 @@
 #pragma once
 
+#include <any>
 #include <bitset>
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <format>
 #include <iterator>
 #include <exception>
 #include <limits>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 #include <type_traits>
 #include <vector>
 #include <set>
+
+#include "final_state.hpp"
 
 namespace regex {
 
@@ -28,7 +33,7 @@ namespace regex {
        public:
         class state {
            public:
-            using id_t         = std::uint32_t;
+            using id_t         = final_state::id_t;
             using transition_t = std::vector<id_t>;
             using transition_map_t =
                 std::array<transition_t, std::numeric_limits<unsigned char>::max() + 1>;
@@ -67,17 +72,16 @@ namespace regex {
 
         using charset_t = std::bitset<256>;
         using states_t  = std::vector<state>;
-        using state_set_t = std::set<state::id_t>;
+        using closure   = final_state::closure;
 
        private:
         states_t states;
-        state::id_t start, final;
+        state::id_t start;
+        final_state final;
 
        protected:
-        explicit nfa(void)
+        explicit nfa(void): start(this->add_state()), final(this->add_state())
         {
-            this->set_start(this->add_state());
-            this->set_final(this->add_state());
         }
 
         state::id_t add_state(void)
@@ -138,6 +142,7 @@ namespace regex {
 
        public:
         friend nfa build_nfa(std::string_view exp);
+        friend struct std::formatter<nfa>;
 
         class regex_error: public std::runtime_error {
            public:
@@ -156,9 +161,9 @@ namespace regex {
             return this->final;
         }
 
-        bool has_final(const state_set_t& states) const
+        bool has_final(const closure& states) const
         {
-            return states.contains(this->get_final());
+            return states.contains(this->final);
         }
 
         const state& get_state(state::id_t state) const noexcept
@@ -216,6 +221,46 @@ namespace regex {
         };
     };
 
+    // nfa相关约束
+
+    // 是否具有与regex::nfa::state相同的操作
+    template<typename T>
+    concept has_nfa_state_op = requires(const T& t, char input) {
+        // 约束T类型必须有get_transition_map方法
+        { t.get_transition_map() } -> std::same_as<const nfa::state::transition_map_t&>;
+
+        // 约束T类型必须有get_transition方法
+        { t.get_transition(input) } -> std::same_as<const nfa::state::transition_t&>;
+
+        // 约束T类型必须有get_epsilon_transition方法
+        { t.get_epsilon_transition() } -> std::same_as<const nfa::state::transition_t&>;
+    };
+
+    // 是否为regex::nfa派生类
+    template<typename T>
+    concept is_base_of_nfa_v = std::is_base_of_v<nfa, T>;
+
+    // 是否具有与regex::nfa相同的操作(以子集构造算法所需要的来看)
+    template<typename T>
+    concept has_nfa_op = requires(const T& t, nfa::state::id_t state,
+                                  const nfa::closure& closure) {
+        { t.get_start() } -> std::same_as<nfa::state::id_t>;
+        { t.has_final(closure) } -> std::same_as<bool>;
+        { t.get_state(state) } -> has_nfa_state_op;
+        { t.get_states() } -> std::ranges::range;
+
+        requires has_nfa_state_op<std::ranges::range_value_t<decltype(t.get_states())>>;
+    };
+
+    // 是否为NFA抽象类型(regex::nfa及其其子类, 或者与regex::nfa行为相同的任何类都可以算作NFA)
+    template<typename T>
+    concept is_nfa = std::is_same_v<T, nfa> or is_base_of_nfa_v<T> or has_nfa_op<T>;
+
+    // 是否具有获取元数据的能力
+    template<typename NFA>
+    concept has_metadata = requires(const NFA& nfa, const nfa::closure& closure) {
+        { nfa.get_metadata(closure) } -> std::same_as<std::any>;
+    };
 } // namespace regex
 
 // 为 nfa 类提供 std::format 支持

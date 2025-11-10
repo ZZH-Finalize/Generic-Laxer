@@ -1,129 +1,15 @@
 #include "dfa.hpp"
+#include "final_state.hpp"
+#include "nfa.hpp"
 
 namespace regex {
 
-    dfa::builder::state_set_t dfa::builder::epsilon_closure(const state_set_t& states_set,
-                                                            const nfa& input_nfa)
+#if 1
+    dfa dfa::builder::minimize(const dfa& input_dfa)
     {
-        state_set_t closure = states_set;
-
-        // 使用队列进行BFS遍历，避免无限循环
-        std::queue<nfa::state::id_t> work_queue;
-        for (auto state_id : states_set) {
-            work_queue.push(state_id);
-        }
-
-        while (not work_queue.empty()) {
-            nfa::state::id_t current_state = work_queue.front();
-            work_queue.pop();
-
-            const auto& state           = input_nfa.get_state(current_state);
-            const auto& epsilon_targets = state.get_epsilon_transition();
-
-            for (auto epsilon_target : epsilon_targets) {
-                closure.insert(epsilon_target);
-                work_queue.push(epsilon_target);
-            }
-        }
-
-        return closure;
+        return input_dfa;
     }
-
-    dfa::builder::state_set_t dfa::builder::move(const state_set_t& states_set,
-                                                 char input, const nfa& input_nfa)
-    {
-        state_set_t result;
-
-        for (auto state_id : states_set) {
-            const auto& state          = input_nfa.get_state(state_id);
-            const auto& transition_map = state.get_transition_map();
-
-            for (auto target : transition_map[static_cast<unsigned char>(input)]) {
-                result.insert(target);
-            }
-        }
-
-        return result;
-    }
-
-    dfa dfa::builder::build(const nfa& input_nfa)
-    {
-        dfa result_dfa;
-
-        if (input_nfa.get_states().empty()) {
-            // 如果NFA没有状态，创建一个空的DFA
-            result_dfa.start_state = result_dfa.add_state({});
-            return result_dfa;
-        }
-
-        // 计算初始状态的epsilon闭包
-        state_set_t initial_closure =
-            builder::epsilon_closure(input_nfa.get_start(), input_nfa);
-        std::map<state_set_t, dfa::state::id_t> state_map; // 映射NFA状态集到DFA状态ID
-        std::vector<state_set_t> unmarked;                 // 未标记的DFA状态
-
-        // 创建初始DFA状态
-        bool is_final          = initial_closure.contains(input_nfa.get_final());
-        result_dfa.start_state = result_dfa.add_state(initial_closure, is_final);
-
-        state_map[initial_closure] = result_dfa.start_state;
-
-        unmarked.push_back(initial_closure);
-
-        // 子集构造算法
-        while (not unmarked.empty()) {
-            state_set_t current_set = unmarked.back();
-            unmarked.pop_back();
-
-            dfa::state::id_t current_id = state_map[current_set];
-
-            // 尝试所有可能的输入字符
-            std::set<char> input_chars;
-            for (auto nfa_state_id : current_set) {
-                const auto& nfa_state   = input_nfa.get_state(nfa_state_id);
-                const auto& transitions = nfa_state.get_transition_map();
-
-                for (int input_idx = 0; input_idx < transitions.size(); input_idx++) {
-                    if (not transitions[input_idx].empty()) {
-                        input_chars.insert(static_cast<char>(input_idx));
-                    }
-                }
-            }
-
-            // 对每个输入字符计算下一个状态
-            for (char input_char : input_chars) {
-                state_set_t next_set = builder::epsilon_closure(
-                    builder::move(current_set, input_char, input_nfa), input_nfa);
-                if (next_set.empty()) continue;
-
-                dfa::state::id_t next_id;
-                auto it = state_map.find(next_set);
-                if (it == state_map.end()) {
-                    // 创建新的DFA状态
-
-                    next_id = result_dfa.add_state(
-                        next_set, next_set.contains(input_nfa.get_final()));
-                    state_map[next_set] = next_id;
-                    unmarked.push_back(next_set);
-                } else {
-                    next_id = it->second;
-                }
-
-                // 添加转换
-                result_dfa.set_transition(current_id, input_char, next_id);
-            }
-        }
-
-        // 记录最终状态
-        for (dfa::state::id_t i = 0; i < result_dfa.states.size(); i++) {
-            if (result_dfa.states[i].is_final()) {
-                result_dfa.final_states.insert(i);
-            }
-        }
-
-        return result_dfa;
-    }
-
+#else
     dfa dfa::builder::minimize(const dfa& input_dfa)
     {
         if (input_dfa.states.empty()) {
@@ -302,5 +188,6 @@ namespace regex {
 
         return minimized_dfa;
     }
+#endif
 
 } // namespace regex

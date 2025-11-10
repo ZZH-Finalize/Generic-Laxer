@@ -15,7 +15,7 @@ int main(const int argc, const char **argv)
 
         try {
             auto nfa           = regex::build_nfa(exp);
-            auto dfa           = nfa | regex::to_dfa;
+            auto dfa           = regex::to_dfa(nfa);
             auto minimized_dfa = dfa | regex::minimize;
 
             std::cout << std::format("regexp: `{}`\n\n", exp);

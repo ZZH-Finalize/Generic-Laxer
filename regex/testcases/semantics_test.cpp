@@ -1,7 +1,7 @@
 #include <iostream>
 #include <format>
 #include <string_view>
-#include "regex/regex.hpp"
+#include "regex.hpp"
 
 void print_match(const regex::dfa& dfa, const std::string_view& str, const std::string& test_name, bool expected)
 {

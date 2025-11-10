@@ -3,9 +3,7 @@
 #include <fstream>
 #include <string>
 
-#include "regex/dfa.hpp"
-#include "regex/nfa.hpp"
-#include "regex/regex.hpp"
+#include "nfa.hpp"
 
 int main(const int argc, const char** argv)
 {
