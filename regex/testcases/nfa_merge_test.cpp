@@ -31,25 +31,25 @@ void test_nfa_merge()
 
     // 测试合并后的DFA并添加断言
     std::cout << "\n--- 测试合并后的DFA ---" << std::endl;
-    bool result1 = combined_dfa.match("if");
-    std::cout << "匹配 'if': " << result1 << std::endl;
-    assert(result1 == true);
-
-    bool result2 = combined_dfa.match("variable");
-    std::cout << "匹配 'variable': " << result2 << std::endl;
-    assert(result2 == true);
-
-    bool result3 = combined_dfa.match("123");
-    std::cout << "匹配 '123': " << result3 << std::endl;
-    assert(result3 == true);
-
-    bool result4 = combined_dfa.match("else"); // 不应该匹配
-    std::cout << "匹配 'else': " << result4 << std::endl;
-    assert(result4 == false);
-
-    bool result5 = combined_dfa.match("456"); // 不应该匹配
-    std::cout << "匹配 '456': " << result5 << std::endl;
-    assert(result5 == false);
+    auto result1 = combined_dfa.match("if");
+    std::cout << "匹配 'if': " << result1.has_value() << std::endl;
+    assert(result1.has_value());
+    
+    auto result2 = combined_dfa.match("variable");
+    std::cout << "匹配 'variable': " << result2.has_value() << std::endl;
+    assert(result2.has_value());
+    
+    auto result3 = combined_dfa.match("123");
+    std::cout << "匹配 '123': " << result3.has_value() << std::endl;
+    assert(result3.has_value());
+    
+    auto result4 = combined_dfa.match("else"); // 不应该匹配
+    std::cout << "匹配 'else': " << result4.has_value() << std::endl;
+    assert(!result4.has_value());
+    
+    auto result5 = combined_dfa.match("456"); // 不应该匹配
+    std::cout << "匹配 '456': " << result5.has_value() << std::endl;
+    assert(!result5.has_value());
 
     // 测试更复杂的合并
     std::cout << "\n--- 测试复杂合并 ---" << std::endl;
@@ -64,51 +64,51 @@ void test_nfa_merge()
     regex::dfa complex_dfa = regex::to_dfa(complex_nfa);
 
     std::cout << "复杂合并DFA测试:" << std::endl;
-    bool result6 = complex_dfa.match("abc");
-    std::cout << "匹配 'abc': " << result6 << std::endl;
-    assert(result6 == true);
-
-    bool result7 = complex_dfa.match("xyz");
-    std::cout << "匹配 'xyz': " << result7 << std::endl;
-    assert(result7 == true);
-
-    bool result8 = complex_dfa.match("789");
-    std::cout << "匹配 '789': " << result8 << std::endl;
-    assert(result8 == true);
-
-    bool result9 = complex_dfa.match("hello");
-    std::cout << "匹配 'hello': " << result9 << std::endl;
-    assert(result9 == false);
+    auto result6 = complex_dfa.match("abc");
+    std::cout << "匹配 'abc': " << result6.has_value() << std::endl;
+    assert(result6.has_value());
+    
+    auto result7 = complex_dfa.match("xyz");
+    std::cout << "匹配 'xyz': " << result7.has_value() << std::endl;
+    assert(result7.has_value());
+    
+    auto result8 = complex_dfa.match("789");
+    std::cout << "匹配 '789': " << result8.has_value() << std::endl;
+    assert(result8.has_value());
+    
+    auto result9 = complex_dfa.match("hello");
+    std::cout << "匹配 'hello': " << result9.has_value() << std::endl;
+    assert(!result9.has_value());
 
     // 验证每个单独的NFA仍然有效
     std::cout << "\n--- 验证原NFA未被修改 ---" << std::endl;
     regex::dfa original_keyword_dfa    = regex::to_dfa(keyword_nfa);
     regex::dfa original_identifier_dfa = regex::to_dfa(identifier_nfa);
     regex::dfa original_number_dfa     = regex::to_dfa(number_nfa);
-
-    bool result10 = original_keyword_dfa.match("if");
-    std::cout << "原关键字NFA匹配'if': " << result10 << std::endl;
-    assert(result10 == true);
-
-    bool result11 = original_keyword_dfa.match("variable");
-    std::cout << "原关键字NFA匹配'variable': " << result11 << std::endl;
-    assert(result11 == false);
-
-    bool result12 = original_identifier_dfa.match("variable");
-    std::cout << "原标识符NFA匹配'variable': " << result12 << std::endl;
-    assert(result12 == true);
-
-    bool result13 = original_identifier_dfa.match("if");
-    std::cout << "原标识符NFA匹配'if': " << result13 << std::endl;
-    assert(result13 == false);
-
-    bool result14 = original_number_dfa.match("123");
-    std::cout << "原数字NFA匹配'123': " << result14 << std::endl;
-    assert(result14 == true);
-
-    bool result15 = original_number_dfa.match("456");
-    std::cout << "原数字NFA匹配'456': " << result15 << std::endl;
-    assert(result15 == false);
+    
+    auto result10 = original_keyword_dfa.match("if");
+    std::cout << "原关键字NFA匹配'if': " << result10.has_value() << std::endl;
+    assert(result10.has_value());
+    
+    auto result11 = original_keyword_dfa.match("variable");
+    std::cout << "原关键字NFA匹配'variable': " << result11.has_value() << std::endl;
+    assert(!result11.has_value());
+    
+    auto result12 = original_identifier_dfa.match("variable");
+    std::cout << "原标识符NFA匹配'variable': " << result12.has_value() << std::endl;
+    assert(result12.has_value());
+    
+    auto result13 = original_identifier_dfa.match("if");
+    std::cout << "原标识符NFA匹配'if': " << result13.has_value() << std::endl;
+    assert(!result13.has_value());
+    
+    auto result14 = original_number_dfa.match("123");
+    std::cout << "原数字NFA匹配'123': " << result14.has_value() << std::endl;
+    assert(result14.has_value());
+    
+    auto result15 = original_number_dfa.match("456");
+    std::cout << "原数字NFA匹配'456': " << result15.has_value() << std::endl;
+    assert(!result15.has_value());
 }
 
 // 测试NFA合并的顺序是否影响结果
@@ -129,38 +129,38 @@ void test_merge_associativity()
     regex::dfa right_dfa   = regex::to_dfa(right_assoc);
 
     // 测试左侧结合的结果
-    bool left_result1 = left_dfa.match("a");
-    std::cout << "左侧结合 (a|b)|c 匹配 'a': " << left_result1 << std::endl;
-    assert(left_result1 == true);
-
-    bool left_result2 = left_dfa.match("b");
-    std::cout << "左侧结合 (a|b)|c 匹配 'b': " << left_result2 << std::endl;
-    assert(left_result2 == true);
-
-    bool left_result3 = left_dfa.match("c");
-    std::cout << "左侧结合 (a|b)|c 匹配 'c': " << left_result3 << std::endl;
-    assert(left_result3 == true);
-
-    bool left_result4 = left_dfa.match("d");
-    std::cout << "左侧结合 (a|b)|c 匹配 'd': " << left_result4 << std::endl;
-    assert(left_result4 == false);
+    auto left_result1 = left_dfa.match("a");
+    std::cout << "左侧结合 (a|b)|c 匹配 'a': " << left_result1.has_value() << std::endl;
+    assert(left_result1.has_value());
+    
+    auto left_result2 = left_dfa.match("b");
+    std::cout << "左侧结合 (a|b)|c 匹配 'b': " << left_result2.has_value() << std::endl;
+    assert(left_result2.has_value());
+    
+    auto left_result3 = left_dfa.match("c");
+    std::cout << "左侧结合 (a|b)|c 匹配 'c': " << left_result3.has_value() << std::endl;
+    assert(left_result3.has_value());
+    
+    auto left_result4 = left_dfa.match("d");
+    std::cout << "左侧结合 (a|b)|c 匹配 'd': " << left_result4.has_value() << std::endl;
+    assert(!left_result4.has_value());
 
     // 测试右侧结合的结果
-    bool right_result1 = right_dfa.match("a");
-    std::cout << "右侧结合 a|(b|c) 匹配 'a': " << right_result1 << std::endl;
-    assert(right_result1 == true);
-
-    bool right_result2 = right_dfa.match("b");
-    std::cout << "右侧结合 a|(b|c) 匹配 'b': " << right_result2 << std::endl;
-    assert(right_result2 == true);
-
-    bool right_result3 = right_dfa.match("c");
-    std::cout << "右侧结合 a|(b|c) 匹配 'c': " << right_result3 << std::endl;
-    assert(right_result3 == true);
-
-    bool right_result4 = right_dfa.match("d");
-    std::cout << "右侧结合 a|(b|c) 匹配 'd': " << right_result4 << std::endl;
-    assert(right_result4 == false);
+    auto right_result1 = right_dfa.match("a");
+    std::cout << "右侧结合 a|(b|c) 匹配 'a': " << right_result1.has_value() << std::endl;
+    assert(right_result1.has_value());
+    
+    auto right_result2 = right_dfa.match("b");
+    std::cout << "右侧结合 a|(b|c) 匹配 'b': " << right_result2.has_value() << std::endl;
+    assert(right_result2.has_value());
+    
+    auto right_result3 = right_dfa.match("c");
+    std::cout << "右侧结合 a|(b|c) 匹配 'c': " << right_result3.has_value() << std::endl;
+    assert(right_result3.has_value());
+    
+    auto right_result4 = right_dfa.match("d");
+    std::cout << "右侧结合 a|(b|c) 匹配 'd': " << right_result4.has_value() << std::endl;
+    assert(!right_result4.has_value());
 }
 
 int main()

@@ -28,17 +28,17 @@ int main(const int argc, const char** argv)
         regex::dfa dfa_obj = regex::to_dfa(nfa_obj);
         
         // 测试匹配结果
-        bool match_a = dfa_obj.match("a");
-        std::cout << "NFA转换后的DFA匹配 'a': " << match_a << std::endl;
-        assert(match_a == true);
+        auto match_a = dfa_obj.match("a");
+        std::cout << "NFA转换后的DFA匹配 'a': " << match_a.has_value() << std::endl;
+        assert(match_a.has_value());
         
-        bool match_b = dfa_obj.match("b");
-        std::cout << "NFA转换后的DFA匹配 'b': " << match_b << std::endl;
-        assert(match_b == false);
+        auto match_b = dfa_obj.match("b");
+        std::cout << "NFA转换后的DFA匹配 'b': " << match_b.has_value() << std::endl;
+        assert(!match_b.has_value());
         
-        bool match_empty = dfa_obj.match("");
-        std::cout << "NFA转换后的DFA匹配 '': " << match_empty << std::endl;
-        assert(match_empty == false);
+        auto match_empty = dfa_obj.match("");
+        std::cout << "NFA转换后的DFA匹配 '': " << match_empty.has_value() << std::endl;
+        assert(!match_empty.has_value());
 
         std::cout << "NFA测试通过!" << std::endl;
     } catch (const std::exception& e) {

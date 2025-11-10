@@ -5,12 +5,13 @@
 
 void print_match_result(const regex::dfa& dfa, const std::string_view& str, const std::string& test_name, bool expected_full_match)
 {
-    bool full_match_result = dfa.match(str);
-    std::string full_match_status = (full_match_result == expected_full_match) ? "PASS" : "FAIL";
-    std::cout << std::format("[{}] {}: 完全匹配={} ({})\n", full_match_status, test_name, full_match_result, str);
+    auto full_match_result = dfa.match(str);
+    bool has_match = full_match_result.has_value();
+    std::string full_match_status = (has_match == expected_full_match) ? "PASS" : "FAIL";
+    std::cout << std::format("[{}] {}: 完全匹配={} ({})\n", full_match_status, test_name, has_match, str);
     
-    if (full_match_result != expected_full_match) {
-        std::cout << "  -> 期望完全匹配结果: " << expected_full_match << ", 实际: " << full_match_result << std::endl;
+    if (has_match != expected_full_match) {
+        std::cout << "  -> 期望完全匹配结果: " << expected_full_match << ", 实际: " << has_match << std::endl;
         std::exit(1);
     }
 }

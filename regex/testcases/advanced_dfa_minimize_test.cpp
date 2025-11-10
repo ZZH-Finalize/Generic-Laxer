@@ -15,13 +15,13 @@ int main()
             std::cout << "原始DFA状态数: " << original_states << std::endl;
 
             // 测试原始DFA
-            assert(dfa.match("aa") == true);
-            assert(dfa.match("ab") == true);
-            assert(dfa.match("ba") == false);
-            assert(dfa.match("bb") == false);
-            assert(dfa.match("aaa") == true);
-            assert(dfa.match("aba") == false);
-            assert(dfa.match("aab") == true);
+            assert(dfa.match("aa").has_value());
+            assert(dfa.match("ab").has_value());
+            assert(!dfa.match("ba").has_value());
+            assert(!dfa.match("bb").has_value());
+            assert(dfa.match("aaa").has_value());
+            assert(!dfa.match("aba").has_value());
+            assert(dfa.match("aab").has_value());
 
             // 最小化DFA
             dfa                     = regex::minimize(dfa);
@@ -29,13 +29,13 @@ int main()
             std::cout << "最小化后DFA状态数: " << minimized_states << std::endl;
 
             // 测试最小化后的DFA，结果应该相同
-            assert(dfa.match("aa") == true);
-            assert(dfa.match("ab") == true);
-            assert(dfa.match("ba") == false);
-            assert(dfa.match("bb") == false);
-            assert(dfa.match("aaa") == true);
-            assert(dfa.match("aba") == false);
-            assert(dfa.match("aab") == true);
+            assert(dfa.match("aa").has_value());
+            assert(dfa.match("ab").has_value());
+            assert(!dfa.match("ba").has_value());
+            assert(!dfa.match("bb").has_value());
+            assert(dfa.match("aaa").has_value());
+            assert(!dfa.match("aba").has_value());
+            assert(dfa.match("aab").has_value());
 
             std::cout << "测试1通过!" << std::endl;
         }
@@ -48,11 +48,11 @@ int main()
             std::cout << "原始DFA状态数: " << original_states << std::endl;
 
             // 测试原始DFA
-            assert(dfa.match("a") == true);
-            assert(dfa.match("aa") == true);
-            assert(dfa.match("aaa") == true);
-            assert(dfa.match("") == false);
-            assert(dfa.match("b") == false);
+            assert(dfa.match("a").has_value());
+            assert(dfa.match("aa").has_value());
+            assert(dfa.match("aaa").has_value());
+            assert(!dfa.match("").has_value());
+            assert(!dfa.match("b").has_value());
 
             // 最小化DFA
             dfa                     = regex::minimize(dfa);
@@ -60,11 +60,11 @@ int main()
             std::cout << "最小化后DFA状态数: " << minimized_states << std::endl;
 
             // 测试最小化后的DFA，结果应该相同
-            assert(dfa.match("a") == true);
-            assert(dfa.match("aa") == true);
-            assert(dfa.match("aaa") == true);
-            assert(dfa.match("") == false);
-            assert(dfa.match("b") == false);
+            assert(dfa.match("a").has_value());
+            assert(dfa.match("aa").has_value());
+            assert(dfa.match("aaa").has_value());
+            assert(!dfa.match("").has_value());
+            assert(!dfa.match("b").has_value());
 
             std::cout << "测试2通过!" << std::endl;
         }
@@ -77,13 +77,13 @@ int main()
             std::cout << "原始DFA状态数: " << original_states << std::endl;
 
             // 测试原始DFA
-            assert(dfa.match("") == true);
-            assert(dfa.match("a") == true);
-            assert(dfa.match("b") == true);
-            assert(dfa.match("ab") == true);
-            assert(dfa.match("ba") == true);
-            assert(dfa.match("aba") == true);
-            assert(dfa.match("xyz") == false); // 包含非a,b字符
+            assert(dfa.match("").has_value());
+            assert(dfa.match("a").has_value());
+            assert(dfa.match("b").has_value());
+            assert(dfa.match("ab").has_value());
+            assert(dfa.match("ba").has_value());
+            assert(dfa.match("aba").has_value());
+            assert(!dfa.match("xyz").has_value()); // 包含非a,b字符
 
             // 最小化DFA
             dfa                     = regex::minimize(dfa);
@@ -91,13 +91,13 @@ int main()
             std::cout << "最小化后DFA状态数: " << minimized_states << std::endl;
 
             // 测试最小化后的DFA，结果应该相同
-            assert(dfa.match("") == true);
-            assert(dfa.match("a") == true);
-            assert(dfa.match("b") == true);
-            assert(dfa.match("ab") == true);
-            assert(dfa.match("ba") == true);
-            assert(dfa.match("aba") == true);
-            assert(dfa.match("xyz") == false); // 包含非a,b字符
+            assert(dfa.match("").has_value());
+            assert(dfa.match("a").has_value());
+            assert(dfa.match("b").has_value());
+            assert(dfa.match("ab").has_value());
+            assert(dfa.match("ba").has_value());
+            assert(dfa.match("aba").has_value());
+            assert(!dfa.match("xyz").has_value()); // 包含非a,b字符
 
             std::cout << "测试3通过!" << std::endl;
         }

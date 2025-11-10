@@ -6,11 +6,12 @@
 void print_match(const regex::dfa& dfa, const std::string_view& str,
                  const std::string& test_name, bool expected)
 {
-    bool result        = dfa.match(str);
-    std::string status = (result == expected) ? "PASS" : "FAIL";
-    std::cout << std::format("[{}] {}: {} ({})\n", status, test_name, result, str);
+    auto result        = dfa.match(str);
+    bool has_match = result.has_value();
+    std::string status = (has_match == expected) ? "PASS" : "FAIL";
+    std::cout << std::format("[{}] {}: {} ({})\n", status, test_name, has_match, str);
 
-    if (result != expected) {
+    if (has_match != expected) {
         std::exit(1); // 测试失败，退出程序
     }
 }

@@ -6,16 +6,23 @@
 #include "regex/final_state.hpp"
 
 namespace laxer {
-    class nfa: protected regex::nfa {
+    class nfa: public regex::nfa {
        public:
         using accept_states_t = std::set<regex::final_state>;
+        using metadata_t      = regex::final_state::metadata_t;
+        using rule_id_t       = state::id_t;
 
        private:
         // 所有NFA的终态以及规则id
         accept_states_t accept_states;
 
         // 规则id计数
-        state::id_t current_rule_id;
+        rule_id_t current_rule_id;
+
+        // state::id_t get_final(void) const noexcept
+        // {
+        //     return 0;
+        // }
 
        public:
         explicit nfa(state::id_t rule_id_base = 0)
@@ -44,15 +51,30 @@ namespace laxer {
             }
         }
 
+        // 重写基类方法, 实现多终态查找逻辑
         bool has_final(const closure& states) const
         {
-            for (auto state : states) {
+            for (const auto& state : states) {
                 if (this->accept_states.contains(state)) {
                     return true;
                 }
             }
 
             return false;
+        }
+
+        metadata_t get_metadata(const closure& states) const
+        {
+            for (const auto& state : states) {
+                const auto& find_state = this->accept_states.find(state);
+
+                // 闭包中存在终态
+                if (find_state != this->accept_states.end()) {
+                    return find_state->get_metadata();
+                }
+            }
+
+            return std::any();
         }
     };
 } // namespace laxer

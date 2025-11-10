@@ -14,14 +14,14 @@ int main()
             regex::dfa dfa = nfa | regex::to_dfa;
             
             // 测试DFA的匹配结果
-            assert(dfa.match("b") == true);
-            assert(dfa.match("ab") == true);
-            assert(dfa.match("aab") == true);
-            assert(dfa.match("aaab") == true);
-            assert(dfa.match("a") == false);
-            assert(dfa.match("aa") == false);
-            assert(dfa.match("ba") == false);
-            assert(dfa.match("") == false);
+            assert(dfa.match("b").has_value());
+            assert(dfa.match("ab").has_value());
+            assert(dfa.match("aab").has_value());
+            assert(dfa.match("aaab").has_value());
+            assert(!dfa.match("a").has_value());
+            assert(!dfa.match("aa").has_value());
+            assert(!dfa.match("ba").has_value());
+            assert(!dfa.match("").has_value());
             
             std::cout << "测试1通过!" << std::endl;
         }
@@ -33,14 +33,14 @@ int main()
             regex::dfa minimized_dfa = dfa | regex::minimize;
             
             // 比较原始DFA和最小化DFA的匹配结果，应该相同
-            assert(dfa.match("aa") == minimized_dfa.match("aa"));
-            assert(dfa.match("ab") == minimized_dfa.match("ab"));
-            assert(dfa.match("ba") == minimized_dfa.match("ba"));
-            assert(dfa.match("bb") == minimized_dfa.match("bb"));
-            assert(dfa.match("aaa") == minimized_dfa.match("aaa"));
-            assert(dfa.match("aba") == minimized_dfa.match("aba"));
-            assert(dfa.match("aab") == minimized_dfa.match("aab"));
-            assert(dfa.match("xyz") == minimized_dfa.match("xyz"));
+            assert(dfa.match("aa").has_value() == minimized_dfa.match("aa").has_value());
+            assert(dfa.match("ab").has_value() == minimized_dfa.match("ab").has_value());
+            assert(dfa.match("ba").has_value() == minimized_dfa.match("ba").has_value());
+            assert(dfa.match("bb").has_value() == minimized_dfa.match("bb").has_value());
+            assert(dfa.match("aaa").has_value() == minimized_dfa.match("aaa").has_value());
+            assert(dfa.match("aba").has_value() == minimized_dfa.match("aba").has_value());
+            assert(dfa.match("aab").has_value() == minimized_dfa.match("aab").has_value());
+            assert(dfa.match("xyz").has_value() == minimized_dfa.match("xyz").has_value());
             
             std::cout << "测试2通过!" << std::endl;
         }
@@ -53,12 +53,12 @@ int main()
             regex::dfa minimized_dfa = dfa | regex::minimize;
             
             // 比较转换后的DFA和最小化DFA的匹配结果，应该相同
-            assert(dfa.match("a") == minimized_dfa.match("a"));
-            assert(dfa.match("aa") == minimized_dfa.match("aa"));
-            assert(dfa.match("aaa") == minimized_dfa.match("aaa"));
-            assert(dfa.match("") == minimized_dfa.match(""));
-            assert(dfa.match("b") == minimized_dfa.match("b"));
-            assert(dfa.match("ab") == minimized_dfa.match("ab"));
+            assert(dfa.match("a").has_value() == minimized_dfa.match("a").has_value());
+            assert(dfa.match("aa").has_value() == minimized_dfa.match("aa").has_value());
+            assert(dfa.match("aaa").has_value() == minimized_dfa.match("aaa").has_value());
+            assert(dfa.match("").has_value() == minimized_dfa.match("").has_value());
+            assert(dfa.match("b").has_value() == minimized_dfa.match("b").has_value());
+            assert(dfa.match("ab").has_value() == minimized_dfa.match("ab").has_value());
             
             std::cout << "测试3通过!" << std::endl;
         }
@@ -70,13 +70,13 @@ int main()
             regex::dfa minimized_dfa = dfa | regex::minimize;
             
             // 比较原始DFA和最小化DFA的匹配结果，应该相同
-            assert(dfa.match("") == minimized_dfa.match(""));
-            assert(dfa.match("a") == minimized_dfa.match("a"));
-            assert(dfa.match("b") == minimized_dfa.match("b"));
-            assert(dfa.match("ab") == minimized_dfa.match("ab"));
-            assert(dfa.match("ba") == minimized_dfa.match("ba"));
-            assert(dfa.match("aba") == minimized_dfa.match("aba"));
-            assert(dfa.match("xyz") == minimized_dfa.match("xyz")); // 包含非a,b字符，应该都为false
+            assert(dfa.match("").has_value() == minimized_dfa.match("").has_value());
+            assert(dfa.match("a").has_value() == minimized_dfa.match("a").has_value());
+            assert(dfa.match("b").has_value() == minimized_dfa.match("b").has_value());
+            assert(dfa.match("ab").has_value() == minimized_dfa.match("ab").has_value());
+            assert(dfa.match("ba").has_value() == minimized_dfa.match("ba").has_value());
+            assert(dfa.match("aba").has_value() == minimized_dfa.match("aba").has_value());
+            assert(dfa.match("xyz").has_value() == minimized_dfa.match("xyz").has_value()); // 包含非a,b字符，应该都为false
             
             std::cout << "测试4通过!" << std::endl;
         }

@@ -14,33 +14,33 @@ int main() {
         std::cout << "原始DFA状态数: " << dfa.get_state_count() << std::endl;
         
         // 测试原始DFA并添加断言
-        bool result1 = dfa.match("aa");
-        std::cout << "原始DFA匹配 'aa': " << result1 << std::endl;
-        assert(result1 == true);
+        auto result1 = dfa.match("aa");
+        std::cout << "原始DFA匹配 'aa': " << result1.has_value() << std::endl;
+        assert(result1.has_value());
         
-        bool result2 = dfa.match("ab");
-        std::cout << "原始DFA匹配 'ab': " << result2 << std::endl;
-        assert(result2 == true);
+        auto result2 = dfa.match("ab");
+        std::cout << "原始DFA匹配 'ab': " << result2.has_value() << std::endl;
+        assert(result2.has_value());
         
-        bool result3 = dfa.match("ba");
-        std::cout << "原始DFA匹配 'ba': " << result3 << std::endl;
-        assert(result3 == false);
+        auto result3 = dfa.match("ba");
+        std::cout << "原始DFA匹配 'ba': " << result3.has_value() << std::endl;
+        assert(!result3.has_value());
         
-        bool result4 = dfa.match("bb");
-        std::cout << "原始DFA匹配 'bb': " << result4 << std::endl;
-        assert(result4 == false);
+        auto result4 = dfa.match("bb");
+        std::cout << "原始DFA匹配 'bb': " << result4.has_value() << std::endl;
+        assert(!result4.has_value());
         
-        bool result5 = dfa.match("aaa");
-        std::cout << "原始DFA匹配 'aaa': " << result5 << std::endl;
-        assert(result5 == true);
+        auto result5 = dfa.match("aaa");
+        std::cout << "原始DFA匹配 'aaa': " << result5.has_value() << std::endl;
+        assert(result5.has_value());
         
-        bool result6 = dfa.match("aba");
-        std::cout << "原始DFA匹配 'aba': " << result6 << std::endl;
-        assert(result6 == false);
+        auto result6 = dfa.match("aba");
+        std::cout << "原始DFA匹配 'aba': " << result6.has_value() << std::endl;
+        assert(!result6.has_value());
         
-        bool result7 = dfa.match("aab");
-        std::cout << "原始DFA匹配 'aab': " << result7 << std::endl;
-        assert(result7 == true);
+        auto result7 = dfa.match("aab");
+        std::cout << "原始DFA匹配 'aab': " << result7.has_value() << std::endl;
+        assert(result7.has_value());
         
         // 最小化DFA
         dfa = regex::minimize(dfa);
@@ -48,33 +48,33 @@ int main() {
         std::cout << "最小化后DFA状态数: " << dfa.get_state_count() << std::endl;
         
         // 测试最小化后的DFA，结果应该相同
-        bool result8 = dfa.match("aa");
-        std::cout << "最小化DFA匹配 'aa': " << result8 << std::endl;
-        assert(result8 == true);
+        auto result8 = dfa.match("aa");
+        std::cout << "最小化DFA匹配 'aa': " << result8.has_value() << std::endl;
+        assert(result8.has_value());
         
-        bool result9 = dfa.match("ab");
-        std::cout << "最小化DFA匹配 'ab': " << result9 << std::endl;
-        assert(result9 == true);
+        auto result9 = dfa.match("ab");
+        std::cout << "最小化DFA匹配 'ab': " << result9.has_value() << std::endl;
+        assert(result9.has_value());
         
-        bool result10 = dfa.match("ba");
-        std::cout << "最小化DFA匹配 'ba': " << result10 << std::endl;
-        assert(result10 == false);
+        auto result10 = dfa.match("ba");
+        std::cout << "最小化DFA匹配 'ba': " << result10.has_value() << std::endl;
+        assert(!result10.has_value());
         
-        bool result11 = dfa.match("bb");
-        std::cout << "最小化DFA匹配 'bb': " << result11 << std::endl;
-        assert(result11 == false);
+        auto result11 = dfa.match("bb");
+        std::cout << "最小化DFA匹配 'bb': " << result11.has_value() << std::endl;
+        assert(!result11.has_value());
         
-        bool result12 = dfa.match("aaa");
-        std::cout << "最小化DFA匹配 'aaa': " << result12 << std::endl;
-        assert(result12 == true);
+        auto result12 = dfa.match("aaa");
+        std::cout << "最小化DFA匹配 'aaa': " << result12.has_value() << std::endl;
+        assert(result12.has_value());
         
-        bool result13 = dfa.match("aba");
-        std::cout << "最小化DFA匹配 'aba': " << result13 << std::endl;
-        assert(result13 == false);
+        auto result13 = dfa.match("aba");
+        std::cout << "最小化DFA匹配 'aba': " << result13.has_value() << std::endl;
+        assert(!result13.has_value());
         
-        bool result14 = dfa.match("aab");
-        std::cout << "最小化DFA匹配 'aab': " << result14 << std::endl;
-        assert(result14 == true);
+        auto result14 = dfa.match("aab");
+        std::cout << "最小化DFA匹配 'aab': " << result14.has_value() << std::endl;
+        assert(result14.has_value());
         
         std::cout << "DFA最小化测试通过!" << std::endl;
     } catch (const std::exception& e) {

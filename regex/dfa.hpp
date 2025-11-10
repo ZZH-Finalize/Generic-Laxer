@@ -3,6 +3,7 @@
 #include "nfa.hpp"
 #include <format>
 #include <iterator>
+#include <optional>
 #include <set>
 #include <exception>
 #include <stdexcept>
@@ -77,6 +78,11 @@ namespace regex {
             {
                 return this->transitions;
             }
+
+            const closure& get_closure(void) const
+            {
+                return this->nfa_states;
+            }
         };
 
         using final_states_t = std::set<final_state>;
@@ -132,7 +138,7 @@ namespace regex {
         }
 
         // 匹配算法：检查字符串是否与DFA匹配
-        bool match(std::string_view str) const;
+        std::optional<final_state> match(std::string_view str) const;
 
         // 检查是否匹配空字符串
         bool match_empty() const;
@@ -283,7 +289,11 @@ namespace regex {
                 for (dfa::state::id_t i = 0; i < result_dfa.states.size(); i++) {
                     if (result_dfa.states[i].is_final()) {
                         final_state state(i);
-                        // get metadata from nfa
+                        const auto& closure = result_dfa.states[i].get_closure();
+
+                        if constexpr (has_metadata<NFA>) {
+                            state.set_metadata(input_nfa.get_metadata(closure));
+                        }
 
                         result_dfa.final_states.insert(state);
                     }

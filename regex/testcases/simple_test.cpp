@@ -19,22 +19,22 @@ int main(const int argc, const char** argv)
         std::cout << "DFA构造成功" << std::endl;
         
         // 测试匹配并添加断言来验证结果
-        bool match_a = dfa_obj.match("a");
-        std::cout << "测试匹配 'a': " << match_a << std::endl;
-        assert(match_a == true);
+        auto match_a = dfa_obj.match("a");
+        std::cout << "测试匹配 'a': " << match_a.has_value() << std::endl;
+        assert(match_a.has_value());
         
-        bool match_b = dfa_obj.match("b");
-        std::cout << "测试匹配 'b': " << match_b << std::endl;
-        assert(match_b == false);
+        auto match_b = dfa_obj.match("b");
+        std::cout << "测试匹配 'b': " << match_b.has_value() << std::endl;
+        assert(!match_b.has_value());
         
         // 添加更多测试用例
-        bool match_aa = dfa_obj.match("aa");
-        std::cout << "测试匹配 'aa': " << match_aa << std::endl;
-        assert(match_aa == false);
+        auto match_aa = dfa_obj.match("aa");
+        std::cout << "测试匹配 'aa': " << match_aa.has_value() << std::endl;
+        assert(!match_aa.has_value());
         
-        bool match_empty = dfa_obj.match("");
-        std::cout << "测试匹配 '': " << match_empty << std::endl;
-        assert(match_empty == false);
+        auto match_empty = dfa_obj.match("");
+        std::cout << "测试匹配 '': " << match_empty.has_value() << std::endl;
+        assert(!match_empty.has_value());
 
         std::cout << "简单测试通过!" << std::endl;
     } catch (const std::exception& e) {

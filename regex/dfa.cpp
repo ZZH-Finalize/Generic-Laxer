@@ -1,8 +1,10 @@
 #include "dfa.hpp"
+#include <optional>
+#include "final_state.hpp"
 
 namespace regex {
 
-    bool dfa::match(std::string_view str) const
+    std::optional<final_state> dfa::match(std::string_view str) const
     {
         if (this->states.empty()) {
             return false; // 没有状态，无法匹配
@@ -27,8 +29,14 @@ namespace regex {
             current_state = next_state;
         }
 
+        const auto& find_state = this->final_states.find(current_state);
+
         // 检查最终状态是否为接受状态
-        return this->final_states.contains(current_state);
+        if (find_state != this->final_states.end()) {
+            return *find_state;
+        }
+
+        return std::nullopt;
     }
 
     bool dfa::match_empty() const

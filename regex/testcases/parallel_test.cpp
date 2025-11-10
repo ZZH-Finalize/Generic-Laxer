@@ -31,25 +31,25 @@ void test_parallel_nfa()
     
     // 测试各种输入并添加断言
     std::cout << "\n--- 测试组合DFA ---" << std::endl;
-    bool result1 = combined_dfa.match("if");
-    std::cout << "匹配 'if': " << result1 << std::endl;
-    assert(result1 == true);
+    auto result1 = combined_dfa.match("if");
+    std::cout << "匹配 'if': " << result1.has_value() << std::endl;
+    assert(result1.has_value());
     
-    bool result2 = combined_dfa.match("variable");
-    std::cout << "匹配 'variable': " << result2 << std::endl;
-    assert(result2 == true);
+    auto result2 = combined_dfa.match("variable");
+    std::cout << "匹配 'variable': " << result2.has_value() << std::endl;
+    assert(result2.has_value());
     
-    bool result3 = combined_dfa.match("123");
-    std::cout << "匹配 '123': " << result3 << std::endl;
-    assert(result3 == true);
+    auto result3 = combined_dfa.match("123");
+    std::cout << "匹配 '123': " << result3.has_value() << std::endl;
+    assert(result3.has_value());
     
-    bool result4 = combined_dfa.match(" \t");
-    std::cout << "匹配 '  \t': " << result4 << std::endl;
-    assert(result4 == true);
+    auto result4 = combined_dfa.match(" \t");
+    std::cout << "匹配 '  \t': " << result4.has_value() << std::endl;
+    assert(result4.has_value());
     
-    bool result5 = combined_dfa.match("!@#");  // 特殊字符，不符合任何模式
-    std::cout << "匹配 '!@#': " << result5 << std::endl;
-    assert(result5 == false);  // 特殊字符不符合任何模式，所以不应该匹配
+    auto result5 = combined_dfa.match("!@#");  // 特殊字符，不符合任何模式
+    std::cout << "匹配 '!@#': " << result5.has_value() << std::endl;
+    assert(!result5.has_value());  // 特殊字符不符合任何模式，所以不应该匹配
     
     // 使用新的查找功能来测试子串匹配
     std::cout << "\n--- 测试查找功能 ---" << std::endl;
@@ -69,35 +69,35 @@ void test_parallel_nfa()
     regex::dfa identifier_dfa = regex::build_dfa("[a-zA-Z_][a-zA-Z0-9_]*");
     regex::dfa number_dfa = regex::build_dfa("[0-9]+");
     
-    bool kw_result1 = keyword_dfa.match("if");
-    bool id_result1 = identifier_dfa.match("if");
-    bool num_result1 = number_dfa.match("if");
-    std::cout << "'if' 是关键字: " << kw_result1 << std::endl;
-    std::cout << "'if' 是标识符: " << id_result1 << std::endl;
-    std::cout << "'if' 是数字: " << num_result1 << std::endl;
-    assert(kw_result1 == true);
-    assert(id_result1 == true);  // 'if' 也符合标识符模式，所以会被匹配
-    assert(num_result1 == false);
+    auto kw_result1 = keyword_dfa.match("if");
+    auto id_result1 = identifier_dfa.match("if");
+    auto num_result1 = number_dfa.match("if");
+    std::cout << "'if' 是关键字: " << kw_result1.has_value() << std::endl;
+    std::cout << "'if' 是标识符: " << id_result1.has_value() << std::endl;
+    std::cout << "'if' 是数字: " << num_result1.has_value() << std::endl;
+    assert(kw_result1.has_value());
+    assert(id_result1.has_value());  // 'if' 也符合标识符模式，所以会被匹配
+    assert(!num_result1.has_value());
     
-    bool kw_result2 = keyword_dfa.match("variable");
-    bool id_result2 = identifier_dfa.match("variable");
-    bool num_result2 = number_dfa.match("variable");
-    std::cout << "\n'variable' 是关键字: " << kw_result2 << std::endl;
-    std::cout << "'variable' 是标识符: " << id_result2 << std::endl;
-    std::cout << "'variable' 是数字: " << num_result2 << std::endl;
-    assert(kw_result2 == false);
-    assert(id_result2 == true);
-    assert(num_result2 == false);
+    auto kw_result2 = keyword_dfa.match("variable");
+    auto id_result2 = identifier_dfa.match("variable");
+    auto num_result2 = number_dfa.match("variable");
+    std::cout << "\n'variable' 是关键字: " << kw_result2.has_value() << std::endl;
+    std::cout << "'variable' 是标识符: " << id_result2.has_value() << std::endl;
+    std::cout << "'variable' 是数字: " << num_result2.has_value() << std::endl;
+    assert(!kw_result2.has_value());
+    assert(id_result2.has_value());
+    assert(!num_result2.has_value());
     
-    bool kw_result3 = keyword_dfa.match("456");
-    bool id_result3 = identifier_dfa.match("456");
-    bool num_result3 = number_dfa.match("456");
-    std::cout << "\n'456' 是关键字: " << kw_result3 << std::endl;
-    std::cout << "'456' 是标识符: " << id_result3 << std::endl;
-    std::cout << "'456' 是数字: " << num_result3 << std::endl;
-    assert(kw_result3 == false);
-    assert(id_result3 == false);
-    assert(num_result3 == true);
+    auto kw_result3 = keyword_dfa.match("456");
+    auto id_result3 = identifier_dfa.match("456");
+    auto num_result3 = number_dfa.match("456");
+    std::cout << "\n'456' 是关键字: " << kw_result3.has_value() << std::endl;
+    std::cout << "'456' 是标识符: " << id_result3.has_value() << std::endl;
+    std::cout << "'456' 是数字: " << num_result3.has_value() << std::endl;
+    assert(!kw_result3.has_value());
+    assert(!id_result3.has_value());
+    assert(num_result3.has_value());
 }
 
 // 测试手动合并NFA（如果NFA类提供公共接口）
@@ -114,21 +114,21 @@ void test_manual_merge()
     regex::dfa combined_dfa = regex::build_dfa("(abc)|(xyz)");
      
     std::cout << "选择DFA测试:" << std::endl;
-    bool result1 = combined_dfa.match("abc");
-    std::cout << "匹配 'abc': " << result1 << std::endl;
-    assert(result1 == true);
+    auto result1 = combined_dfa.match("abc");
+    std::cout << "匹配 'abc': " << result1.has_value() << std::endl;
+    assert(result1.has_value());
     
-    bool result2 = combined_dfa.match("xyz");
-    std::cout << "匹配 'xyz': " << result2 << std::endl;
-    assert(result2 == true);
+    auto result2 = combined_dfa.match("xyz");
+    std::cout << "匹配 'xyz': " << result2.has_value() << std::endl;
+    assert(result2.has_value());
     
-    bool result3 = combined_dfa.match("abcx");
-    std::cout << "匹配 'abcx': " << result3 << std::endl;
-    assert(result3 == false);
+    auto result3 = combined_dfa.match("abcx");
+    std::cout << "匹配 'abcx': " << result3.has_value() << std::endl;
+    assert(!result3.has_value());
     
-    bool result4 = combined_dfa.match("123");
-    std::cout << "匹配 '123': " << result4 << std::endl;
-    assert(result4 == false);
+    auto result4 = combined_dfa.match("123");
+    std::cout << "匹配 '123': " << result4.has_value() << std::endl;
+    assert(!result4.has_value());
 }
 
 int main()
