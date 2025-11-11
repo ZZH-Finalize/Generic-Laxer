@@ -66,11 +66,11 @@
                 "dependsOn": "build",
                 "command": "build/mingw/x86_64/debug/laxer-test.exe",
                 "args": [
-                    "test_cases/identifiers.edl",
-                    // "test_cases/keywords.edl",
-                    "test_cases/numbers.edl",
-                    "test_cases/strings.edl",
-                    "test_cases/std.edl",
+                    "edl_demo/identifiers.edl",
+                    // "edl_demo/keywords.edl",
+                    "edl_demo/numbers.edl",
+                    "edl_demo/strings.edl",
+                    "edl_demo/std.edl",
                 ],
                 "options": {
                     "cwd": "${workspaceFolder}"
@@ -124,11 +124,11 @@
                 "request": "launch",
                 "program": "${workspaceFolder}/build/mingw/x86_64/debug/laxer-test.exe",
                 "args": [
-                    "test_cases/identifiers.edl",
-                    // "test_cases/keywords.edl",
-                    "test_cases/numbers.edl",
-                    "test_cases/strings.edl",
-                    "test_cases/std.edl",
+                    "edl_demo/identifiers.edl",
+                    // "edl_demo/keywords.edl",
+                    "edl_demo/numbers.edl",
+                    "edl_demo/strings.edl",
+                    "edl_demo/std.edl",
                 ],
                 "stopAtEntry": true,
                 "cwd": "${workspaceFolder}",
