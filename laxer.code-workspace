@@ -83,10 +83,10 @@
                     "showReuseMessage": true,
                     "clear": true
                 },
-                "group": {
-                    "kind": "test",
-                    "isDefault": true
-                },
+                // "group": {
+                //     "kind": "test",
+                //     "isDefault": true
+                // },
                 "detail": "测试运行"
             },
             {
@@ -95,6 +95,7 @@
                 "command": "xmake",
                 "args": [
                     "test",
+                    "*/laxer"
                     // "-vD"
                 ],
                 "options": {
@@ -108,10 +109,10 @@
                     "showReuseMessage": true,
                     "clear": true
                 },
-                // "group": {
-                //     "kind": "test",
-                //     "isDefault": true
-                // },
+                "group": {
+                    "kind": "test",
+                    "isDefault": true
+                },
                 "detail": "测试运行"
             },
         ]

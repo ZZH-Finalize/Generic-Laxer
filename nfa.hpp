@@ -1,5 +1,7 @@
 #pragma once
 
+#include <any>
+#include <limits>
 #include <vector>
 #include <set>
 #include "regex/nfa.hpp"
@@ -65,14 +67,24 @@ namespace laxer {
 
         metadata_t get_metadata(const closure& states) const
         {
+            rule_id_t min_id = std::numeric_limits<rule_id_t>::max();
+
             for (const auto& state : states) {
                 const auto& find_state =
                     this->accept_states.find(regex::final_state(state));
 
                 // 闭包中存在终态
                 if (find_state != this->accept_states.end()) {
-                    return find_state->get_metadata();
+                    rule_id_t id = std::any_cast<rule_id_t>(find_state->get_metadata());
+
+                    if (id < min_id) {
+                        min_id = id;
+                    }
                 }
+            }
+
+            if (min_id != std::numeric_limits<rule_id_t>::max()) {
+                return min_id;
             }
 
             return std::any();
