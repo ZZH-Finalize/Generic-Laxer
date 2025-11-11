@@ -55,7 +55,7 @@ namespace laxer {
         bool has_final(const closure& states) const
         {
             for (const auto& state : states) {
-                if (this->accept_states.contains(state)) {
+                if (this->accept_states.contains(regex::final_state(state))) {
                     return true;
                 }
             }
@@ -66,7 +66,8 @@ namespace laxer {
         metadata_t get_metadata(const closure& states) const
         {
             for (const auto& state : states) {
-                const auto& find_state = this->accept_states.find(state);
+                const auto& find_state =
+                    this->accept_states.find(regex::final_state(state));
 
                 // 闭包中存在终态
                 if (find_state != this->accept_states.end()) {
