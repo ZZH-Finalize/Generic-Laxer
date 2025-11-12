@@ -4,64 +4,195 @@
 #include "dfa.hpp"
 
 namespace regex {
+    // builder类，包含所有构造相关的静态方法
+    class builder {
+       public:
+        using charset_t = nfa::charset_t;
+        using closure   = dfa::state::closure;
+        using transition_map_t =
+            std::array<nfa::state::id_t, std::tuple_size_v<nfa::state::transition_map_t>>;
+        using id_t = nfa::state::id_t;
 
-    inline nfa build_nfa(std::string_view exp)
-    {
-        return nfa::builder::build(exp);
-    }
+        // 从正则表达式创建NFA
+        static nfa build(std::string_view exp);
 
-    template<typename NFA>
-    requires is_nfa<NFA>
-    inline dfa to_dfa(const NFA& nfa)
-    {
-        return dfa::builder::build(nfa);
-    }
+        template<typename NFA>
+        requires is_nfa<NFA>
+        static dfa build(const NFA& input_nfa)
+        {
+            dfa result_dfa;
 
-    static inline dfa build_dfa(std::string_view exp)
-    {
-        return to_dfa(build_nfa(exp));
-    }
+            if (input_nfa.get_states().empty()) {
+                // 如果NFA没有状态，创建一个空的DFA
+                result_dfa.start_state = result_dfa.add_state({});
+                return result_dfa;
+            }
 
-    template<typename NFA>
-    requires is_nfa<NFA>
-    static inline dfa build(const NFA& nfa)
-    {
-        return to_dfa(nfa);
-    }
+            // 计算初始状态的epsilon闭包
+            closure initial_closure =
+                builder::epsilon_closure(input_nfa.get_start(), input_nfa);
+            std::map<closure, dfa::state::id_t> state_map; // 映射NFA状态集到DFA状态ID
+            std::vector<closure> unmarked;                 // 未标记的DFA状态
 
-    static inline dfa build(std::string_view exp)
-    {
-        return build_dfa(exp);
-    }
+            // 创建初始DFA状态
+            bool is_final          = input_nfa.has_final(initial_closure);
+            result_dfa.start_state = result_dfa.add_state(initial_closure, is_final);
 
-    inline dfa minimize(const dfa& dfa)
-    {
-        return dfa::builder::minimize(dfa);
-    }
+            state_map[initial_closure] = result_dfa.start_state;
 
-    template<typename T>
-    concept regexp_res = is_nfa<T> || std::is_same_v<T, dfa>;
+            unmarked.push_back(initial_closure);
 
-    // 为支持函数指针和函数对象，扩展概念
-    template<typename F, typename T>
-    concept regexp_op = regexp_res<T> && requires(F&& f, const T& input) {
-        { f(input) } -> std::same_as<dfa>;
+            // 子集构造算法
+            while (not unmarked.empty()) {
+                closure current_set = unmarked.back();
+                unmarked.pop_back();
+
+                dfa::state::id_t current_id = state_map[current_set];
+
+                // 尝试所有可能的输入字符
+                std::set<char> input_chars;
+                for (auto nfa_state_id : current_set) {
+                    const auto& nfa_state   = input_nfa.get_state(nfa_state_id);
+                    const auto& transitions = nfa_state.get_transition_map();
+
+                    for (int input_idx = 0; input_idx < transitions.size(); input_idx++) {
+                        if (not transitions[input_idx].empty()) {
+                            input_chars.insert(static_cast<char>(input_idx));
+                        }
+                    }
+                }
+
+                // 对每个输入字符计算下一个状态
+                for (char input_char : input_chars) {
+                    closure next_set = builder::epsilon_closure(
+                        builder::move(current_set, input_char, input_nfa), input_nfa);
+                    if (next_set.empty()) continue;
+
+                    dfa::state::id_t next_id;
+                    auto it = state_map.find(next_set);
+                    if (it == state_map.end()) {
+                        // 创建新的DFA状态
+                        next_id =
+                            result_dfa.add_state(next_set, input_nfa.has_final(next_set));
+                        state_map[next_set] = next_id;
+                        unmarked.push_back(next_set);
+                    } else {
+                        next_id = it->second;
+                    }
+
+                    // 添加转换
+                    result_dfa.set_transition(current_id, input_char, next_id);
+                }
+            }
+
+            // 记录最终状态
+            for (dfa::state::id_t i = 0; i < result_dfa.states.size(); i++) {
+                if (result_dfa.states[i].is_final()) {
+                    final_state state(i);
+                    const auto& closure = result_dfa.states[i].get_closure();
+
+                    if constexpr (has_metadata<NFA>) {
+                        state.set_metadata(input_nfa.get_metadata(closure));
+                    }
+
+                    result_dfa.final_states.insert(state);
+                }
+            }
+
+            return result_dfa;
+        }
+
+        // DFA最小化算法 - 使用Hopcroft算法
+        static dfa minimize(const dfa& input_dfa);
+
+       private:
+        // 计算epsilon闭包
+        template<typename NFA>
+        requires is_nfa<NFA>
+        static closure epsilon_closure(const closure& states_set,
+                                                     const NFA& input_nfa)
+        {
+            closure closure = states_set;
+
+            // 使用队列进行BFS遍历，避免无限循环
+            std::queue<nfa::state::id_t> work_queue;
+            for (auto state_id : states_set) {
+                work_queue.push(state_id);
+            }
+
+            while (not work_queue.empty()) {
+                nfa::state::id_t current_state = work_queue.front();
+                work_queue.pop();
+
+                const auto& state           = input_nfa.get_state(current_state);
+                const auto& epsilon_targets = state.get_epsilon_transition();
+
+                for (auto epsilon_target : epsilon_targets) {
+                    closure.insert(epsilon_target);
+                    work_queue.push(epsilon_target);
+                }
+            }
+
+            return closure;
+        }
+
+        template<typename NFA>
+        requires is_nfa<NFA>
+        static closure epsilon_closure(nfa::state::id_t state_id, const NFA& input_nfa)
+        {
+            closure single_set = {state_id};
+            return builder::epsilon_closure(single_set, input_nfa);
+        }
+
+        template<typename NFA>
+        requires is_nfa<NFA>
+        static closure move(const closure& states_set, char input,
+                                          const NFA& input_nfa)
+        {
+            closure result;
+
+            for (auto state_id : states_set) {
+                const auto& state          = input_nfa.get_state(state_id);
+                const auto& transition_map = state.get_transition_map();
+
+                for (auto target : transition_map[static_cast<unsigned char>(input)]) {
+                    result.insert(target);
+                }
+            }
+
+            return result;
+        }
+
+        // 处理转义字符, 当读到\的时候, 把下一字符传进来, 将返回对应的转义字符
+        static char handle_escape(char ch);
+
+        // 内部解析辅助函数
+        // 解析单个字符（包括转义字符）并推进指针
+        static nfa parse_char(std::string_view& exp);
+
+        // 解析通配符.并推进指针
+        static nfa parse_wildcard(std::string_view& exp);
+
+        // 解析字符集[...]并推进指针
+        static nfa parse_charset(std::string_view& exp);
+
+        // 解析数字相关字符集(\d, \D)并推进指针
+        static nfa parse_digit(std::string_view& exp);
+
+        // 解析单词相关字符集(\w, \W)并推进指针
+        static nfa parse_word(std::string_view& exp);
+
+        // 解析空白字符集(\s, \S)并推进指针
+        static nfa parse_space(std::string_view& exp);
+
+        // 递归解析表达式的主要函数
+        static nfa parse_expression(std::string_view& exp);
+
+        // 解析序列（连接操作）
+        static nfa parse_sequence(std::string_view& exp);
+
+        // 解析单个项（可能包含量词）
+        static nfa parse_term(std::string_view& exp);
     };
-
-    // 重载操作符，支持函数名、函数指针、函数对象等
-    template<typename T>
-    requires regexp_res<T>
-    inline dfa operator|(const T& input, dfa (*f)(const T&))
-    {
-        return f(input);
-    }
-
-    // 通用版本，支持函数对象和lambda
-    template<typename T, typename F>
-    requires regexp_res<T> && regexp_op<F, T>
-    inline dfa operator|(const T& input, F&& f)
-    {
-        return std::forward<F>(f)(input);
-    }
 
 } // namespace regex

@@ -141,7 +141,7 @@ namespace regex {
         void select_with(const nfa& other);
 
        public:
-        friend nfa build_nfa(std::string_view exp);
+        friend class builder;
         friend struct std::formatter<nfa>;
 
         class regex_error: public std::runtime_error {
@@ -178,47 +178,6 @@ namespace regex {
 
         // 合并两个NFA，实现选择操作（类似 | 操作符）
         nfa operator|(const nfa& other) const;
-
-       private:
-        // NFA builder类，包含所有构造相关的静态方法
-        class builder {
-           public:
-            using charset_t = nfa::charset_t;
-
-            // 处理转义字符, 当读到\的时候, 把下一字符传进来, 将返回对应的转义字符
-            static char handle_escape(char ch);
-
-            // 内部解析辅助函数
-            // 解析单个字符（包括转义字符）并推进指针
-            static nfa parse_char(std::string_view& exp);
-
-            // 解析通配符.并推进指针
-            static nfa parse_wildcard(std::string_view& exp);
-
-            // 解析字符集[...]并推进指针
-            static nfa parse_charset(std::string_view& exp);
-
-            // 解析数字相关字符集(\d, \D)并推进指针
-            static nfa parse_digit(std::string_view& exp);
-
-            // 解析单词相关字符集(\w, \W)并推进指针
-            static nfa parse_word(std::string_view& exp);
-
-            // 解析空白字符集(\s, \S)并推进指针
-            static nfa parse_space(std::string_view& exp);
-
-            // 递归解析表达式的主要函数
-            static nfa parse_expression(std::string_view& exp);
-
-            // 解析序列（连接操作）
-            static nfa parse_sequence(std::string_view& exp);
-
-            // 解析单个项（可能包含量词）
-            static nfa parse_term(std::string_view& exp);
-
-            // 从正则表达式创建NFA
-            static nfa build(std::string_view exp);
-        };
     };
 
     // nfa相关约束

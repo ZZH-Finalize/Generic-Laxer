@@ -1,8 +1,9 @@
 #include "nfa.hpp"
+#include "builder.hpp"
 
 namespace regex {
 
-    char nfa::builder::handle_escape(char ch)
+    char builder::handle_escape(char ch)
     {
         switch (ch) {
             case 'n': return '\n';
@@ -18,7 +19,7 @@ namespace regex {
         }
     }
 
-    nfa nfa::builder::parse_char(std::string_view& exp)
+    nfa builder::parse_char(std::string_view& exp)
     {
         if (exp.empty()) {
             throw nfa::regex_error("Unexpected end of expression");
@@ -30,7 +31,7 @@ namespace regex {
                 throw nfa::regex_error("Unexpected end of expression after escape");
             }
 
-            ch = nfa::builder::handle_escape(exp[1]);
+            ch = builder::handle_escape(exp[1]);
             exp.remove_prefix(2); // 跳过转义字符
         } else {
             exp.remove_prefix(1); // 跳过普通字符
@@ -41,7 +42,7 @@ namespace regex {
         return result;
     }
 
-    nfa nfa::builder::parse_wildcard(std::string_view& exp)
+    nfa builder::parse_wildcard(std::string_view& exp)
     {
         if (exp.empty() or exp[0] != '.') {
             throw nfa::regex_error("Expected wildcard character '.'");
@@ -54,7 +55,7 @@ namespace regex {
         return result;
     }
 
-    nfa nfa::builder::parse_charset(std::string_view& exp)
+    nfa builder::parse_charset(std::string_view& exp)
     {
         if (exp.empty() or exp[0] != '[') {
             throw nfa::regex_error("Expected character set starting with '['");
@@ -72,7 +73,7 @@ namespace regex {
         exp.remove_prefix(is_negated ? 2 : 1);
 
         for (std::size_t i = 0; i < exp.length(); i++) {
-            char current = is_escape ? nfa::builder::handle_escape(exp[i]) : exp[i];
+            char current = is_escape ? builder::handle_escape(exp[i]) : exp[i];
 
             if (current == ']') {
                 has_end = true;
@@ -97,7 +98,7 @@ namespace regex {
                 if (range_end == '\\') {
                     // range_end依然是转义字符, 且\后还有有效字符
                     if ((i + 3) < exp.length()) {
-                        range_end = nfa::builder::handle_escape(exp[i + 3]);
+                        range_end = builder::handle_escape(exp[i + 3]);
                         offset += 1;
                     } else {
                         throw nfa::regex_error(
@@ -131,7 +132,7 @@ namespace regex {
         return result;
     }
 
-    nfa nfa::builder::parse_digit(std::string_view& exp)
+    nfa builder::parse_digit(std::string_view& exp)
     {
         if (exp.length() < 2 or exp[0] != '\\' or (exp[1] != 'd' and exp[1] != 'D')) {
             throw nfa::regex_error("Expected digit character class '\\d' or '\\D'");
@@ -154,7 +155,7 @@ namespace regex {
         return result;
     }
 
-    nfa nfa::builder::parse_word(std::string_view& exp)
+    nfa builder::parse_word(std::string_view& exp)
     {
         if (exp.length() < 2 or exp[0] != '\\' or (exp[1] != 'w' and exp[1] != 'W')) {
             throw nfa::regex_error("Expected word character class '\\w' or '\\W'");
@@ -187,7 +188,7 @@ namespace regex {
         return result;
     }
 
-    nfa nfa::builder::parse_space(std::string_view& exp)
+    nfa builder::parse_space(std::string_view& exp)
     {
         if (exp.length() < 2 or exp[0] != '\\' or (exp[1] != 's' and exp[1] != 'S')) {
             throw nfa::regex_error("Expected space character class '\\s' or '\\S'");
@@ -212,7 +213,7 @@ namespace regex {
         return result;
     }
 
-    nfa nfa::builder::parse_expression(std::string_view& exp)
+    nfa builder::parse_expression(std::string_view& exp)
     {
         if (exp.empty()) {
             nfa empty;
@@ -234,8 +235,8 @@ namespace regex {
             std::size_t right_offset = choice_nfa.merge_nfa_states(right);
 
             // 创建新的起始和结束状态
-            state::id_t new_start = choice_nfa.add_state();
-            state::id_t new_final = choice_nfa.add_state();
+            id_t new_start = choice_nfa.add_state();
+            id_t new_final = choice_nfa.add_state();
 
             // 从新起始状态到左右NFA的起始状态添加epsilon转换
             choice_nfa.add_epsilon_transition(new_start,
@@ -259,7 +260,7 @@ namespace regex {
         return result;
     }
 
-    nfa nfa::builder::parse_sequence(std::string_view& exp)
+    nfa builder::parse_sequence(std::string_view& exp)
     {
         nfa result;
 
@@ -291,7 +292,7 @@ namespace regex {
         return current;
     }
 
-    nfa nfa::builder::parse_term(std::string_view& exp)
+    nfa builder::parse_term(std::string_view& exp)
     {
         nfa base;
 
@@ -343,11 +344,11 @@ namespace regex {
 
                 // 根据量词类型修改NFA
                 // 保存原始的start和final状态ID，因为add_state会改变base的状态
-                state::id_t original_start = base.get_start();
-                state::id_t original_final = base.get_final();
+                id_t original_start = base.get_start();
+                id_t original_final = base.get_final();
 
-                state::id_t new_start = base.add_state();
-                state::id_t new_final = base.add_state();
+                id_t new_start = base.add_state();
+                id_t new_final = base.add_state();
 
                 if (quantifier == '*') {
                     // a* : 可以匹配0次或多次
@@ -385,7 +386,7 @@ namespace regex {
         return base;
     }
 
-    nfa nfa::builder::build(std::string_view exp)
+    nfa builder::build(std::string_view exp)
     {
         // 使用递归下降解析器解析表达式
         std::string_view exp_copy = exp;
