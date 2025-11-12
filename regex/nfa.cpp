@@ -1,19 +1,7 @@
 #include "nfa.hpp"
+#include "final_state.hpp"
 
 namespace regex {
-    void nfa::add_transition(const charset_t& chars, bool is_negated)
-    {
-        charset_t final_charset =
-            is_negated ? (regex::ascii_printable_chars & ~chars) : chars;
-
-        for (std::size_t i = 0; i < final_charset.size(); i++) {
-            if (final_charset.test(i)) {
-                this->add_transition(this->get_start(), static_cast<char>(i),
-                                     this->get_final());
-            }
-        }
-    }
-
     std::size_t nfa::merge_nfa_states(const nfa& other_nfa)
     {
         // 保存当前NFA的原始状态数量作为偏移量
@@ -59,7 +47,7 @@ namespace regex {
         this->add_epsilon_transition(this->get_final(), next.start + offset);
 
         // 更新当前NFA的最终状态为next的最终状态（加上偏移）
-        this->set_final(next.final + offset);
+        this->set_final(final_state(next.final + offset));
     }
 
     void nfa::select_with(const nfa& other)
@@ -85,7 +73,7 @@ namespace regex {
 
         // 更新当前NFA的起始和最终状态
         this->set_start(new_start);
-        this->set_final(new_final);
+        this->set_final(final_state(new_final));
     }
 
     nfa nfa::operator|(const nfa& other) const
@@ -114,7 +102,7 @@ namespace regex {
 
         // 更新当前NFA的起始和最终状态
         result.set_start(new_start);
-        result.set_final(new_final);
+        result.set_final(final_state(new_final));
 
         return result;
     }

@@ -17,92 +17,33 @@
 #include <vector>
 #include <set>
 
+#include "basic_fa.hpp"
 #include "basic_state.hpp"
 #include "final_state.hpp"
 
 namespace regex {
 
-    inline constexpr std::bitset<256> ascii_printable_chars = [] {
-        std::bitset<256> bs;
-        for (int i = ' '; i <= '~'; ++i) {
-            bs.set(i);
-        }
-        return bs;
-    }();
+    class __nfa_state: public basic_state<std::vector<std::uint32_t>> {
+       private:
+        transition_map_item_t epsilon_transitions;
 
-    class nfa {
        public:
-        class state: public basic_state<std::vector<std::uint32_t>> {
-           private:
-            transition_map_item_t epsilon_transitions;
+        inline void add_epsilon_transition(id_t to)
+        {
+            this->epsilon_transitions.push_back(to);
+        }
 
-           public:
-            inline void add_epsilon_transition(id_t to)
-            {
-                this->epsilon_transitions.push_back(to);
-            }
+        inline const auto& get_epsilon_transition(void) const
+        {
+            return this->epsilon_transitions;
+        }
+    };
 
-            inline const auto& get_epsilon_transition(void) const
-            {
-                return this->epsilon_transitions;
-            }
-        };
-
-        using charset_t = std::bitset<256>;
+    class nfa: public basic_fa<__nfa_state, final_state> {
+       public:
         using closure   = final_state::closure;
 
-       private:
-        std::vector<state> states;
-        state::id_t start;
-        final_state final;
-
        protected:
-        explicit nfa(void): start(this->add_state()), final(this->add_state())
-        {
-        }
-
-        state::id_t add_state(void)
-        {
-            this->states.emplace_back();
-            return this->states.size() - 1;
-        }
-
-        void check_state_valid(state::id_t state_n) const
-        {
-            if (state_n >= this->states.size()) {
-                throw std::out_of_range(std::format("state_n({}) >= states.size({})",
-                                                    state_n, this->states.size()));
-            }
-        }
-
-        void set_start(state::id_t start)
-        {
-            this->check_state_valid(start);
-
-            this->start = start;
-        }
-
-        void set_final(state::id_t final)
-        {
-            this->check_state_valid(final);
-
-            this->final = final_state(final);
-        }
-
-        void add_transition(state::id_t state, char input, state::id_t to)
-        {
-            this->states.at(state).add_transition(input, to);
-        }
-
-        // 将charset中的字符添加为从start到final的转换
-        void add_transition(const charset_t& chars, bool is_negated = false);
-
-        // 添加从state到to的epsilon转换
-        void add_epsilon_transition(state::id_t state, state::id_t to)
-        {
-            this->states.at(state).add_epsilon_transition(to);
-        }
-
         // 内部辅助方法：将另一个NFA的状态和转换合并到当前NFA中
         // 返回偏移量，用于调整传入NFA的状态ID
         std::size_t merge_nfa_states(const nfa& other_nfa);
@@ -128,29 +69,9 @@ namespace regex {
             }
         };
 
-        auto get_start(void) const noexcept
-        {
-            return this->start;
-        }
-
-        auto get_final(void) const noexcept
-        {
-            return this->final;
-        }
-
         bool has_final(const closure& states) const
         {
             return states.contains(this->final);
-        }
-
-        const auto& get_state(state::id_t state) const noexcept
-        {
-            return this->states.at(state);
-        }
-
-        const auto& get_states(void) const noexcept
-        {
-            return this->states;
         }
 
         // 合并两个NFA，实现选择操作（类似 | 操作符）
