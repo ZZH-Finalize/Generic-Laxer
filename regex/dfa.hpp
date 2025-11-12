@@ -1,6 +1,5 @@
 #pragma once
 
-#include "nfa.hpp"
 #include <format>
 #include <iterator>
 #include <optional>
@@ -17,30 +16,20 @@
 #include <algorithm>
 #include <map>
 
+#include "nfa.hpp"
 #include "final_state.hpp"
 
 namespace regex {
-
     class dfa {
        private:
-        class state {
+        class state: public basic_state<nfa::state::id_t> {
            public:
-            // DFA状态id采用和NFA状态id相同类型, 但二者是是两个不同的概念
-            using id_t = nfa::state::id_t;
-
             // NFA状态集类型
             using closure = nfa::closure;
-
-            // DFA状态转换表类型
-            using transition_map_t =
-                std::array<id_t, std::tuple_size_v<nfa::state::transition_map_t>>;
 
            private:
             // 对应NFA状态集合
             closure nfa_states;
-
-            // DFA状态转换表
-            transition_map_t transitions;
 
             // 是否为最终状态
             bool final;
@@ -50,36 +39,21 @@ namespace regex {
             explicit state(const closure& nfa_states, bool is_final = false)
                 : nfa_states(nfa_states), final(is_final)
             {
-                std::fill(transitions.begin(), transitions.end(),
+                std::fill(this->transition_map.begin(), this->transition_map.end(),
                           std::numeric_limits<id_t>::max());
             }
 
-            void set_final(bool is_final)
+            inline void set_final(bool is_final)
             {
                 this->final = is_final;
             }
 
-            bool is_final(void) const
+            inline bool is_final(void) const noexcept
             {
                 return this->final;
             }
 
-            void set_transition(char ch, id_t id)
-            {
-                this->transitions[ch] = id;
-            }
-
-            id_t get_transition(char ch) const
-            {
-                return this->transitions[ch];
-            }
-
-            const transition_map_t& get_transition_map(void) const
-            {
-                return this->transitions;
-            }
-
-            const closure& get_closure(void) const
+            inline const closure& get_closure(void) const
             {
                 return this->nfa_states;
             }

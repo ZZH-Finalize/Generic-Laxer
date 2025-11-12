@@ -17,6 +17,7 @@
 #include <vector>
 #include <set>
 
+#include "basic_state.hpp"
 #include "final_state.hpp"
 
 namespace regex {
@@ -31,51 +32,27 @@ namespace regex {
 
     class nfa {
        public:
-        class state {
-           public:
-            using id_t         = final_state::id_t;
-            using transition_t = std::vector<id_t>;
-            using transition_map_t =
-                std::array<transition_t, std::numeric_limits<unsigned char>::max() + 1>;
-
+        class state: public basic_state<std::vector<std::uint32_t>> {
            private:
-            transition_t epsilon_transitions;
-            transition_map_t char_transitions;
+            transition_map_item_t epsilon_transitions;
 
            public:
-            inline void add_transition(char input, id_t to)
-            {
-                this->char_transitions[input].push_back(to);
-            }
-
             inline void add_epsilon_transition(id_t to)
             {
                 this->epsilon_transitions.push_back(to);
             }
 
-            // 获取转换映射的常量引用，用于复制NFA结构
-            const transition_map_t& get_transition_map(void) const noexcept
-            {
-                return this->char_transitions;
-            }
-
-            const transition_t& get_transition(char input) const
-            {
-                return this->char_transitions[input];
-            }
-
-            const transition_t& get_epsilon_transition(void) const
+            inline const auto& get_epsilon_transition(void) const
             {
                 return this->epsilon_transitions;
             }
         };
 
         using charset_t = std::bitset<256>;
-        using states_t  = std::vector<state>;
         using closure   = final_state::closure;
 
        private:
-        states_t states;
+        std::vector<state> states;
         state::id_t start;
         final_state final;
 
@@ -151,12 +128,12 @@ namespace regex {
             }
         };
 
-        state::id_t get_start(void) const noexcept
+        auto get_start(void) const noexcept
         {
             return this->start;
         }
 
-        state::id_t get_final(void) const noexcept
+        auto get_final(void) const noexcept
         {
             return this->final;
         }
@@ -166,12 +143,12 @@ namespace regex {
             return states.contains(this->final);
         }
 
-        const state& get_state(state::id_t state) const noexcept
+        const auto& get_state(state::id_t state) const noexcept
         {
             return this->states.at(state);
         }
 
-        const states_t& get_states(void) const noexcept
+        const auto& get_states(void) const noexcept
         {
             return this->states;
         }
@@ -189,10 +166,14 @@ namespace regex {
         { t.get_transition_map() } -> std::same_as<const nfa::state::transition_map_t&>;
 
         // 约束T类型必须有get_transition方法
-        { t.get_transition(input) } -> std::same_as<const nfa::state::transition_t&>;
+        {
+            t.get_transition(input)
+        } -> std::same_as<const nfa::state::transition_map_item_t&>;
 
         // 约束T类型必须有get_epsilon_transition方法
-        { t.get_epsilon_transition() } -> std::same_as<const nfa::state::transition_t&>;
+        {
+            t.get_epsilon_transition()
+        } -> std::same_as<const nfa::state::transition_map_item_t&>;
     };
 
     // 是否为regex::nfa派生类
@@ -211,7 +192,8 @@ namespace regex {
         requires has_nfa_state_op<std::ranges::range_value_t<decltype(t.get_states())>>;
     };
 
-    // 是否为NFA抽象类型(regex::nfa及其其子类, 或者与regex::nfa行为相同的任何类都可以算作NFA)
+    // 是否为NFA抽象类型(regex::nfa及其其子类,
+    // 或者与regex::nfa行为相同的任何类都可以算作NFA)
     template<typename T>
     concept is_nfa = std::is_same_v<T, nfa> or is_base_of_nfa_v<T> or has_nfa_op<T>;
 
