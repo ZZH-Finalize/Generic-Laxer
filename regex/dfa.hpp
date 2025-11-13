@@ -18,7 +18,6 @@
 
 #include "basic_fa.hpp"
 #include "nfa.hpp"
-#include "final_state.hpp"
 
 namespace regex {
     class __dfa_state: public basic_state<nfa::id_t> {
@@ -60,14 +59,14 @@ namespace regex {
 
     class dfa: public basic_fa<__dfa_state> {
        protected:
-        std::set<final_state> final;
+        std::set<id_t> final;
 
         inline const auto& get_final(void) const noexcept
         {
             return this->final;
         }
 
-        inline void add_final(const final_state& state)
+        inline void add_final(const id_t& state)
         {
             this->final.insert(state);
         }
@@ -77,7 +76,7 @@ namespace regex {
         friend struct std::formatter<dfa>;
 
         // 匹配算法：检查字符串是否与DFA匹配
-        std::optional<final_state> match(std::string_view str) const;
+        std::optional<id_t> match(std::string_view str) const;
 
         // 检查是否匹配空字符串
         bool match_empty() const;

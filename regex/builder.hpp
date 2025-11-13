@@ -89,12 +89,13 @@ namespace regex {
             // 记录最终状态
             for (dfa::state::id_t i = 0; i < result_dfa.get_states().size(); i++) {
                 if (result_dfa.get_state(i).is_final()) {
-                    final_state state(i);
+                    id_t state(i);
                     const auto& closure = result_dfa.get_state(i).get_closure();
 
-                    if constexpr (has_metadata<NFA>) {
-                        state.set_metadata(input_nfa.get_metadata(closure));
-                    }
+                    // todo: solve metadata issue
+                    // if constexpr (has_metadata<NFA>) {
+                    //     state.set_metadata(input_nfa.get_metadata(closure));
+                    // }
 
                     result_dfa.add_final(state);
                 }

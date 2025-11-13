@@ -1,10 +1,9 @@
 #include "dfa.hpp"
 #include <optional>
-#include "final_state.hpp"
 
 namespace regex {
 
-    std::optional<final_state> dfa::match(std::string_view str) const
+    std::optional<dfa::id_t> dfa::match(std::string_view str) const
     {
         if (this->states.empty()) {
             return std::nullopt; // 没有状态，无法匹配
@@ -29,7 +28,7 @@ namespace regex {
             current_state = next_state;
         }
 
-        const auto& find_state = this->get_final().find(final_state(current_state));
+        const auto& find_state = this->get_final().find(current_state);
 
         // 检查最终状态是否为接受状态
         if (find_state != this->get_final().end()) {
@@ -48,7 +47,7 @@ namespace regex {
         if (this->get_start() >= this->states.size()) {
             return false;
         }
-        return this->get_final().contains(final_state(this->get_start()));
+        return this->get_final().contains(this->get_start());
     }
 
     int dfa::find_match(std::string_view str) const
@@ -81,7 +80,7 @@ namespace regex {
                 current_state = next_state;
 
                 // 检查当前位置是否为接受状态
-                if (this->get_final().contains(final_state(current_state))) {
+                if (this->get_final().contains(current_state)) {
                     // 找到匹配，返回起始位置
                     return static_cast<int>(start_pos);
                 }

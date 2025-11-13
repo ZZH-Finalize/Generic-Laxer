@@ -47,6 +47,7 @@ namespace regex {
         using id_t                  = state_t::id_t;
         using transition_map_item_t = state::transition_map_item_t;
         using charset_t             = std::bitset<256>;
+        using closure               = std::set<id_t>;
 
         // 非法id值
         inline static const state::id_t invalid_state =
@@ -74,7 +75,8 @@ namespace regex {
         }
 
         // 为nfa和dfa及其子类实现, 拷贝赋值版本
-        inline void set_transition(state::id_t state, char c, const transition_map_item_t &to)
+        inline void set_transition(state::id_t state, char c,
+                                   const transition_map_item_t &to)
         {
             this->states.at(state).set_transition(c, to);
         }

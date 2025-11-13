@@ -286,7 +286,7 @@ namespace regex {
                                            next.get_start() + offset);
 
             // 更新当前NFA的最终状态
-            current.set_final(final_state(next.get_final() + offset));
+            current.set_final(next.get_final() + offset);
         }
 
         return current;
@@ -379,7 +379,7 @@ namespace regex {
                 }
 
                 base.set_start(new_start);
-                base.set_final(final_state(new_final));
+                base.set_final(new_final);
             }
         }
 

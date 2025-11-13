@@ -19,7 +19,6 @@
 
 #include "basic_fa.hpp"
 #include "basic_state.hpp"
-#include "final_state.hpp"
 
 namespace regex {
 
@@ -41,17 +40,17 @@ namespace regex {
 
     class nfa: public basic_fa<__nfa_state> {
        protected:
-        final_state final;
+        id_t final;
 
         explicit nfa()
         {
             this->start = this->add_state();
-            this->final = final_state(this->add_state());
+            this->final = this->add_state();
         }
 
         void set_final(state::id_t id) noexcept
         {
-            this->final = final_state(id);
+            this->final = id;
         }
 
         const auto& get_final(void) const noexcept
@@ -100,8 +99,6 @@ namespace regex {
         void select_with(const nfa& other);
 
        public:
-        using closure = final_state::closure;
-
         friend class builder;
         friend struct std::formatter<nfa>;
 

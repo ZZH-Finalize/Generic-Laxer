@@ -130,7 +130,7 @@ struct std::formatter<regex::dfa>
                 state_str += "start_";
             }
 
-            if (final_states.contains(regex::final_state(id))) {
+            if (final_states.contains(id)) {
                 // return std::string("[*]");
                 state_str += "final_";
             }

@@ -46,29 +46,29 @@ namespace regex {
 
         inline void set_transition(char ch, const T& id)
         {
-            this->transition_map[ch] = id;
+            this->transition_map[static_cast<unsigned char>(ch)] = id;
         }
 
         inline void set_transition(char ch, T&& id)
         {
-            this->transition_map[ch] = std::move(id);
+            this->transition_map[static_cast<unsigned char>(ch)] = std::move(id);
         }
 
-        inline void add_transition(char input, id_t to)
+        inline void add_transition(char ch, id_t to)
         requires has_push_back<T>
         {
-            this->transition_map[input].push_back(to);
+            this->transition_map[static_cast<unsigned char>(ch)].push_back(to);
         }
 
-        inline void add_transition(char input, id_t to)
+        inline void add_transition(char ch, id_t to)
         requires has_insert<T>
         {
-            this->transition_map[input].insert(to);
+            this->transition_map[static_cast<unsigned char>(ch)].insert(to);
         }
 
         inline const auto& get_transition(char ch) const
         {
-            return this->transition_map[ch];
+            return this->transition_map[static_cast<unsigned char>(ch)];
         }
 
         inline const auto& get_transition_map(void) const noexcept

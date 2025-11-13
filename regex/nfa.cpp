@@ -1,5 +1,4 @@
 #include "nfa.hpp"
-#include "final_state.hpp"
 
 namespace regex {
     std::size_t nfa::merge_states(const nfa& other_nfa)
@@ -73,7 +72,7 @@ namespace regex {
 
         // 更新当前NFA的起始和最终状态
         this->set_start(new_start);
-        this->set_final(final_state(new_final));
+        this->set_final(new_final);
     }
 
     nfa nfa::operator|(const nfa& other) const
@@ -102,7 +101,7 @@ namespace regex {
 
         // 更新当前NFA的起始和最终状态
         result.set_start(new_start);
-        result.set_final(final_state(new_final));
+        result.set_final(new_final);
 
         return result;
     }
