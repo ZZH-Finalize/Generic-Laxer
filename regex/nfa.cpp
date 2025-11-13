@@ -12,7 +12,7 @@ namespace regex {
         }
 
         // 复制other_nfa的转换，但需要调整ID偏移
-        for (state::id_t i = 0; i < other_nfa.states.size(); i++) {
+        for (id_t i = 0; i < other_nfa.states.size(); i++) {
             const auto& other_state          = other_nfa.states[i];
             const auto& other_transition_map = other_state.get_transition_map();
 
@@ -52,15 +52,15 @@ namespace regex {
     void nfa::select_with(const nfa& other)
     {
         // 保存当前NFA的原始起始和最终状态
-        state::id_t original_start = this->get_start();
-        state::id_t original_final = this->get_final();
+        id_t original_start = this->get_start();
+        id_t original_final = this->get_final();
 
         // 使用公共方法合并other的状态和转换
         std::size_t offset = this->merge_states(other);
 
         // 创建新的起始状态和最终状态
-        state::id_t new_start = this->add_state();
-        state::id_t new_final = this->add_state();
+        id_t new_start = this->add_state();
+        id_t new_final = this->add_state();
 
         // 从新的起始状态到原来的两个NFA的起始状态添加epsilon转换
         this->add_epsilon_transition(new_start, original_start);
@@ -80,16 +80,16 @@ namespace regex {
         nfa result;
 
         // 保存当前NFA的原始起始和最终状态
-        state::id_t original_start = this->get_start();
-        state::id_t original_final = this->get_final();
+        id_t original_start = this->get_start();
+        id_t original_final = this->get_final();
 
         // 使用公共方法合并other的状态和转换
         std::size_t offset       = result.merge_states(*this);
         std::size_t other_offset = result.merge_states(other);
 
         // 创建新的起始状态和最终状态
-        state::id_t new_start = result.add_state();
-        state::id_t new_final = result.add_state();
+        id_t new_start = result.add_state();
+        id_t new_final = result.add_state();
 
         // 从新的起始状态到原来的两个NFA的起始状态添加epsilon转换
         result.add_epsilon_transition(new_start, original_start + offset);

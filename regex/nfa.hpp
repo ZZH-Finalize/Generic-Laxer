@@ -19,10 +19,10 @@
 
 #include "basic_fa.hpp"
 #include "basic_state.hpp"
+#include "dfa.hpp"
 
 namespace regex {
-
-    class __nfa_state: public basic_state<std::vector<std::uint32_t>> {
+    class __nfa_state: public basic_state<std::vector<dfa::id_t>> {
        private:
         transition_map_item_t epsilon_transitions;
 
@@ -48,7 +48,7 @@ namespace regex {
             this->final = this->add_state();
         }
 
-        void set_final(state::id_t id) noexcept
+        void set_final(id_t id) noexcept
         {
             this->final = id;
         }
@@ -59,7 +59,7 @@ namespace regex {
         }
 
         // 添加从state经过字符c向to的转换
-        void add_transition(state::id_t state, char c, state::id_t to)
+        void add_transition(id_t state, char c, id_t to)
         {
             this->states.at(state).add_transition(c, to);
         }
@@ -79,7 +79,7 @@ namespace regex {
         }
 
         // 添加从state到to的epsilon转换
-        void add_epsilon_transition(state::id_t state, state::id_t to)
+        void add_epsilon_transition(id_t state, id_t to)
         {
             this->states.at(state).add_epsilon_transition(to);
         }
@@ -143,9 +143,9 @@ namespace regex {
 
     // 是否具有与regex::nfa相同的操作(以子集构造算法所需要的来看)
     template<typename T>
-    concept has_nfa_op = requires(const T& t, nfa::state::id_t state,
+    concept has_nfa_op = requires(const T& t, nfa::id_t state,
                                   const nfa::closure& closure) {
-        { t.get_start() } -> std::same_as<nfa::state::id_t>;
+        { t.get_start() } -> std::same_as<nfa::id_t>;
         { t.has_final(closure) } -> std::same_as<bool>;
         { t.get_state(state) } -> has_nfa_state_op;
         { t.get_states() } -> std::ranges::range;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <array>
-#include <cstdint>
+#include <set>
 #include <limits>
 #include <type_traits>
 
@@ -43,6 +43,7 @@ namespace regex {
         using transition_map_t =
             std::array<transition_map_item_t,
                        std::numeric_limits<unsigned char>::max() + 1>;
+        using closure               = std::set<id_t>;
 
         inline void set_transition(char ch, const T& id)
         {

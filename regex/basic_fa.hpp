@@ -47,7 +47,7 @@ namespace regex {
         using id_t                  = state_t::id_t;
         using transition_map_item_t = state::transition_map_item_t;
         using charset_t             = std::bitset<256>;
-        using closure               = std::set<id_t>;
+        using closure               = state_t::closure;
 
         // 非法id值
         inline static const state::id_t invalid_state =

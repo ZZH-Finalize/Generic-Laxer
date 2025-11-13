@@ -17,14 +17,9 @@
 #include <map>
 
 #include "basic_fa.hpp"
-#include "nfa.hpp"
 
 namespace regex {
-    class __dfa_state: public basic_state<nfa::id_t> {
-       public:
-        // NFA状态集类型
-        using closure = nfa::closure;
-
+    class __dfa_state: public basic_state<std::uint32_t> {
        private:
         // 对应NFA状态集合
         closure nfa_states;
