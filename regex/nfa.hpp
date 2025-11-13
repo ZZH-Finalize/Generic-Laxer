@@ -39,14 +39,55 @@ namespace regex {
         }
     };
 
-    class nfa: public basic_fa<__nfa_state, final_state> {
-       public:
-        using closure   = final_state::closure;
-
+    class nfa: public basic_fa<__nfa_state> {
        protected:
+        final_state final;
+
+        explicit nfa()
+        {
+            this->start = this->add_state();
+            this->final = final_state(this->add_state());
+        }
+
+        void set_final(state::id_t id) noexcept
+        {
+            this->final = final_state(id);
+        }
+
+        const auto& get_final(void) const noexcept
+        {
+            return this->final;
+        }
+
+        // 添加从state经过字符c向to的转换
+        void add_transition(state::id_t state, char c, state::id_t to)
+        {
+            this->states.at(state).add_transition(c, to);
+        }
+
+        // 将charset中的字符添加为从start到final的转换
+        void add_transition(const charset_t& chars, bool is_negated = false)
+        {
+            charset_t final_charset =
+                is_negated ? (regex::ascii_printable_chars & ~chars) : chars;
+
+            for (std::size_t i = 0; i < final_charset.size(); i++) {
+                if (final_charset.test(i)) {
+                    this->add_transition(this->get_start(), static_cast<char>(i),
+                                         this->get_final());
+                }
+            }
+        }
+
+        // 添加从state到to的epsilon转换
+        void add_epsilon_transition(state::id_t state, state::id_t to)
+        {
+            this->states.at(state).add_epsilon_transition(to);
+        }
+
         // 内部辅助方法：将另一个NFA的状态和转换合并到当前NFA中
         // 返回偏移量，用于调整传入NFA的状态ID
-        std::size_t merge_nfa_states(const nfa& other_nfa);
+        std::size_t merge_states(const nfa& other_nfa);
 
         // 连接当前NFA与传入的NFA
         // regexp: 当前NFA + next
@@ -59,6 +100,8 @@ namespace regex {
         void select_with(const nfa& other);
 
        public:
+        using closure = final_state::closure;
+
         friend class builder;
         friend struct std::formatter<nfa>;
 
@@ -71,7 +114,7 @@ namespace regex {
 
         bool has_final(const closure& states) const
         {
-            return states.contains(this->final);
+            return states.contains(this->get_final());
         }
 
         // 合并两个NFA，实现选择操作（类似 | 操作符）
@@ -124,86 +167,3 @@ namespace regex {
         { nfa.get_metadata(closure) } -> std::same_as<std::any>;
     };
 } // namespace regex
-
-// 为 nfa 类提供 std::format 支持
-template<>
-struct std::formatter<regex::nfa>
-{
-    std::string direction;
-
-    constexpr auto parse(std::format_parse_context& ctx)
-    {
-        auto it = ctx.begin();
-
-        while (*it != '}') {
-            this->direction.push_back(*it++);
-        }
-
-        // 检查方向字符串是否有效
-        if (this->direction != "LR" and this->direction != "TB"
-            and this->direction != "RL" and not this->direction.empty()) {
-            return ctx.end();
-        }
-
-        return it;
-    }
-
-    auto format(const regex::nfa& nfa, std::format_context& ctx) const
-    {
-        std::string result = "```mermaid\n";
-
-        result += "stateDiagram-v2\n";
-
-        if (not this->direction.empty()) {
-            result += std::format("direction {}\n", this->direction);
-        }
-
-        result += "\n";
-
-        auto& states = nfa.get_states();
-
-        auto get_state_str = [&nfa](regex::nfa::state::id_t id) {
-            if (id == nfa.get_start() || id == nfa.get_final()) {
-                return std::string("[*]");
-            } else {
-                return std::format("state_{}", id);
-            }
-        };
-
-        for (auto current_state_id = 0; current_state_id < states.size();
-             current_state_id++) {
-            if (current_state_id == nfa.get_final()) {
-                continue;
-            }
-
-            const regex::nfa::state& state = states.at(current_state_id);
-            std::string from               = get_state_str(current_state_id);
-
-            // handle epsilon transitions
-            for (auto& to_state : state.get_epsilon_transition()) {
-                std::string to = get_state_str(to_state);
-
-                result += std::format("{} --> {}\n", from, to);
-            }
-
-            // handle char transitions
-            auto trans_map = state.get_transition_map();
-            // 遍历所有可能的输入
-            for (auto input = 0; input < trans_map.size(); input++) {
-                auto& trans = trans_map.at(input);
-
-                // 对输入字符, 遍历可能的目标状态
-                for (auto& to_state : trans) {
-                    std::string to = get_state_str(to_state);
-
-                    result += std::format("{} --> {} : {}\n", from, to,
-                                          static_cast<char>(input));
-                }
-            }
-        }
-
-        result += "```";
-
-        return std::format_to(ctx.out(), "{}", result);
-    }
-};

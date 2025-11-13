@@ -2,7 +2,7 @@
 #include "final_state.hpp"
 
 namespace regex {
-    std::size_t nfa::merge_nfa_states(const nfa& other_nfa)
+    std::size_t nfa::merge_states(const nfa& other_nfa)
     {
         // 保存当前NFA的原始状态数量作为偏移量
         std::size_t offset = this->states.size();
@@ -41,13 +41,13 @@ namespace regex {
     void nfa::connect_with(const nfa& next)
     {
         // 使用公共方法合并next的状态和转换
-        std::size_t offset = this->merge_nfa_states(next);
+        std::size_t offset = this->merge_states(next);
 
         // 连接当前NFA的最终状态和next的起始状态
         this->add_epsilon_transition(this->get_final(), next.start + offset);
 
         // 更新当前NFA的最终状态为next的最终状态（加上偏移）
-        this->set_final(final_state(next.final + offset));
+        this->set_final(next.get_final() + offset);
     }
 
     void nfa::select_with(const nfa& other)
@@ -57,7 +57,7 @@ namespace regex {
         state::id_t original_final = this->get_final();
 
         // 使用公共方法合并other的状态和转换
-        std::size_t offset = this->merge_nfa_states(other);
+        std::size_t offset = this->merge_states(other);
 
         // 创建新的起始状态和最终状态
         state::id_t new_start = this->add_state();
@@ -69,7 +69,7 @@ namespace regex {
 
         // 从原来的两个NFA的最终状态到新的最终状态添加epsilon转换
         this->add_epsilon_transition(original_final, new_final);
-        this->add_epsilon_transition(other.final + offset, new_final);
+        this->add_epsilon_transition(other.get_final() + offset, new_final);
 
         // 更新当前NFA的起始和最终状态
         this->set_start(new_start);
@@ -85,8 +85,8 @@ namespace regex {
         state::id_t original_final = this->get_final();
 
         // 使用公共方法合并other的状态和转换
-        std::size_t offset       = result.merge_nfa_states(*this);
-        std::size_t other_offset = result.merge_nfa_states(other);
+        std::size_t offset       = result.merge_states(*this);
+        std::size_t other_offset = result.merge_states(other);
 
         // 创建新的起始状态和最终状态
         state::id_t new_start = result.add_state();
@@ -98,7 +98,7 @@ namespace regex {
 
         // 从原来的两个NFA的最终状态到新的最终状态添加epsilon转换
         result.add_epsilon_transition(original_final + offset, new_final);
-        result.add_epsilon_transition(other.final + other_offset, new_final);
+        result.add_epsilon_transition(other.get_final() + other_offset, new_final);
 
         // 更新当前NFA的起始和最终状态
         result.set_start(new_start);

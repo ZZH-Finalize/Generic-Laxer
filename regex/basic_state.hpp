@@ -18,10 +18,10 @@ namespace regex {
     template<typename T>
     concept has_insert = requires(T t, const T::value_type& v) { t.insert(v); };
 
-    class bsic_state_base {};
+    class basic_state_base {};
 
     template<typename T>
-    class basic_state: private bsic_state_base {
+    class basic_state: private basic_state_base {
        public:
         // 非容器情况
         template<bool IsContainer, typename U>

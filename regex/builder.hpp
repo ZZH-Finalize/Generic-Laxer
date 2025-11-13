@@ -24,7 +24,8 @@ namespace regex {
 
             if (input_nfa.get_states().empty()) {
                 // 如果NFA没有状态，创建一个空的DFA
-                result_dfa.start_state = result_dfa.add_state({});
+                dfa::state::closure empty_closure;
+                result_dfa.set_start(result_dfa.add_state(empty_closure, false));
                 return result_dfa;
             }
 
@@ -35,10 +36,10 @@ namespace regex {
             std::vector<closure> unmarked;                 // 未标记的DFA状态
 
             // 创建初始DFA状态
-            bool is_final          = input_nfa.has_final(initial_closure);
-            result_dfa.start_state = result_dfa.add_state(initial_closure, is_final);
+            bool is_final = input_nfa.has_final(initial_closure);
+            result_dfa.set_start(result_dfa.add_state(initial_closure, is_final));
 
-            state_map[initial_closure] = result_dfa.start_state;
+            state_map[initial_closure] = result_dfa.get_start();
 
             unmarked.push_back(initial_closure);
 
@@ -86,16 +87,16 @@ namespace regex {
             }
 
             // 记录最终状态
-            for (dfa::state::id_t i = 0; i < result_dfa.states.size(); i++) {
-                if (result_dfa.states[i].is_final()) {
+            for (dfa::state::id_t i = 0; i < result_dfa.get_states().size(); i++) {
+                if (result_dfa.get_state(i).is_final()) {
                     final_state state(i);
-                    const auto& closure = result_dfa.states[i].get_closure();
+                    const auto& closure = result_dfa.get_state(i).get_closure();
 
                     if constexpr (has_metadata<NFA>) {
                         state.set_metadata(input_nfa.get_metadata(closure));
                     }
 
-                    result_dfa.final_states.insert(state);
+                    result_dfa.add_final(state);
                 }
             }
 
@@ -109,8 +110,7 @@ namespace regex {
         // 计算epsilon闭包
         template<typename NFA>
         requires is_nfa<NFA>
-        static closure epsilon_closure(const closure& states_set,
-                                                     const NFA& input_nfa)
+        static closure epsilon_closure(const closure& states_set, const NFA& input_nfa)
         {
             closure closure = states_set;
 
@@ -146,8 +146,7 @@ namespace regex {
 
         template<typename NFA>
         requires is_nfa<NFA>
-        static closure move(const closure& states_set, char input,
-                                          const NFA& input_nfa)
+        static closure move(const closure& states_set, char input, const NFA& input_nfa)
         {
             closure result;
 

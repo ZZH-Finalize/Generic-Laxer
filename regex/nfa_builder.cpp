@@ -231,8 +231,8 @@ namespace regex {
 
             // 创建一个新的NFA来表示选择操作
             nfa choice_nfa;
-            std::size_t left_offset  = choice_nfa.merge_nfa_states(result);
-            std::size_t right_offset = choice_nfa.merge_nfa_states(right);
+            std::size_t left_offset  = choice_nfa.merge_states(result);
+            std::size_t right_offset = choice_nfa.merge_states(right);
 
             // 创建新的起始和结束状态
             id_t new_start = choice_nfa.add_state();
@@ -252,7 +252,7 @@ namespace regex {
 
             // 设置新的起始和结束状态
             choice_nfa.set_start(new_start);
-            choice_nfa.set_final(final_state(new_final));
+            choice_nfa.set_final(new_final);
 
             result = choice_nfa;
         }
@@ -279,7 +279,7 @@ namespace regex {
             nfa next = parse_term(exp);
 
             // 连接当前项和下一项
-            std::size_t offset = current.merge_nfa_states(next);
+            std::size_t offset = current.merge_states(next);
 
             // 连接当前NFA的最终状态和下一项的起始状态
             current.add_epsilon_transition(current.get_final(),

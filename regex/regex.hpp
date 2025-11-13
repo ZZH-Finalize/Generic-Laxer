@@ -3,6 +3,7 @@
 #include "nfa.hpp"
 #include "dfa.hpp"
 #include "builder.hpp"
+#include "formatters.hpp"
 
 namespace regex {
 

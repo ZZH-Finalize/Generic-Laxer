@@ -10,7 +10,7 @@ namespace regex {
             return std::nullopt; // 没有状态，无法匹配
         }
 
-        state::id_t current_state = this->start_state;
+        state::id_t current_state = this->get_start();
 
         for (char c : str) {
             // 边界检查：确保current_state在有效范围内
@@ -29,10 +29,10 @@ namespace regex {
             current_state = next_state;
         }
 
-        const auto& find_state = this->final_states.find(final_state(current_state));
+        const auto& find_state = this->get_final().find(final_state(current_state));
 
         // 检查最终状态是否为接受状态
-        if (find_state != this->final_states.end()) {
+        if (find_state != this->get_final().end()) {
             return *find_state;
         }
 
@@ -44,11 +44,11 @@ namespace regex {
         if (this->states.empty()) {
             return false;
         }
-        // 边界检查：确保this->start_state在有效范围内
-        if (this->start_state >= this->states.size()) {
+        // 边界检查：确保this->get_start()在有效范围内
+        if (this->get_start() >= this->states.size()) {
             return false;
         }
-        return this->final_states.contains(final_state(this->start_state));
+        return this->get_final().contains(final_state(this->get_start()));
     }
 
     int dfa::find_match(std::string_view str) const
@@ -59,7 +59,7 @@ namespace regex {
 
         // 尝试从每个位置开始匹配
         for (size_t start_pos = 0; start_pos < str.length(); ++start_pos) {
-            state::id_t current_state = this->start_state;
+            state::id_t current_state = this->get_start();
 
             // 从当前位置开始尝试匹配
             for (size_t i = start_pos; i < str.length(); ++i) {
@@ -81,7 +81,7 @@ namespace regex {
                 current_state = next_state;
 
                 // 检查当前位置是否为接受状态
-                if (this->final_states.contains(final_state(current_state))) {
+                if (this->get_final().contains(final_state(current_state))) {
                     // 找到匹配，返回起始位置
                     return static_cast<int>(start_pos);
                 }

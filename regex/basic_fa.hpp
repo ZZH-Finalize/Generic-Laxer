@@ -3,7 +3,9 @@
 #include <algorithm>
 #include <concepts>
 #include <type_traits>
+#include <utility>
 #include <vector>
+#include <set>
 #include <bitset>
 
 #include "basic_state.hpp"
@@ -23,7 +25,7 @@ namespace regex {
     //     []<typename U>(basic_state<U> *) {}(static_cast<T *>(nullptr));
     // };
     template<typename T>
-    concept is_fa_state = std::is_base_of_v<bsic_state_base, T>;
+    concept is_fa_state = std::is_base_of_v<basic_state_base, T>;
 
     // 检查两个类是否定义了相同的id_t
     template<typename T, typename U>
@@ -36,15 +38,13 @@ namespace regex {
 
     // 约束规则如下
     // 1. state_t必须是basic_state的子类
-    // 2. final_state_t必须与state_t定义相同的id_t类型
-    // 3. final_state_t必须能够转换为state_t::id_t类型
-    template<typename state_t, typename final_state_t>
-    requires is_fa_state<state_t> and is_id_same<state_t, final_state_t>
-             and std::convertible_to<final_state_t, typename state_t::id_t>
+    template<typename state_t>
+    requires is_fa_state<state_t>
     class basic_fa {
        public:
         // 添加state别名
         using state                 = state_t;
+        using id_t                  = state_t::id_t;
         using transition_map_item_t = state::transition_map_item_t;
         using charset_t             = std::bitset<256>;
 
@@ -55,15 +55,16 @@ namespace regex {
        protected:
         std::vector<state> states;
         state::id_t start;
-        final_state_t final;
 
-        explicit basic_fa(void): start(this->add_state()), final(this->add_state())
+        explicit basic_fa(void): start(0)
         {
         }
 
-        state::id_t add_state(void)
+        template<typename... Args>
+        inline state::id_t add_state(Args &&...args)
         {
-            this->states.emplace_back();
+            this->states.emplace_back(std::forward<Args>(args)...);
+
             return this->states.size() - 1;
         }
 
@@ -72,55 +73,14 @@ namespace regex {
             this->start = start;
         }
 
-        // 拷贝赋值版本
-        inline void set_final(const final_state_t &final)
-        {
-            this->final = final;
-        }
-
-        // 移动赋值版本
-        // void set_final(final_state_t &&final)
-        // requires(not std::is_trivial_v<final_state_t>)
-        // {
-        //     this->final = std::move(final);
-        // }
-
-        // 为nfa及其子类实现, 添加从state经过字符c向to的转换
-        void add_transition(state::id_t state, char c, state::id_t to)
-        requires is_container<transition_map_item_t>
-        {
-            this->states.at(state).add_transition(c, to);
-        }
-
-        // 为nfa及其子类实现, 将charset中的字符添加为从start到final的转换
-        void add_transition(const charset_t &chars, bool is_negated = false)
-        {
-            charset_t final_charset =
-                is_negated ? (regex::ascii_printable_chars & ~chars) : chars;
-
-            for (std::size_t i = 0; i < final_charset.size(); i++) {
-                if (final_charset.test(i)) {
-                    this->add_transition(this->get_start(), static_cast<char>(i),
-                                         this->get_final());
-                }
-            }
-        }
-
-        // 为nfa及其子类实现, 添加从state到to的epsilon转换
-        void add_epsilon_transition(state::id_t state, state::id_t to)
-        requires has_add_epsilon_transition<state_t>
-        {
-            this->states.at(state).add_epsilon_transition(to);
-        }
-
         // 为nfa和dfa及其子类实现, 拷贝赋值版本
-        void set_transition(state::id_t state, char c, const transition_map_item_t &to)
+        inline void set_transition(state::id_t state, char c, const transition_map_item_t &to)
         {
             this->states.at(state).set_transition(c, to);
         }
 
         // 为nfa和dfa及其子类实现, 移动赋值版本
-        void set_transition(state::id_t state, char c, transition_map_item_t &&to)
+        inline void set_transition(state::id_t state, char c, transition_map_item_t &&to)
         {
             this->states.at(state).set_transition(c, std::move(to));
         }
@@ -131,17 +91,6 @@ namespace regex {
             return this->start;
         }
 
-        inline auto get_final(void) const noexcept
-        {
-            return this->final;
-        }
-
-        // todo: forward call to final_state_t
-        // bool has_final(const closure &states) const
-        // {
-        //     return states.contains(this->final);
-        // }
-
         inline const auto &get_state(state::id_t state) const noexcept
         {
             return this->states.at(state);
@@ -150,6 +99,12 @@ namespace regex {
         inline const auto &get_states(void) const noexcept
         {
             return this->states;
+        }
+
+        // 获取状态数量
+        inline std::size_t get_state_count(void) const
+        {
+            return this->states.size();
         }
     };
 
