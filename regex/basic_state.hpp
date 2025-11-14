@@ -4,6 +4,7 @@
 #include <limits>
 
 #include "regex_concepts.hpp"
+#include "regex_typedef.hpp"
 
 namespace regex {
     class basic_state_base {};
@@ -11,6 +12,7 @@ namespace regex {
     template<typename T>
     class basic_state: private basic_state_base {
        public:
+        using id_t                  = id_t;
         using transition_map_item_t = T;
         using transition_map_t =
             std::array<transition_map_item_t,

@@ -42,6 +42,8 @@ namespace regex {
        public:
         // 添加state别名
         using state                 = state_t;
+        using id_t                  = state_t::id_t;
+        using closure_t             = closure_t;
         using transition_map_item_t = state::transition_map_item_t;
         using final_state_t         = _final_state_t;
 
@@ -53,7 +55,7 @@ namespace regex {
         id_t start;
         final_state_t final;
 
-        explicit basic_fa(void): start(0)
+        explicit basic_fa(void): start {}, final {}
         {
         }
 
@@ -76,9 +78,13 @@ namespace regex {
         }
 
         // todo: add move version
+        inline void set_final(final_state_t &&final) noexcept
+        {
+            this->final = std::move(final);
+        }
 
         template<typename... Args>
-        inline void add_final(id_t state, Args &&...args)
+        inline void add_final(Args &&...args)
         requires has_emplace_back<final_state_t>
         {
             this->final.emplace_back(std::forward<Args>(args)...);

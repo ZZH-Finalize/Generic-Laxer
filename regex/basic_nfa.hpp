@@ -26,10 +26,10 @@ namespace regex {
     template<typename final_state_t>
     requires is_fa_final_state<final_state_t>
     class basic_nfa: public basic_fa<__nfa_state, final_state_t> {
+       protected:
         explicit basic_nfa()
         {
             this->start = this->add_state();
-            this->final = this->add_state();
         }
 
         // 添加从state经过字符c向to的转换
@@ -60,19 +60,23 @@ namespace regex {
 
         // 内部辅助方法：将另一个NFA的状态和转换合并到当前NFA中
         // 返回偏移量，用于调整传入NFA的状态ID
-        std::size_t merge_states(const basic_nfa& other_nfa)
+        template<typename T>
+        // todo: add constrines
+        std::size_t merge_states(const T& other_nfa)
         {
             // 保存当前NFA的原始状态数量作为偏移量
             std::size_t offset = this->states.size();
 
+            const auto& other_states = other_nfa.get_states();
+
             // 添加other_nfa的所有状态到当前NFA中
-            for (const auto& s : other_nfa.states) {
+            for (const auto& s : other_states) {
                 this->add_state();
             }
 
             // 复制other_nfa的转换，但需要调整ID偏移
-            for (id_t i = 0; i < other_nfa.states.size(); i++) {
-                const auto& other_state          = other_nfa.states[i];
+            for (id_t i = 0; i < other_states.size(); i++) {
+                const auto& other_state          = other_nfa.get_state(i);
                 const auto& other_transition_map = other_state.get_transition_map();
 
                 // 复制字符转换
@@ -141,7 +145,6 @@ namespace regex {
         }
 
        public:
-        friend class builder;
         friend struct std::formatter<basic_nfa>;
 
         class regex_error: public std::runtime_error {

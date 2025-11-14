@@ -8,7 +8,16 @@
 namespace regex {
 
     // 定义regex::nfa
-    using nfa = basic_nfa<id_t>;
+    class nfa: public basic_nfa<id_t> {
+       public:
+        friend class builder;
+
+       protected:
+        nfa()
+        {
+            this->final = this->add_state();
+        }
+    };
 
     // nfa相关约束
     // 是否具有与regex::nfa::state相同的操作
@@ -34,8 +43,7 @@ namespace regex {
 
     // 是否具有与regex::nfa相同的操作(以子集构造算法所需要的来看)
     template<typename T>
-    concept has_nfa_op = requires(const T& t, id_t state,
-                                  const closure_t& closure) {
+    concept has_nfa_op = requires(const T& t, id_t state, const closure_t& closure) {
         { t.get_start() } -> std::same_as<id_t>;
         { t.has_final(closure) } -> std::same_as<bool>;
         { t.get_state(state) } -> has_nfa_state_op;
