@@ -24,25 +24,12 @@ namespace regex {
     };
 
     template<typename final_state_t>
-    requires fa_final_state<final_state_t>
-    class basic_nfa: public basic_fa<__nfa_state> {
-       protected:
-        final_state_t final;
-
+    requires is_fa_final_state<final_state_t>
+    class basic_nfa: public basic_fa<__nfa_state, final_state_t> {
         explicit basic_nfa()
         {
             this->start = this->add_state();
             this->final = this->add_state();
-        }
-
-        void set_final(id_t id) noexcept
-        {
-            this->final = id;
-        }
-
-        const auto& get_final(void) const noexcept
-        {
-            return this->final;
         }
 
         // 添加从state经过字符c向to的转换

@@ -9,6 +9,8 @@
 #include <bitset>
 
 #include "basic_state.hpp"
+#include "regex_concepts.hpp"
+#include "regex_typedef.hpp"
 
 namespace regex {
     inline constexpr std::bitset<256> ascii_printable_chars = [] {
@@ -34,13 +36,14 @@ namespace regex {
 
     // 约束规则如下
     // 1. state_t必须是basic_state的子类
-    template<typename state_t>
-    requires is_fa_state<state_t>
+    template<typename state_t, typename _final_state_t>
+    requires is_fa_state<state_t> and is_fa_final_state<_final_state_t>
     class basic_fa {
        public:
         // 添加state别名
         using state                 = state_t;
         using transition_map_item_t = state::transition_map_item_t;
+        using final_state_t         = _final_state_t;
 
         // 非法id值
         inline static const id_t invalid_state = std::numeric_limits<id_t>::max();
@@ -48,6 +51,7 @@ namespace regex {
        protected:
         std::vector<state> states;
         id_t start;
+        final_state_t final;
 
         explicit basic_fa(void): start(0)
         {
@@ -61,9 +65,30 @@ namespace regex {
             return this->states.size() - 1;
         }
 
-        inline void set_start(id_t start)
+        inline void set_start(id_t start) noexcept
         {
             this->start = start;
+        }
+
+        inline void set_final(const final_state_t &final) noexcept
+        {
+            this->final = final;
+        }
+
+        // todo: add move version
+
+        template<typename... Args>
+        inline void add_final(id_t state, Args &&...args)
+        requires has_emplace_back<final_state_t>
+        {
+            this->final.emplace_back(std::forward<Args>(args)...);
+        }
+
+        template<typename... Args>
+        inline void add_final(Args &&...args)
+        requires has_insert<final_state_t>
+        {
+            this->final.insert(std::forward<Args>(args)...);
         }
 
         // 为nfa和dfa及其子类实现, 拷贝赋值版本
@@ -84,6 +109,11 @@ namespace regex {
             return this->start;
         }
 
+        inline const auto &get_final(void) const noexcept
+        {
+            return this->final;
+        }
+
         inline const auto &get_state(id_t state) const noexcept
         {
             return this->states.at(state);
@@ -95,7 +125,7 @@ namespace regex {
         }
 
         // 获取状态数量
-        inline std::size_t get_state_count(void) const
+        inline std::size_t get_state_count(void) const noexcept
         {
             return this->states.size();
         }
