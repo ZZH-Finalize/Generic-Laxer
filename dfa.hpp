@@ -25,6 +25,11 @@ namespace laxer {
         {
             return this->rule_id;
         }
+
+        void copy_metadata(const final_state_t& other)
+        {
+            this->rule_id = other.rule_id;
+        }
     };
 
     class dfa: public regex::basic_dfa<std::set<final_state_t>> {

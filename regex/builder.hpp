@@ -19,6 +19,7 @@ namespace regex {
         requires is_nfa<NFA>
         static NFA::to_type build(const NFA& input_nfa)
         {
+            using final_state_id_t = typename NFA::to_type::final_state_id_t;
             typename NFA::to_type result_dfa;
 
             if (input_nfa.get_states().empty()) {
@@ -35,7 +36,7 @@ namespace regex {
             std::vector<closure_t> unmarked;     // 未标记的DFA状态
 
             // 创建初始DFA状态
-            bool is_final = input_nfa.has_final(initial_closure);
+            bool is_final = input_nfa.find_final(initial_closure).has_value();
             result_dfa.set_start(result_dfa.add_state(initial_closure, is_final));
 
             state_map[initial_closure] = result_dfa.get_start();
@@ -72,8 +73,8 @@ namespace regex {
                     auto it = state_map.find(next_set);
                     if (it == state_map.end()) {
                         // 创建新的DFA状态
-                        next_id =
-                            result_dfa.add_state(next_set, input_nfa.has_final(next_set));
+                        next_id = result_dfa.add_state(
+                            next_set, input_nfa.find_final(next_set).has_value());
                         state_map[next_set] = next_id;
                         unmarked.push_back(next_set);
                     } else {
@@ -87,15 +88,21 @@ namespace regex {
 
             // 记录最终状态
             for (id_t i = 0; i < result_dfa.get_states().size(); i++) {
-                if (result_dfa.get_state(i).is_final()) {
-                    const auto& closure = result_dfa.get_state(i).get_closure();
+                auto state = result_dfa.get_state(i);
+                if (state.is_final()) {
+                    const auto& closure = state.get_closure();
 
-                    // todo: solve metadata issue
-                    // if constexpr (has_metadata<NFA>) {
-                    //     state.set_metadata(input_nfa.get_metadata(closure));
-                    // }
+                    final_state_id_t final_state(i);
 
-                    result_dfa.add_final(i);
+                    if constexpr (has_metadata<final_state_id_t>) {
+                        auto final = input_nfa.find_final(closure);
+
+                        if (final.has_value()) {
+                            final_state.copy_metadata(final.value());
+                        }
+                    }
+
+                    result_dfa.add_final(final_state);
                 }
             }
 

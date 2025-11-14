@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <ranges>
 #include <set>
 
@@ -17,6 +18,7 @@ namespace laxer {
 
        public:
         using to_type = laxer::dfa;
+        using final_state_id_t = typename basic_nfa::final_state_id_t;
 
         nfa(id_t initial_rule_id = 0): current_rule_id(initial_rule_id)
         {
@@ -44,15 +46,17 @@ namespace laxer {
             }
         }
 
-        bool has_final(const closure_t& states) const
+        std::optional<final_state_id_t> find_final(
+            const closure_t& states) const
         {
             for (const auto& state : states) {
-                if (this->get_final().contains(state)) {
-                    return true;
+                const auto& final = this->get_final().find(state);
+                if (final != this->get_final().end()) {
+                    return *final;
                 }
             }
 
-            return false;
+            return std::nullopt;
         }
     };
 

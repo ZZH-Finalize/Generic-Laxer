@@ -43,9 +43,10 @@ namespace regex {
         // 添加state别名
         using state                 = state_t;
         using id_t                  = state_t::id_t;
-        using closure_t             = closure_t;
+        using closure_t             = state_t::closure_t;
         using transition_map_item_t = state::transition_map_item_t;
         using final_state_t         = _final_state_t;
+        using final_state_id_t      = remove_container<final_state_t>::type;
 
         // 非法id值
         inline static const id_t invalid_state = std::numeric_limits<id_t>::max();

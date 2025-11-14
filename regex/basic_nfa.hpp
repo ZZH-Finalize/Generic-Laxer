@@ -2,6 +2,7 @@
 
 #include <exception>
 #include <format>
+#include <optional>
 
 #include "basic_fa.hpp"
 #include "basic_state.hpp"
@@ -146,6 +147,7 @@ namespace regex {
 
        public:
         friend struct std::formatter<basic_nfa>;
+        using final_state_id_t = typename basic_nfa::final_state_id_t;
 
         class regex_error: public std::runtime_error {
            public:
@@ -154,9 +156,15 @@ namespace regex {
             }
         };
 
-        bool has_final(const closure_t& states) const
+        std::optional<final_state_id_t> find_final(const closure_t& states) const
         {
-            return states.contains(this->get_final());
+            const auto& final = this->get_final();
+
+            if (not states.contains(final)) {
+                return std::nullopt;
+            }
+
+            return final;
         }
 
         // 合并两个NFA，实现选择操作（类似 | 操作符）

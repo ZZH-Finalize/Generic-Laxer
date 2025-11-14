@@ -12,8 +12,9 @@ namespace regex {
     template<typename T>
     class basic_state: private basic_state_base {
        public:
-        using id_t                  = id_t;
+        using id_t                  = regex::id_t;
         using transition_map_item_t = T;
+        using closure_t             = regex::closure_t;
         using transition_map_t =
             std::array<transition_map_item_t,
                        std::numeric_limits<unsigned char>::max() + 1>;

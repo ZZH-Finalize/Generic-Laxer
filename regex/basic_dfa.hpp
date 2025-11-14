@@ -53,7 +53,7 @@ namespace regex {
        public:
         friend class builder;
         friend struct std::formatter<basic_dfa>;
-        using final_state_id_t = final_state_t::value_type;
+        using final_state_id_t = typename basic_dfa::final_state_id_t;
 
         // 匹配算法：检查字符串是否与DFA匹配
         std::optional<final_state_id_t> match(std::string_view str) const

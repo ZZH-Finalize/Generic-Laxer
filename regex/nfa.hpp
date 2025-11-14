@@ -1,6 +1,7 @@
 #pragma once
 
 #include <concepts>
+#include <optional>
 #include <type_traits>
 
 #include "basic_nfa.hpp"
@@ -44,19 +45,30 @@ namespace regex {
     template<typename T>
     concept is_base_of_nfa_v = std::is_base_of_v<nfa, T>;
 
-    // 是否具有与regex::nfa相同的操作(以子集构造算法所需要的来看)
+    // 是否具有与regex::nfa相同的操作(以子集构造算法所需要操作的来看)
     template<typename T>
     concept has_nfa_op = requires(const T& t, id_t state, const closure_t& closure) {
+        // T必须提供to_type来指明对应的DFA类型
         typename T::to_type;
+        // T必须提供自身使用的终态类型(如果终态是容器, 则代表容器内部类型)
+        typename T::final_state_id_t;
+
+        // 需要获取T的起始id
         { t.get_start() } -> std::same_as<id_t>;
-        { t.has_final(closure) } -> std::same_as<bool>;
+        // 需要T给出闭包中的终态
+        {
+            t.find_final(closure)
+        } -> std::same_as<std::optional<typename T::final_state_id_t>>;
+        // 需要从T中获取具体的某个state对象, 返回的对象需要实现与nfa::state相同的公共函数
         { t.get_state(state) } -> has_nfa_state_op;
+        // 需要T给出所有的state, 且需要以容器形式提供
         { t.get_states() } -> std::ranges::range;
 
+        // 获取到的容器内部对象需要实现与nfa::state相同的公共函数
         requires has_nfa_state_op<std::ranges::range_value_t<decltype(t.get_states())>>;
     };
 
-    // 是否为NFA抽象类型(regex::nfa及其其子类,
+    // 是否为NFA抽象类型(regex::nfa及其子类,
     // 或者与regex::nfa行为相同的任何类都可以算作NFA)
     template<typename T>
     concept is_nfa = std::is_same_v<T, nfa> or is_base_of_nfa_v<T> or has_nfa_op<T>;

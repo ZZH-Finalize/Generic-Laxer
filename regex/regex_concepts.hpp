@@ -26,15 +26,19 @@ namespace regex {
     template<bool IsContainer, typename U>
     struct type_in_container
     {
-        using value = U;
+        using type = U;
     };
 
     // 容器情况
     template<typename U>
     struct type_in_container<true, U>
     {
-        using value = typename U::value_type;
+        using type = typename U::value_type;
     };
+
+    // 取出容器内部的类型, 如果T不是容器, 则返回T
+    template<typename T>
+    using remove_container = type_in_container<is_container<T>, T>;
 
     // 判断T能否作为自动机终态类型
     template<typename T>
@@ -47,7 +51,12 @@ namespace regex {
     concept is_fa_final_state_container =
         is_container<T> and is_fa_final_state_t<typename T::value_type>;
 
+    // NFA可以是单终态或者多终态, 多终态NFA的T类型应当为容器类型
     template<typename T>
     concept is_fa_final_state = is_fa_final_state_t<T> or is_fa_final_state_container<T>;
+
+    // 判断T类型能否携带元数据
+    template<typename T>
+    concept has_metadata = requires(T& t, const T& other) { t.copy_metadata(other); };
 
 } // namespace regex
