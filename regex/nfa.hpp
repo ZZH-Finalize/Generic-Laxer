@@ -1,12 +1,12 @@
 #pragma once
 
 #include <concepts>
+#include <format>
 #include <optional>
 #include <type_traits>
 
 #include "basic_nfa.hpp"
-
-#include "dfa.hpp"
+#include "basic_dfa.hpp"
 
 namespace regex {
 
@@ -14,7 +14,6 @@ namespace regex {
     class nfa: public basic_nfa<id_t> {
        public:
         friend class builder;
-        using to_type = regex::dfa;
 
        protected:
         nfa()
@@ -48,8 +47,8 @@ namespace regex {
     // 是否具有与regex::nfa相同的操作(以子集构造算法所需要操作的来看)
     template<typename T>
     concept has_nfa_op = requires(const T& t, id_t state, const closure_t& closure) {
-        // T必须提供to_type来指明对应的DFA类型
-        typename T::to_type;
+        // T必须提供dfa来指明对应的DFA类型
+        typename T::dfa;
         // T必须提供自身使用的终态类型(如果终态是容器, 则代表容器内部类型)
         typename T::final_state_id_t;
 
@@ -68,8 +67,22 @@ namespace regex {
         requires has_nfa_state_op<std::ranges::range_value_t<decltype(t.get_states())>>;
     };
 
-    // 是否为NFA抽象类型(regex::nfa及其子类,
-    // 或者与regex::nfa行为相同的任何类都可以算作NFA)
+    // 是否为NFA抽象类型(regex::nfa及其子类, 或者与其行为相同的任何类都可以算作NFA)
     template<typename T>
     concept is_nfa = std::is_same_v<T, nfa> or is_base_of_nfa_v<T> or has_nfa_op<T>;
+
+    // 是否为DFA类型, 由于DFA均为自动生成的类型, 只需要根据DFA公共基类判断是否为派生类即可
+    template<typename T>
+    concept is_dfa = std::is_base_of_v<basic_dfa_base, T>;
 } // namespace regex
+
+namespace std {
+    template<typename CharT>
+    struct formatter<regex::nfa, CharT>
+        : formatter<regex::basic_nfa<regex::nfa::id_t>, CharT>
+    {
+        using formatter<regex::basic_nfa<regex::nfa::id_t>, CharT>::parse;
+        using formatter<regex::basic_nfa<regex::nfa::id_t>, CharT>::format;
+    };
+
+} // namespace std

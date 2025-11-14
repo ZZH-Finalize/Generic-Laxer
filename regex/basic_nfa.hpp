@@ -4,6 +4,7 @@
 #include <format>
 #include <optional>
 
+#include "basic_dfa.hpp"
 #include "basic_fa.hpp"
 #include "basic_state.hpp"
 
@@ -146,8 +147,12 @@ namespace regex {
         }
 
        public:
+        // 支持格式化
         friend struct std::formatter<basic_nfa>;
+        // NFA元素的类型
         using final_state_id_t = typename basic_nfa::final_state_id_t;
+        // 导出目标dfa类型
+        using dfa = basic_dfa<final_state_id_t>;
 
         class regex_error: public std::runtime_error {
            public:

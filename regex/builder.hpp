@@ -3,7 +3,6 @@
 #include <queue>
 
 #include "nfa.hpp"
-#include "dfa.hpp"
 
 namespace regex {
     // builder类，包含所有构造相关的静态方法
@@ -17,10 +16,10 @@ namespace regex {
 
         template<typename NFA>
         requires is_nfa<NFA>
-        static NFA::to_type build(const NFA& input_nfa)
+        static NFA::dfa build(const NFA& input_nfa)
         {
-            using final_state_id_t = typename NFA::to_type::final_state_id_t;
-            typename NFA::to_type result_dfa;
+            using final_state_id_t = typename NFA::dfa::final_state_id_t;
+            typename NFA::dfa result_dfa;
 
             if (input_nfa.get_states().empty()) {
                 // 如果NFA没有状态，创建一个空的DFA
@@ -110,7 +109,7 @@ namespace regex {
         }
 
         // DFA最小化算法 - 使用Hopcroft算法
-        static dfa minimize(const dfa& input_dfa);
+        // static dfa minimize(const dfa& input_dfa);
 
        private:
         // 计算epsilon闭包

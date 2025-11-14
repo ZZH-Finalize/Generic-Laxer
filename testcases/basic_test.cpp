@@ -8,7 +8,6 @@
 #include <utility>
 #include <vector>
 
-#include "dfa.hpp"
 #include "nfa.hpp"
 #include "regex/regex.hpp"
 
@@ -40,13 +39,14 @@ int main(const int argc, const char** argv)
 
     // setup rules
     laxer::nfa laxer_nfa;
+
     for (const auto& rule : rules) {
         auto nfa = regex::build_nfa(rule);
 
         laxer_nfa.add_nfa(nfa);
     }
 
-    auto dfa = regex::build(laxer_nfa);
+    auto dfa = laxer_nfa | regex::to_dfa;
 
     // check matchs
     for (const auto& [text, expected_id] : tests) {

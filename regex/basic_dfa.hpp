@@ -46,10 +46,13 @@ namespace regex {
         }
     };
 
+    class basic_dfa_base {};
+
     // DFA必然是多终态的, 因此终态类型必须是容器类型
     template<typename final_state_t>
-    requires is_fa_final_state_container<final_state_t>
-    class basic_dfa: public basic_fa<dfa_state, final_state_t> {
+    requires is_fa_final_state_t<final_state_t>
+    class basic_dfa: public basic_fa<dfa_state, std::set<final_state_t>>,
+                     private basic_dfa_base {
        public:
         friend class builder;
         friend struct std::formatter<basic_dfa>;

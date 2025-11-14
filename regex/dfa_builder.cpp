@@ -1,13 +1,8 @@
-#include "dfa.hpp"
 #include "builder.hpp"
 
 namespace regex {
 
 #if 1
-    dfa builder::minimize(const dfa& input_dfa)
-    {
-        return input_dfa;
-    }
 #else
     dfa dfa::builder::minimize(const dfa& input_dfa)
     {
