@@ -17,9 +17,9 @@ namespace regex {
 
         template<typename NFA>
         requires is_nfa<NFA>
-        static dfa build(const NFA& input_nfa)
+        static NFA::to_type build(const NFA& input_nfa)
         {
-            dfa result_dfa;
+            typename NFA::to_type result_dfa;
 
             if (input_nfa.get_states().empty()) {
                 // 如果NFA没有状态，创建一个空的DFA
@@ -88,7 +88,6 @@ namespace regex {
             // 记录最终状态
             for (id_t i = 0; i < result_dfa.get_states().size(); i++) {
                 if (result_dfa.get_state(i).is_final()) {
-                    id_t state(i);
                     const auto& closure = result_dfa.get_state(i).get_closure();
 
                     // todo: solve metadata issue
@@ -96,7 +95,7 @@ namespace regex {
                     //     state.set_metadata(input_nfa.get_metadata(closure));
                     // }
 
-                    result_dfa.add_final(state);
+                    result_dfa.add_final(i);
                 }
             }
 

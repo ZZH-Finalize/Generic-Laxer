@@ -7,36 +7,36 @@
 
 namespace regex {
 
-    inline nfa build_nfa(std::string_view exp)
+    inline auto build_nfa(std::string_view exp)
     {
         return builder::build(exp);
     }
 
     template<typename NFA>
     requires is_nfa<NFA>
-    inline dfa to_dfa(const NFA& nfa)
+    inline auto to_dfa(const NFA& nfa)
     {
         return builder::build(nfa);
     }
 
-    static inline dfa build_dfa(std::string_view exp)
+    static inline auto build_dfa(std::string_view exp)
     {
         return to_dfa(build_nfa(exp));
     }
 
     template<typename NFA>
     requires is_nfa<NFA>
-    static inline dfa build(const NFA& nfa)
+    static inline auto build(const NFA& nfa)
     {
         return to_dfa(nfa);
     }
 
-    static inline dfa build(std::string_view exp)
+    static inline auto build(std::string_view exp)
     {
         return build_dfa(exp);
     }
 
-    inline dfa minimize(const dfa& dfa)
+    inline auto minimize(const dfa& dfa)
     {
         return builder::minimize(dfa);
     }
@@ -53,7 +53,7 @@ namespace regex {
     // 重载操作符，支持函数名、函数指针、函数对象等
     template<typename T>
     requires regexp_res<T>
-    inline dfa operator|(const T& input, dfa (*f)(const T&))
+    inline auto operator|(const T& input, dfa (*f)(const T&))
     {
         return f(input);
     }
@@ -61,7 +61,7 @@ namespace regex {
     // 通用版本，支持函数对象和lambda
     template<typename T, typename F>
     requires regexp_res<T> && regexp_op<F, T>
-    inline dfa operator|(const T& input, F&& f)
+    inline auto operator|(const T& input, F&& f)
     {
         return std::forward<F>(f)(input);
     }

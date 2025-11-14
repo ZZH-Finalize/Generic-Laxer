@@ -12,7 +12,7 @@
 #include "nfa.hpp"
 #include "regex/regex.hpp"
 
-using rule_id_t = laxer::nfa::rule_id_t;
+using rule_id_t = laxer::nfa::id_t;
 
 const rule_id_t invalid_id = std::numeric_limits<rule_id_t>::max();
 
@@ -46,7 +46,7 @@ int main(const int argc, const char** argv)
         laxer_nfa.add_nfa(nfa);
     }
 
-    auto dfa = regex::build(laxer_nfa) | regex::minimize;
+    auto dfa = regex::build(laxer_nfa);
 
     // check matchs
     for (const auto& [text, expected_id] : tests) {
@@ -54,7 +54,7 @@ int main(const int argc, const char** argv)
 
         // matched
         if (res.has_value()) {
-            rule_id_t matched_id = std::any_cast<rule_id_t>(res->get_metadata());
+            auto matched_id = res->get_rule_id();
 
             std::cout << std::format("{} matched with rule {}, expected: {}\n", text,
                                      matched_id, expected_id);

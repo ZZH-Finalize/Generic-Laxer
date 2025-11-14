@@ -5,12 +5,15 @@
 
 #include "basic_nfa.hpp"
 
+#include "dfa.hpp"
+
 namespace regex {
 
     // 定义regex::nfa
     class nfa: public basic_nfa<id_t> {
        public:
         friend class builder;
+        using to_type = regex::dfa;
 
        protected:
         nfa()
@@ -44,6 +47,7 @@ namespace regex {
     // 是否具有与regex::nfa相同的操作(以子集构造算法所需要的来看)
     template<typename T>
     concept has_nfa_op = requires(const T& t, id_t state, const closure_t& closure) {
+        typename T::to_type;
         { t.get_start() } -> std::same_as<id_t>;
         { t.has_final(closure) } -> std::same_as<bool>;
         { t.get_state(state) } -> has_nfa_state_op;

@@ -9,6 +9,7 @@
 #include <algorithm>
 
 #include "basic_fa.hpp"
+#include "regex_concepts.hpp"
 
 namespace regex {
 
@@ -45,15 +46,17 @@ namespace regex {
         }
     };
 
+    // DFA必然是多终态的, 因此终态类型必须是容器类型
     template<typename final_state_t>
-    requires is_fa_final_state<final_state_t>
+    requires is_fa_final_state_container<final_state_t>
     class basic_dfa: public basic_fa<dfa_state, final_state_t> {
        public:
         friend class builder;
         friend struct std::formatter<basic_dfa>;
+        using final_state_id_t = final_state_t::value_type;
 
         // 匹配算法：检查字符串是否与DFA匹配
-        std::optional<id_t> match(std::string_view str) const
+        std::optional<final_state_id_t> match(std::string_view str) const
         {
             if (this->states.empty()) {
                 return std::nullopt; // 没有状态，无法匹配
