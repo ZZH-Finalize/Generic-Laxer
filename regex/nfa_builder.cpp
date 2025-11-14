@@ -62,7 +62,7 @@ namespace regex {
         }
 
         nfa result;
-        nfa::charset_t chars;
+        charset_t chars;
 
         const auto exp_orig = exp;
 
@@ -142,7 +142,7 @@ namespace regex {
         exp.remove_prefix(2); // 跳过'\d'或'\D'
 
         nfa result;
-        nfa::charset_t chars;
+        charset_t chars;
 
         // 添加数字字符 0-9
         for (char ch = '0'; ch <= '9'; ch++) {
@@ -165,7 +165,7 @@ namespace regex {
         exp.remove_prefix(2); // 跳过'\w'或'\W'
 
         nfa result;
-        nfa::charset_t chars;
+        charset_t chars;
 
         // 添加字母 a-z, A-Z, 数字 0-9, 以及下划线 _
         for (char ch = 'a'; ch <= 'z'; ch++) {
@@ -198,13 +198,13 @@ namespace regex {
         exp.remove_prefix(2); // 跳过'\s'或'\S'
 
         nfa result;
-        nfa::charset_t chars;
+        charset_t chars;
 
         for (char ch : {' ', '\t', '\r', '\n', '\b', '\f', '\v'}) {
             chars.set(static_cast<unsigned char>(ch));
         }
 
-        nfa::charset_t final_charset =
+        charset_t final_charset =
             is_negated ? (regex::ascii_printable_chars & ~chars) : chars;
 
         // 为所有符合条件的字符添加转换规则

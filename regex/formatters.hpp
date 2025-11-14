@@ -1,5 +1,7 @@
 #pragma once
 
+#include <map>
+
 #include "nfa.hpp"
 #include "dfa.hpp"
 
@@ -40,7 +42,7 @@ struct std::formatter<regex::nfa>
 
         auto& states = nfa.get_states();
 
-        auto get_state_str = [&nfa](regex::nfa::state::id_t id) {
+        auto get_state_str = [&nfa](regex::id_t id) {
             if (id == nfa.get_start() || id == nfa.get_final()) {
                 return std::string("[*]");
             } else {
@@ -121,7 +123,7 @@ struct std::formatter<regex::dfa>
 
         result += "\n";
 
-        auto get_state_str = [&dfa](regex::dfa::id_t id) {
+        auto get_state_str = [&dfa](regex::id_t id) {
             auto& final_states = dfa.get_final();
             std::string state_str;
 
@@ -146,7 +148,7 @@ struct std::formatter<regex::dfa>
 
         std::map<std::size_t, std::set<char>> merge_map;
 
-        for (regex::dfa::id_t current_state_id = 0; current_state_id < states.size();
+        for (regex::id_t current_state_id = 0; current_state_id < states.size();
              current_state_id++) {
             auto& state     = states[current_state_id];
             auto& trans_map = state.get_transition_map();

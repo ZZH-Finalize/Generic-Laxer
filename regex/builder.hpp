@@ -1,5 +1,7 @@
 #include <string_view>
-#include <type_traits>
+#include <map>
+#include <queue>
+
 #include "nfa.hpp"
 #include "dfa.hpp"
 
@@ -7,11 +9,8 @@ namespace regex {
     // builder类，包含所有构造相关的静态方法
     class builder {
        public:
-        using charset_t = nfa::charset_t;
-        using closure   = dfa::state::closure;
         using transition_map_t =
-            std::array<nfa::state::id_t, std::tuple_size_v<nfa::state::transition_map_t>>;
-        using id_t = nfa::state::id_t;
+            std::array<id_t, std::tuple_size_v<nfa::state::transition_map_t>>;
 
         // 从正则表达式创建NFA
         static nfa build(std::string_view exp);
@@ -24,16 +23,16 @@ namespace regex {
 
             if (input_nfa.get_states().empty()) {
                 // 如果NFA没有状态，创建一个空的DFA
-                dfa::state::closure empty_closure;
+                closure_t empty_closure;
                 result_dfa.set_start(result_dfa.add_state(empty_closure, false));
                 return result_dfa;
             }
 
             // 计算初始状态的epsilon闭包
-            closure initial_closure =
+            closure_t initial_closure =
                 builder::epsilon_closure(input_nfa.get_start(), input_nfa);
-            std::map<closure, dfa::state::id_t> state_map; // 映射NFA状态集到DFA状态ID
-            std::vector<closure> unmarked;                 // 未标记的DFA状态
+            std::map<closure_t, id_t> state_map; // 映射NFA状态集到DFA状态ID
+            std::vector<closure_t> unmarked;     // 未标记的DFA状态
 
             // 创建初始DFA状态
             bool is_final = input_nfa.has_final(initial_closure);
@@ -45,10 +44,10 @@ namespace regex {
 
             // 子集构造算法
             while (not unmarked.empty()) {
-                closure current_set = unmarked.back();
+                closure_t current_set = unmarked.back();
                 unmarked.pop_back();
 
-                dfa::state::id_t current_id = state_map[current_set];
+                id_t current_id = state_map[current_set];
 
                 // 尝试所有可能的输入字符
                 std::set<char> input_chars;
@@ -65,11 +64,11 @@ namespace regex {
 
                 // 对每个输入字符计算下一个状态
                 for (char input_char : input_chars) {
-                    closure next_set = builder::epsilon_closure(
+                    closure_t next_set = builder::epsilon_closure(
                         builder::move(current_set, input_char, input_nfa), input_nfa);
                     if (next_set.empty()) continue;
 
-                    dfa::state::id_t next_id;
+                    id_t next_id;
                     auto it = state_map.find(next_set);
                     if (it == state_map.end()) {
                         // 创建新的DFA状态
@@ -87,7 +86,7 @@ namespace regex {
             }
 
             // 记录最终状态
-            for (dfa::state::id_t i = 0; i < result_dfa.get_states().size(); i++) {
+            for (id_t i = 0; i < result_dfa.get_states().size(); i++) {
                 if (result_dfa.get_state(i).is_final()) {
                     id_t state(i);
                     const auto& closure = result_dfa.get_state(i).get_closure();
@@ -111,18 +110,19 @@ namespace regex {
         // 计算epsilon闭包
         template<typename NFA>
         requires is_nfa<NFA>
-        static closure epsilon_closure(const closure& states_set, const NFA& input_nfa)
+        static closure_t epsilon_closure(const closure_t& states_set,
+                                         const NFA& input_nfa)
         {
-            closure closure = states_set;
+            closure_t closure = states_set;
 
             // 使用队列进行BFS遍历，避免无限循环
-            std::queue<nfa::state::id_t> work_queue;
+            std::queue<id_t> work_queue;
             for (auto state_id : states_set) {
                 work_queue.push(state_id);
             }
 
             while (not work_queue.empty()) {
-                nfa::state::id_t current_state = work_queue.front();
+                id_t current_state = work_queue.front();
                 work_queue.pop();
 
                 const auto& state           = input_nfa.get_state(current_state);
@@ -139,17 +139,18 @@ namespace regex {
 
         template<typename NFA>
         requires is_nfa<NFA>
-        static closure epsilon_closure(nfa::state::id_t state_id, const NFA& input_nfa)
+        static closure_t epsilon_closure(id_t state_id, const NFA& input_nfa)
         {
-            closure single_set = {state_id};
+            closure_t single_set = {state_id};
             return builder::epsilon_closure(single_set, input_nfa);
         }
 
         template<typename NFA>
         requires is_nfa<NFA>
-        static closure move(const closure& states_set, char input, const NFA& input_nfa)
+        static closure_t move(const closure_t& states_set, char input,
+                              const NFA& input_nfa)
         {
-            closure result;
+            closure_t result;
 
             for (auto state_id : states_set) {
                 const auto& state          = input_nfa.get_state(state_id);

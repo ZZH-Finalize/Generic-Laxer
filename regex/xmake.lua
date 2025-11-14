@@ -12,9 +12,7 @@ target('regex-engine')
     add_includedirs('.', {public=true})
 
     add_files(
-        'nfa.cpp',
         'nfa_builder.cpp',
-        'dfa.cpp',
         'dfa_builder.cpp'
     )
 

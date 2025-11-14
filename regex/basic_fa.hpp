@@ -27,14 +27,10 @@ namespace regex {
     template<typename T>
     concept is_fa_state = std::is_base_of_v<basic_state_base, T>;
 
-    // 检查两个类是否定义了相同的id_t
-    template<typename T, typename U>
-    concept is_id_same = std::is_same_v<typename T::id_t, typename U::id_t>;
-
     // 检查是否有add_epsilon_transition函数
     template<typename T>
     concept has_add_epsilon_transition =
-        requires(T &t, T::id_t id) { t.add_epsilon_transition(id); };
+        requires(T &t, id_t id) { t.add_epsilon_transition(id); };
 
     // 约束规则如下
     // 1. state_t必须是basic_state的子类
@@ -44,45 +40,40 @@ namespace regex {
        public:
         // 添加state别名
         using state                 = state_t;
-        using id_t                  = state_t::id_t;
         using transition_map_item_t = state::transition_map_item_t;
-        using charset_t             = std::bitset<256>;
-        using closure               = state_t::closure;
 
         // 非法id值
-        inline static const state::id_t invalid_state =
-            std::numeric_limits<typename state::id_t>::max();
+        inline static const id_t invalid_state = std::numeric_limits<id_t>::max();
 
        protected:
         std::vector<state> states;
-        state::id_t start;
+        id_t start;
 
         explicit basic_fa(void): start(0)
         {
         }
 
         template<typename... Args>
-        inline state::id_t add_state(Args &&...args)
+        inline id_t add_state(Args &&...args)
         {
             this->states.emplace_back(std::forward<Args>(args)...);
 
             return this->states.size() - 1;
         }
 
-        inline void set_start(state::id_t start)
+        inline void set_start(id_t start)
         {
             this->start = start;
         }
 
         // 为nfa和dfa及其子类实现, 拷贝赋值版本
-        inline void set_transition(state::id_t state, char c,
-                                   const transition_map_item_t &to)
+        inline void set_transition(id_t state, char c, const transition_map_item_t &to)
         {
             this->states.at(state).set_transition(c, to);
         }
 
         // 为nfa和dfa及其子类实现, 移动赋值版本
-        inline void set_transition(state::id_t state, char c, transition_map_item_t &&to)
+        inline void set_transition(id_t state, char c, transition_map_item_t &&to)
         {
             this->states.at(state).set_transition(c, std::move(to));
         }
@@ -93,7 +84,7 @@ namespace regex {
             return this->start;
         }
 
-        inline const auto &get_state(state::id_t state) const noexcept
+        inline const auto &get_state(id_t state) const noexcept
         {
             return this->states.at(state);
         }

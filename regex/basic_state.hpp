@@ -1,49 +1,20 @@
 #pragma once
 
 #include <array>
-#include <set>
 #include <limits>
-#include <type_traits>
+
+#include "regex_concepts.hpp"
 
 namespace regex {
-    // 判断是否为容器
-    template<typename T>
-    concept is_container = requires(T t) { typename T::value_type; };
-
-    // 可以执行push_back, 用于支持std::vector这样的容器
-    template<typename T>
-    concept has_push_back = requires(T t, const T::value_type& v) { t.push_back(v); };
-
-    // 可以执行insert, 用于支持std::set这样的容器
-    template<typename T>
-    concept has_insert = requires(T t, const T::value_type& v) { t.insert(v); };
-
     class basic_state_base {};
 
     template<typename T>
     class basic_state: private basic_state_base {
        public:
-        // 非容器情况
-        template<bool IsContainer, typename U>
-        struct id_type_helper
-        {
-            using type = U;
-        };
-
-        // 容器情况
-        template<typename U>
-        struct id_type_helper<true, U>
-        {
-            using type = typename U::value_type;
-        };
-
-        using id_t = typename id_type_helper<is_container<T>, T>::type;
-
         using transition_map_item_t = T;
         using transition_map_t =
             std::array<transition_map_item_t,
                        std::numeric_limits<unsigned char>::max() + 1>;
-        using closure               = std::set<id_t>;
 
         inline void set_transition(char ch, const T& id)
         {
