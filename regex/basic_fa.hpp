@@ -77,7 +77,6 @@ namespace regex {
             this->final = final;
         }
 
-        // todo: add move version
         inline void set_final(final_state_t &&final) noexcept
         {
             this->final = std::move(final);

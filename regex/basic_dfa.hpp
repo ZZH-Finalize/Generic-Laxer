@@ -12,7 +12,7 @@
 
 namespace regex {
 
-    class __dfa_state: public basic_state<std::uint32_t> {
+    class dfa_state: public basic_state<std::uint32_t> {
        private:
         // 对应NFA状态集合
         closure_t nfa_states;
@@ -22,7 +22,7 @@ namespace regex {
 
        public:
         // 构造函数初始化转换表为无效值
-        explicit __dfa_state(const closure_t& nfa_states = {}, bool is_final = false)
+        explicit dfa_state(const closure_t& nfa_states = {}, bool is_final = false)
             : nfa_states(nfa_states), final(is_final)
         {
             std::fill(this->transition_map.begin(), this->transition_map.end(),
@@ -47,7 +47,7 @@ namespace regex {
 
     template<typename final_state_t>
     requires is_fa_final_state<final_state_t>
-    class basic_dfa: public basic_fa<__dfa_state, final_state_t> {
+    class basic_dfa: public basic_fa<dfa_state, final_state_t> {
        public:
         friend class builder;
         friend struct std::formatter<basic_dfa>;

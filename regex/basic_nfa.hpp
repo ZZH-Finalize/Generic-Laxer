@@ -7,7 +7,7 @@
 #include "basic_state.hpp"
 
 namespace regex {
-    class __nfa_state: public basic_state<std::vector<id_t>> {
+    class nfa_state: public basic_state<std::vector<id_t>> {
        private:
         transition_map_item_t epsilon_transitions;
 
@@ -25,7 +25,7 @@ namespace regex {
 
     template<typename final_state_t>
     requires is_fa_final_state<final_state_t>
-    class basic_nfa: public basic_fa<__nfa_state, final_state_t> {
+    class basic_nfa: public basic_fa<nfa_state, final_state_t> {
        protected:
         explicit basic_nfa()
         {
