@@ -25,6 +25,46 @@ namespace regex {
         }
     };
 
+    // 是否具有与nfa_state相同的操作
+    template<typename T>
+    concept has_nfa_state_op = requires(const T& t, char input) {
+        // 约束T类型必须有get_transition_map方法
+        { t.get_transition_map() } -> std::same_as<const nfa_state::transition_map_t&>;
+
+        // 约束T类型必须有get_transition方法
+        {
+            t.get_transition(input)
+        } -> std::same_as<const nfa_state::transition_map_item_t&>;
+
+        // 约束T类型必须有get_epsilon_transition方法
+        {
+            t.get_epsilon_transition()
+        } -> std::same_as<const nfa_state::transition_map_item_t&>;
+    };
+
+    // 是否具有与basic_nfa相同的操作(以子集构造算法所需要操作的来看)
+    template<typename T>
+    concept has_nfa_op = requires(const T& t, id_t state, const closure_t& closure) {
+        // T必须提供dfa来指明对应的DFA类型
+        typename T::dfa;
+        // T必须提供自身使用的终态类型(如果终态是容器, 则代表容器内部类型)
+        typename T::final_state_id_t;
+
+        // 需要获取T的起始id
+        { t.get_start() } -> std::same_as<id_t>;
+        // 需要T给出闭包中的终态
+        {
+            t.find_final(closure)
+        } -> std::same_as<std::optional<typename T::final_state_id_t>>;
+        // 需要从T中获取具体的某个state对象, 返回的对象需要实现与nfa::state相同的公共函数
+        { t.get_state(state) } -> has_nfa_state_op;
+        // 需要T给出所有的state, 且需要以容器形式提供
+        { t.get_states() } -> std::ranges::range;
+
+        // 获取到的容器内部对象需要实现与nfa::state相同的公共函数
+        requires has_nfa_state_op<std::ranges::range_value_t<decltype(t.get_states())>>;
+    };
+
     template<typename final_state_t>
     requires is_fa_final_state<final_state_t>
     class basic_nfa: public basic_fa<nfa_state, final_state_t> {
@@ -63,7 +103,7 @@ namespace regex {
         // 内部辅助方法：将另一个NFA的状态和转换合并到当前NFA中
         // 返回偏移量，用于调整传入NFA的状态ID
         template<typename T>
-        // todo: add constrines
+        requires has_nfa_op<T>
         std::size_t merge_states(const T& other_nfa)
         {
             // 保存当前NFA的原始状态数量作为偏移量
