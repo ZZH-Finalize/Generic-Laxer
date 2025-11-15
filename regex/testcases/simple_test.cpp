@@ -15,7 +15,7 @@ int main(const int argc, const char** argv)
         
         std::cout << "测试DFA构造..." << std::endl;
         // 测试DFA构造
-        regex::dfa dfa_obj = regex::to_dfa(nfa_obj);
+        auto dfa_obj = regex::to_dfa(nfa_obj);
         std::cout << "DFA构造成功" << std::endl;
         
         // 测试匹配并添加断言来验证结果

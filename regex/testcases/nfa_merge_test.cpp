@@ -27,7 +27,7 @@ void test_nfa_merge()
               << std::endl;
 
     // 将合并后的NFA转换为DFA
-    regex::dfa combined_dfa = regex::to_dfa(final_nfa);
+    auto combined_dfa = regex::to_dfa(final_nfa);
 
     // 测试合并后的DFA并添加断言
     std::cout << "\n--- 测试合并后的DFA ---" << std::endl;
@@ -61,7 +61,7 @@ void test_nfa_merge()
     regex::nfa complex_nfa = abc_nfa | xyz_nfa;
     complex_nfa            = complex_nfa | num_nfa;
 
-    regex::dfa complex_dfa = regex::to_dfa(complex_nfa);
+    auto complex_dfa = regex::to_dfa(complex_nfa);
 
     std::cout << "复杂合并DFA测试:" << std::endl;
     auto result6 = complex_dfa.match("abc");
@@ -82,9 +82,9 @@ void test_nfa_merge()
 
     // 验证每个单独的NFA仍然有效
     std::cout << "\n--- 验证原NFA未被修改 ---" << std::endl;
-    regex::dfa original_keyword_dfa    = regex::to_dfa(keyword_nfa);
-    regex::dfa original_identifier_dfa = regex::to_dfa(identifier_nfa);
-    regex::dfa original_number_dfa     = regex::to_dfa(number_nfa);
+    auto original_keyword_dfa    = regex::to_dfa(keyword_nfa);
+    auto original_identifier_dfa = regex::to_dfa(identifier_nfa);
+    auto original_number_dfa     = regex::to_dfa(number_nfa);
     
     auto result10 = original_keyword_dfa.match("if");
     std::cout << "原关键字NFA匹配'if': " << result10.has_value() << std::endl;
@@ -122,11 +122,11 @@ void test_merge_associativity()
 
     // 测试 (a | b) | c
     regex::nfa left_assoc = (a_nfa | b_nfa) | c_nfa;
-    regex::dfa left_dfa   = regex::to_dfa(left_assoc);
+    auto left_dfa   = regex::to_dfa(left_assoc);
 
     // 测试 a | (b | c)
     regex::nfa right_assoc = a_nfa | (b_nfa | c_nfa);
-    regex::dfa right_dfa   = regex::to_dfa(right_assoc);
+    auto right_dfa   = regex::to_dfa(right_assoc);
 
     // 测试左侧结合的结果
     auto left_result1 = left_dfa.match("a");

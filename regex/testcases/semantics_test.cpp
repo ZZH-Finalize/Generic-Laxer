@@ -3,7 +3,7 @@
 #include <string_view>
 #include "regex.hpp"
 
-void print_match(const regex::dfa& dfa, const std::string_view& str, const std::string& test_name, bool expected)
+void print_match(const auto& dfa, const std::string_view& str, const std::string& test_name, bool expected)
 {
     auto result = dfa.match(str);
     bool has_match = result.has_value();
@@ -24,7 +24,7 @@ int main(const int argc, const char** argv)
     // 测试完全匹配语义
     std::cout << "--- 完全匹配语义测试 ---" << std::endl;
     {
-        regex::dfa dfa = regex::build("abc");
+        auto dfa = regex::build("abc");
         print_match(dfa, "abc", "abc完全匹配abc", true);
         print_match(dfa, "abcd", "abc完全匹配abcd", false);  // 应该是false，因为整个字符串不匹配
         print_match(dfa, "xabc", "abc完全匹配xabc", false);  // 应该是false
@@ -33,7 +33,7 @@ int main(const int argc, const char** argv)
 
     std::cout << "\n--- 其他模式测试 ---" << std::endl;
     {
-        regex::dfa dfa = regex::build("a");
+        auto dfa = regex::build("a");
         print_match(dfa, "a", "a完全匹配a", true);
         print_match(dfa, "aa", "a完全匹配aa", false);  // 应该是false，因为整个字符串是"aa"不匹配模式"a"
         print_match(dfa, "b", "a完全匹配b", false);
@@ -41,7 +41,7 @@ int main(const int argc, const char** argv)
 
     std::cout << "\n--- 量词语义测试 ---" << std::endl;
     {
-        regex::dfa dfa = regex::build("ab*c");  // a后跟零个或多个b，然后是c
+        auto dfa = regex::build("ab*c");  // a后跟零个或多个b，然后是c
         print_match(dfa, "ac", "ab*c完全匹配ac", true);
         print_match(dfa, "abc", "ab*c完全匹配abc", true);
         print_match(dfa, "abbc", "ab*c完全匹配abbc", true);

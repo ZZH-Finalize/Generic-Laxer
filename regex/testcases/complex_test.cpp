@@ -3,7 +3,7 @@
 #include <string_view>
 #include "regex.hpp"
 
-void print_match(const regex::dfa& dfa, const std::string_view& str,
+void print_match(const auto& dfa, const std::string_view& str,
                  const std::string& test_name, bool expected)
 {
     auto result        = dfa.match(str);
@@ -27,7 +27,7 @@ int main(const int argc, const char** argv)
         // 测试1: 简单连接
         std::cout << "\n--- 测试1: 简单连接 ---" << std::endl;
         {
-            regex::dfa dfa = regex::build_dfa("abc");
+            auto dfa = regex::build_dfa("abc");
             print_match(dfa, "abc", "abc连接", true);
             print_match(dfa, "ab", "abc匹配ab", false);
             print_match(dfa, "abcd", "abc匹配abcd", false);
@@ -36,7 +36,7 @@ int main(const int argc, const char** argv)
         // 测试2: 选择操作 (|)
         std::cout << "\n--- 测试2: 选择操作 ---" << std::endl;
         {
-            regex::dfa dfa = regex::build_dfa("cat|dog");
+            auto dfa = regex::build_dfa("cat|dog");
             print_match(dfa, "cat", "cat|dog匹配cat", true);
             print_match(dfa, "dog", "cat|dog匹配dog", true);
             print_match(dfa, "bat", "cat|dog匹配bat", false);
@@ -46,7 +46,7 @@ int main(const int argc, const char** argv)
         // 测试3: 通配符 (.)
         std::cout << "\n--- 测试3: 通配符 ---" << std::endl;
         {
-            regex::dfa dfa = regex::build_dfa("a.c");
+            auto dfa = regex::build_dfa("a.c");
             print_match(dfa, "abc", "a.c匹配abc", true);
             print_match(dfa, "a1c", "a.c匹配a1c", true);
             print_match(dfa, "ac", "a.c匹配ac", false);     // 需要中间有一个字符
@@ -56,7 +56,7 @@ int main(const int argc, const char** argv)
         // 测试4: 字符集 [...]
         std::cout << "\n--- 测试4: 字符集 ---" << std::endl;
         {
-            regex::dfa dfa = regex::build_dfa("a[0-9]c"); // a后跟一个数字再跟c
+            auto dfa = regex::build_dfa("a[0-9]c"); // a后跟一个数字再跟c
             print_match(dfa, "a1c", "a[0-9]c匹配a1c", true);
             print_match(dfa, "a5c", "a[0-9]c匹配a5c", true);
             print_match(dfa, "a0c", "a[0-9]c匹配a0c", true);
@@ -68,7 +68,7 @@ int main(const int argc, const char** argv)
         // 测试5: 否定字符集 [^...]
         std::cout << "\n--- 测试5: 否定字符集 ---" << std::endl;
         {
-            regex::dfa dfa = regex::build_dfa("a[^0-9]c"); // a后跟一个非数字再跟c
+            auto dfa = regex::build_dfa("a[^0-9]c"); // a后跟一个非数字再跟c
             print_match(dfa, "axc", "a[^0-9]c匹配axc", true);
             print_match(dfa, "a.c", "a[^0-9]c匹配a.c", true);
             print_match(dfa, "a1c", "a[^0-9]c匹配a1c", false); // 1是数字
@@ -78,7 +78,7 @@ int main(const int argc, const char** argv)
         // 测试6: 量词 * (零次或多次)
         std::cout << "\n--- 测试6: 量词* ---" << std::endl;
         {
-            regex::dfa dfa = regex::build_dfa("ab*c");      // a后跟零个或多个b，然后是c
+            auto dfa = regex::build_dfa("ab*c");      // a后跟零个或多个b，然后是c
             print_match(dfa, "ac", "ab*c匹配ac", true);     // 零个b
             print_match(dfa, "abc", "ab*c匹配abc", true);   // 一个b
             print_match(dfa, "abbc", "ab*c匹配abbc", true); // 两个b
@@ -89,7 +89,7 @@ int main(const int argc, const char** argv)
         // 测试7: 量词 + (一次或多次)
         std::cout << "\n--- 测试7: 量词+ ---" << std::endl;
         {
-            regex::dfa dfa = regex::build_dfa("ab+c");      // a后跟一个或多个b，然后是c
+            auto dfa = regex::build_dfa("ab+c");      // a后跟一个或多个b，然后是c
             print_match(dfa, "ac", "ab+c匹配ac", false);    // 需要至少一个b
             print_match(dfa, "abc", "ab+c匹配abc", true);   // 一个b
             print_match(dfa, "abbc", "ab+c匹配abbc", true); // 两个b
@@ -99,7 +99,7 @@ int main(const int argc, const char** argv)
         // 测试8: 量词 ? (零次或一次)
         std::cout << "\n--- 测试8: 量词? ---" << std::endl;
         {
-            regex::dfa dfa = regex::build_dfa("ab?c");       // a后跟零个或一个b，然后是c
+            auto dfa = regex::build_dfa("ab?c");       // a后跟零个或一个b，然后是c
             print_match(dfa, "ac", "ab?c匹配ac", true);      // 零个b
             print_match(dfa, "abc", "ab?c匹配abc", true);    // 一个b
             print_match(dfa, "abbc", "ab?c匹配abbc", false); // 两个b，超出范围
@@ -108,7 +108,7 @@ int main(const int argc, const char** argv)
         // 测试9: 转义字符
         std::cout << "\n--- 测试9: 转义字符 ---" << std::endl;
         {
-            regex::dfa dfa = regex::build_dfa("a\\.c");     // a后跟字面量点号再跟c
+            auto dfa = regex::build_dfa("a\\.c");     // a后跟字面量点号再跟c
             print_match(dfa, "a.c", "a\\.c匹配a.c", true);  // 匹配字面量点号
             print_match(dfa, "abc", "a\\.c匹配abc", false); // 不匹配其他字符
         }
@@ -116,7 +116,7 @@ int main(const int argc, const char** argv)
         // 测试10: 复杂组合 - 选择和量词
         std::cout << "\n--- 测试10: 复杂组合 - 选择和量词 ---" << std::endl;
         {
-            regex::dfa dfa = regex::build_dfa("(cat|dog)s?"); // cat或dog，后跟可选的s
+            auto dfa = regex::build_dfa("(cat|dog)s?"); // cat或dog，后跟可选的s
             print_match(dfa, "cat", "(cat|dog)s?匹配cat", true);
             print_match(dfa, "dog", "(cat|dog)s?匹配dog", true);
             print_match(dfa, "cats", "(cat|dog)s?匹配cats", true);
@@ -128,7 +128,7 @@ int main(const int argc, const char** argv)
         // 测试11: 复杂组合 - 字符集和通配符
         std::cout << "\n--- 测试11: 复杂组合 - 字符集和通配符 ---" << std::endl;
         {
-            regex::dfa dfa =
+            auto dfa =
                 regex::build_dfa("[a-z].[0-9]"); // 小写字母 + 任意字符 + 数字
             print_match(dfa, "a12", "[a-z].[0-9]匹配a12", true);
             print_match(dfa, "x.5", "[a-z].[0-9]匹配x.5", true);

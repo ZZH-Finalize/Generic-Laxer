@@ -11,7 +11,7 @@ int main()
         {
             std::cout << "\n测试1: NFA | to_dfa" << std::endl;
             regex::nfa nfa = regex::build_nfa("a*b");
-            regex::dfa dfa = nfa | regex::to_dfa;
+            auto dfa = nfa | regex::to_dfa;
             
             // 测试DFA的匹配结果
             assert(dfa.match("b").has_value());
@@ -29,8 +29,8 @@ int main()
         // 测试2: 使用DFA通过管道运算符进行最小化
         {
             std::cout << "\n测试2: DFA | minimize" << std::endl;
-            regex::dfa dfa = regex::build_dfa("(a|b)*a(a|b)");
-            regex::dfa minimized_dfa = dfa | regex::minimize;
+            auto dfa = regex::build_dfa("(a|b)*a(a|b)");
+            auto minimized_dfa = dfa | regex::minimize;
             
             // 比较原始DFA和最小化DFA的匹配结果，应该相同
             assert(dfa.match("aa").has_value() == minimized_dfa.match("aa").has_value());
@@ -49,8 +49,8 @@ int main()
         {
             std::cout << "\n测试3: NFA | to_dfa | minimize" << std::endl;
             regex::nfa nfa = regex::build_nfa("a+");
-            regex::dfa dfa = nfa | regex::to_dfa;
-            regex::dfa minimized_dfa = dfa | regex::minimize;
+            auto dfa = nfa | regex::to_dfa;
+            auto minimized_dfa = dfa | regex::minimize;
             
             // 比较转换后的DFA和最小化DFA的匹配结果，应该相同
             assert(dfa.match("a").has_value() == minimized_dfa.match("a").has_value());
@@ -66,8 +66,8 @@ int main()
         // 测试4: 直接使用字符串构建DFA并最小化
         {
             std::cout << "\n测试4: 字符串直接构建DFA并最小化" << std::endl;
-            regex::dfa dfa = regex::build_dfa("(a|b)*");
-            regex::dfa minimized_dfa = dfa | regex::minimize;
+            auto dfa = regex::build_dfa("(a|b)*");
+            auto minimized_dfa = dfa | regex::minimize;
             
             // 比较原始DFA和最小化DFA的匹配结果，应该相同
             assert(dfa.match("").has_value() == minimized_dfa.match("").has_value());
@@ -85,8 +85,8 @@ int main()
         {
             std::cout << "\n测试5: 复杂正则表达式 (a|b)*abb" << std::endl;
             regex::nfa nfa = regex::build_nfa("(a|b)*abb");
-            regex::dfa dfa = nfa | regex::to_dfa;
-            regex::dfa minimized_dfa = dfa | regex::minimize;
+            auto dfa = nfa | regex::to_dfa;
+            auto minimized_dfa = dfa | regex::minimize;
             
             // 比较原始DFA和最小化DFA的匹配结果，应该相同
             assert(dfa.match("abb") == minimized_dfa.match("abb"));
@@ -105,8 +105,8 @@ int main()
         {
             std::cout << "\n测试6: 复杂正则表达式 (a|b)+c(d|e)*f" << std::endl;
             regex::nfa nfa = regex::build_nfa("(a|b)+c(d|e)*f");
-            regex::dfa dfa = nfa | regex::to_dfa;
-            regex::dfa minimized_dfa = nfa | regex::to_dfa | regex::minimize;
+            auto dfa = nfa | regex::to_dfa;
+            auto minimized_dfa = nfa | regex::to_dfa | regex::minimize;
             
             // 比较原始DFA和最小化DFA的匹配结果，应该相同
             assert(dfa.match("acdf") == minimized_dfa.match("acdf"));

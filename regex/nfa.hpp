@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <concepts>
 #include <format>
 #include <optional>
@@ -14,6 +15,27 @@ namespace regex {
     class nfa: public basic_nfa<id_t> {
        public:
         friend class builder;
+
+        // 添加从基类basic_nfa构造nfa的构造函数
+        nfa(const basic_nfa& base_nfa)
+        {
+            // 复制基类的状态和结构
+            this->states = base_nfa.get_states();
+
+            // 设置起始和结束状态
+            this->set_start(base_nfa.get_start());
+            this->set_final(base_nfa.get_final());
+        }
+
+        nfa(basic_nfa&& base_nfa)
+        {
+            // 拿走基类的状态和结构
+            this->states = std::move(base_nfa.get_states());
+
+            // 设置起始和结束状态
+            this->set_start(base_nfa.get_start());
+            this->set_final(base_nfa.get_final());
+        }
 
        protected:
         nfa()

@@ -10,7 +10,7 @@ int main()
         // 测试1: 简单的正则表达式
         {
             std::cout << "\n测试1: (a|b)*a(a|b)" << std::endl;
-            regex::dfa dfa         = regex::build_dfa("(a|b)*a(a|b)");
+            auto dfa         = regex::build_dfa("(a|b)*a(a|b)");
             size_t original_states = dfa.get_state_count();
             std::cout << "原始DFA状态数: " << original_states << std::endl;
 
@@ -43,7 +43,7 @@ int main()
         // 测试2: 简单的a+模式
         {
             std::cout << "\n测试2: a+" << std::endl;
-            regex::dfa dfa         = regex::build_dfa("a+");
+            auto dfa         = regex::build_dfa("a+");
             size_t original_states = dfa.get_state_count();
             std::cout << "原始DFA状态数: " << original_states << std::endl;
 
@@ -72,7 +72,7 @@ int main()
         // 测试3: (a|b)* 模式（匹配所有a和b组成的字符串）
         {
             std::cout << "\n测试3: (a|b)*" << std::endl;
-            regex::dfa dfa         = regex::build_dfa("(a|b)*");
+            auto dfa         = regex::build_dfa("(a|b)*");
             size_t original_states = dfa.get_state_count();
             std::cout << "原始DFA状态数: " << original_states << std::endl;
 

@@ -27,7 +27,7 @@ void test_parallel_nfa()
     std::cout << "组合NFA: " << std::format("{}", combined_nfa) << std::endl;
     
     // 将NFA转换为DFA进行测试
-    regex::dfa combined_dfa = regex::to_dfa(combined_nfa);
+    auto combined_dfa = regex::to_dfa(combined_nfa);
     
     // 测试各种输入并添加断言
     std::cout << "\n--- 测试组合DFA ---" << std::endl;
@@ -65,9 +65,9 @@ void test_parallel_nfa()
     std::cout << "\n--- 验证规则区分能力 ---" << std::endl;
     
     // 创建单独的DFA来区分不同类型的token
-    regex::dfa keyword_dfa = regex::build_dfa("if|else|while|for");
-    regex::dfa identifier_dfa = regex::build_dfa("[a-zA-Z_][a-zA-Z0-9_]*");
-    regex::dfa number_dfa = regex::build_dfa("[0-9]+");
+    auto keyword_dfa = regex::build_dfa("if|else|while|for");
+    auto identifier_dfa = regex::build_dfa("[a-zA-Z_][a-zA-Z0-9_]*");
+    auto number_dfa = regex::build_dfa("[0-9]+");
     
     auto kw_result1 = keyword_dfa.match("if");
     auto id_result1 = identifier_dfa.match("if");
@@ -107,11 +107,11 @@ void test_manual_merge()
      
     // 注意：目前NFA的merge方法是私有的，但内部的select_with实现了类似功能
     // 我们可以通过构建包含选择操作的正则表达式来测试这个功能
-    regex::dfa dfa1 = regex::build_dfa("abc");
-    regex::dfa dfa2 = regex::build_dfa("xyz");
+    auto dfa1 = regex::build_dfa("abc");
+    auto dfa2 = regex::build_dfa("xyz");
      
     // 使用选择操作创建一个可以匹配任一模式的DFA
-    regex::dfa combined_dfa = regex::build_dfa("(abc)|(xyz)");
+    auto combined_dfa = regex::build_dfa("(abc)|(xyz)");
      
     std::cout << "选择DFA测试:" << std::endl;
     auto result1 = combined_dfa.match("abc");

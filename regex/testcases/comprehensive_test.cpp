@@ -4,7 +4,7 @@
 #include <cassert>
 #include "regex.hpp"
 
-void print_match(const regex::dfa& dfa, const std::string_view& str, const std::string& test_name)
+void print_match(const auto& dfa, const std::string_view& str, const std::string& test_name)
 {
     auto result = dfa.match(str);
     bool has_match = result.has_value();
@@ -18,7 +18,7 @@ int main(const int argc, const char** argv)
     // 测试1: 简单字符串匹配
     std::cout << "\n--- 测试1: 简单字符串 ---" << std::endl;
     {
-        regex::dfa dfa1 = regex::build_dfa("abc");
+        auto dfa1 = regex::build_dfa("abc");
         auto result1 = dfa1.match("abc");
         print_match(dfa1, "abc", "abc匹配abc");
         assert(result1.has_value());
@@ -35,7 +35,7 @@ int main(const int argc, const char** argv)
     // 测试2: 单字符匹配
     std::cout << "\n--- 测试2: 单字符 ---" << std::endl;
     {
-        regex::dfa dfa2 = regex::build_dfa("x");
+        auto dfa2 = regex::build_dfa("x");
         auto result4 = dfa2.match("x");
         print_match(dfa2, "x", "x匹配x");
         assert(result4.has_value());
@@ -48,7 +48,7 @@ int main(const int argc, const char** argv)
     // 测试3: 特殊字符（如果支持的话）
     std::cout << "\n--- 测试3: 点号通配符 ---" << std::endl;
     {
-        regex::dfa dfa3 = regex::build_dfa(".");
+        auto dfa3 = regex::build_dfa(".");
         auto result6 = dfa3.match("a");
         print_match(dfa3, "a", ".匹配a");
         assert(result6.has_value());

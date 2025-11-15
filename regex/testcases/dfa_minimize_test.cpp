@@ -9,7 +9,7 @@ int main() {
     // 例如: (a|b)*a(a|b) - 匹配以'a'为倒数第二个字符的字符串
     
     try {
-        regex::dfa dfa = regex::build_dfa("(a|b)*a(a|b)");
+        auto dfa = regex::build_dfa("(a|b)*a(a|b)");
         
         std::cout << "原始DFA状态数: " << dfa.get_state_count() << std::endl;
         

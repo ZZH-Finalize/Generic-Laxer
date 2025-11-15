@@ -4,7 +4,7 @@
 #include <cassert>
 #include "regex.hpp"
 
-void print_match(const regex::dfa& dfa, const std::string_view& str)
+void print_match(const auto& dfa, const std::string_view& str)
 {
     auto result = dfa.match(str);
     std::cout << std::format("{}: {}\n", str, result.has_value());
@@ -17,7 +17,7 @@ int main(const int argc, const char** argv)
     // 基本测试
     std::cout << "=== 基本测试 ===" << std::endl;
     {
-        regex::dfa dfa = regex::build_dfa("hello world");
+        auto dfa = regex::build_dfa("hello world");
         auto result1 = dfa.match("hello world");
         print_match(dfa, "hello world");
         assert(result1.has_value());
@@ -42,7 +42,7 @@ int main(const int argc, const char** argv)
     // 单字符测试
     std::cout << "\n=== 单字符测试 ===" << std::endl;
     {
-        regex::dfa dfa_single = regex::build_dfa("a");
+        auto dfa_single = regex::build_dfa("a");
         auto result6 = dfa_single.match("a");
         print_match(dfa_single, "a");
         assert(result6.has_value());
@@ -59,7 +59,7 @@ int main(const int argc, const char** argv)
     // 简单模式测试
     std::cout << "\n=== 简单模式测试 ===" << std::endl;
     {
-        regex::dfa dfa_simple = regex::build_dfa("ab");
+        auto dfa_simple = regex::build_dfa("ab");
         auto result9 = dfa_simple.match("ab");
         print_match(dfa_simple, "ab");
         assert(result9.has_value());
