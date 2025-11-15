@@ -12,8 +12,7 @@ target('regex-engine')
     add_includedirs('.', {public=true})
 
     add_files(
-        'nfa_builder.cpp',
-        'dfa_builder.cpp'
+        'nfa_builder.cpp'
     )
 
 for _, file in ipairs(os.files('testcases/*.cpp')) do

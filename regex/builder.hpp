@@ -14,6 +14,7 @@ namespace regex {
         // 从正则表达式创建NFA
         static nfa build(std::string_view exp);
 
+        // 从NFA创建DFA
         template<typename NFA>
         requires is_nfa<NFA>
         static NFA::dfa build(const NFA& input_nfa)
