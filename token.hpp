@@ -3,17 +3,18 @@
 #include <format>
 #include <functional>
 #include <string>
+#include "regex/nfa.hpp"
 #include "regex_typedef.hpp"
 
 namespace laxer {
 
-    class token {
+    class token: public regex::final_state_t {
        public:
         using id_t     = regex::id_t;
         using action_t = std::function<bool(token &)>;
 
        private:
-        id_t dfa_state_id, token_id;
+        id_t token_id;
         std::string matched_text, rule_name;
 
         action_t action;
@@ -22,23 +23,11 @@ namespace laxer {
         // 实现终态类似所必须的方法
         token(id_t state_id, id_t token_id = 0, const action_t &cb = {},
               const std::string name = {})
-            : dfa_state_id(state_id),
+            : regex::final_state_t(state_id),
               token_id(token_id),
               action(cb),
               rule_name(std::move(name))
         {
-        }
-
-        operator id_t(void) const noexcept
-        {
-            return this->dfa_state_id;
-        }
-
-        void copy_metadata(const token &other)
-        {
-            this->token_id  = other.token_id;
-            this->action    = other.action;
-            this->rule_name = other.rule_name;
         }
 
         // 实现其他方法

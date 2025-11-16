@@ -18,26 +18,13 @@ namespace regex {
         // 对应NFA状态集合
         closure_t nfa_states;
 
-        // 是否为最终状态
-        bool final;
-
        public:
         // 构造函数初始化转换表为无效值
-        explicit dfa_state(const closure_t& nfa_states = {}, bool is_final = false)
-            : nfa_states(nfa_states), final(is_final)
+        explicit dfa_state(const closure_t& nfa_states = {})
+            : nfa_states(nfa_states)
         {
             std::fill(this->transition_map.begin(), this->transition_map.end(),
                       std::numeric_limits<id_t>::max());
-        }
-
-        inline void set_final(bool is_final)
-        {
-            this->final = is_final;
-        }
-
-        inline bool is_final(void) const noexcept
-        {
-            return this->final;
         }
 
         inline const closure_t& get_closure(void) const

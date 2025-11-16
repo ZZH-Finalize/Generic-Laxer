@@ -9,32 +9,22 @@
 #include "regex_typedef.hpp"
 
 namespace laxer_test {
-    class final_state_t {
+    class final_state_t: public regex::final_state_t {
        public:
         using id_t = regex::id_t;
 
        private:
-        id_t state_id, rule_id;
+        id_t rule_id;
 
        public:
         final_state_t(id_t state_id = 0, id_t rule_id = 0)
-            : state_id(state_id), rule_id(rule_id)
+            : regex::final_state_t(state_id), rule_id(rule_id)
         {
-        }
-
-        operator id_t(void) const noexcept
-        {
-            return this->state_id;
         }
 
         id_t get_rule_id(void) const noexcept
         {
             return this->rule_id;
-        }
-
-        void copy_metadata(const final_state_t& other)
-        {
-            this->rule_id = other.rule_id;
         }
     };
 

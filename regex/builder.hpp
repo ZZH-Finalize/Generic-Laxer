@@ -25,7 +25,7 @@ namespace regex {
             if (input_nfa.get_states().empty()) {
                 // 如果NFA没有状态，创建一个空的DFA
                 closure_t empty_closure;
-                result_dfa.set_start(result_dfa.add_state(empty_closure, false));
+                result_dfa.set_start(result_dfa.add_state(empty_closure));
                 return result_dfa;
             }
 
@@ -36,8 +36,15 @@ namespace regex {
             std::vector<closure_t> unmarked;     // 未标记的DFA状态
 
             // 创建初始DFA状态
-            bool is_final = input_nfa.find_final(initial_closure).has_value();
-            result_dfa.set_start(result_dfa.add_state(initial_closure, is_final));
+            auto final    = input_nfa.find_final(initial_closure);
+            bool is_final = final.has_value();
+            result_dfa.set_start(result_dfa.add_state(initial_closure));
+
+            // 如果初始闭包就包括终态, 则记录此终态
+            if (is_final) {
+                final->set_state_id(result_dfa.get_start());
+                result_dfa.add_final(final.value());
+            }
 
             state_map[initial_closure] = result_dfa.get_start();
 
@@ -73,8 +80,15 @@ namespace regex {
                     auto it = state_map.find(next_set);
                     if (it == state_map.end()) {
                         // 创建新的DFA状态
-                        next_id = result_dfa.add_state(
-                            next_set, input_nfa.find_final(next_set).has_value());
+                        next_id = result_dfa.add_state(next_set);
+                        final   = input_nfa.find_final(next_set);
+
+                        // 新的闭包中包含终态
+                        if (final.has_value()) {
+                            final->set_state_id(next_id);
+                            result_dfa.add_final(final.value());
+                        }
+
                         state_map[next_set] = next_id;
                         unmarked.push_back(next_set);
                     } else {
@@ -83,26 +97,6 @@ namespace regex {
 
                     // 添加转换
                     result_dfa.set_transition(current_id, input_char, next_id);
-                }
-            }
-
-            // 记录最终状态
-            for (id_t i = 0; i < result_dfa.get_states().size(); i++) {
-                auto state = result_dfa.get_state(i);
-                if (state.is_final()) {
-                    const auto& closure = state.get_closure();
-
-                    final_state_id_t final_state(i);
-
-                    if constexpr (has_metadata<final_state_id_t>) {
-                        auto final = input_nfa.find_final(closure);
-
-                        if (final.has_value()) {
-                            final_state.copy_metadata(final.value());
-                        }
-                    }
-
-                    result_dfa.add_final(final_state);
                 }
             }
 

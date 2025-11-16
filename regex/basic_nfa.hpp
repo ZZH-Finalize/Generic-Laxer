@@ -50,6 +50,9 @@ namespace regex {
         // T必须提供自身使用的终态类型(如果终态是容器, 则代表容器内部类型)
         typename T::final_state_id_t;
 
+        // T自身使用的终态类型必须符合终态类型的要求
+        requires is_fa_final_state_t<typename T::final_state_id_t>;
+
         // 需要获取T的起始id
         { t.get_start() } -> std::same_as<id_t>;
         // 需要T给出闭包中的终态

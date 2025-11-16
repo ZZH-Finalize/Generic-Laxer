@@ -8,11 +8,33 @@
 
 #include "basic_nfa.hpp"
 #include "basic_dfa.hpp"
+#include "regex_typedef.hpp"
 
 namespace regex {
 
+    // NFA与NFA的终态类型基类, 实现了最基础的concepts要求
+    class final_state_t {
+       private:
+        id_t state_id;
+
+       public:
+        final_state_t(id_t id = 0): state_id(id)
+        {
+        }
+
+        operator id_t(void) const noexcept
+        {
+            return this->state_id;
+        }
+
+        void set_state_id(id_t id) noexcept
+        {
+            this->state_id = id;
+        }
+    };
+
     // 定义regex::nfa
-    class nfa: public basic_nfa<id_t> {
+    class nfa: public basic_nfa<final_state_t> {
        public:
         friend class builder;
 
@@ -57,10 +79,10 @@ namespace regex {
 namespace std {
     template<typename CharT>
     struct formatter<regex::nfa, CharT>
-        : formatter<regex::basic_nfa<regex::nfa::id_t>, CharT>
+        : formatter<regex::basic_nfa<regex::nfa::final_state_t>, CharT>
     {
-        using formatter<regex::basic_nfa<regex::nfa::id_t>, CharT>::parse;
-        using formatter<regex::basic_nfa<regex::nfa::id_t>, CharT>::format;
+        using formatter<regex::basic_nfa<regex::nfa::final_state_t>, CharT>::parse;
+        using formatter<regex::basic_nfa<regex::nfa::final_state_t>, CharT>::format;
     };
 
 } // namespace std

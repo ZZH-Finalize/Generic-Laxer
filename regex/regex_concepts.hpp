@@ -48,7 +48,9 @@ namespace regex {
     template<typename T>
     concept is_fa_final_state_t =
         std::is_convertible_v<T, id_t> and std::is_constructible_v<T, id_t>
-        and std::is_assignable_v<T&, id_t>;
+        and std::is_assignable_v<T&, id_t> and requires(T& t, id_t id) {
+                t.set_state_id(id);
+            };
 
     // 当T是容器时, 判断T内部类型能否作为自动机终态类型
     template<typename T>
