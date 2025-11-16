@@ -17,6 +17,10 @@ namespace regex {
     template<typename T>
     concept has_insert = requires(T t, const T::value_type& v) { t.insert(v); };
 
+    // 可以执行emplace, 用于支持std::set这样的容器
+    template<typename T>
+    concept has_emplace = requires(T t, const T::value_type& v) { t.emplace(v); };
+
     // 可以执行emplace_back 用于支持std::set这样的容器
     template<typename T>
     concept has_emplace_back =

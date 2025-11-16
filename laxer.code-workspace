@@ -95,7 +95,7 @@
                 "command": "xmake",
                 "args": [
                     "test",
-                    "*/regex"
+                    // "*/laxer"
                     // "-vD"
                 ],
                 "options": {

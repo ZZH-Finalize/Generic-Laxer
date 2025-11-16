@@ -8,10 +8,10 @@
 #include <utility>
 #include <vector>
 
-#include "nfa.hpp"
+#include "nfa_with_rule_id.hpp"
 #include "regex/regex.hpp"
 
-using rule_id_t = laxer::nfa::id_t;
+using rule_id_t = laxer_test::nfa::id_t;
 
 const rule_id_t invalid_id = std::numeric_limits<rule_id_t>::max();
 
@@ -38,7 +38,7 @@ int main(const int argc, const char** argv)
     };
 
     // setup rules
-    laxer::nfa laxer_nfa;
+    laxer_test::nfa laxer_nfa;
 
     for (const auto& rule : rules) {
         auto nfa = regex::build_nfa(rule);

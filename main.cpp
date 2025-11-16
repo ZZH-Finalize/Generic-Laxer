@@ -7,17 +7,29 @@
 
 #include "regex/regex.hpp"
 #include "nfa.hpp"
+#include "token.hpp"
 
 int main(const int argc, const char** argv)
 {
-    regex::nfa rule1 = regex::build_nfa("else");
-
     laxer::nfa nfa;
 
-    nfa.add_nfa(rule1);
+    auto return_print = [](laxer::token& token) {
+        std::cout << std::format("action called\n{}", token) << std::endl;
 
-    auto dfa = regex::to_dfa(nfa);
+        token.add_matched_text(" (Action edited)");
 
-    
+        return true;
+    };
+
+    nfa.add_nfa(regex::build_nfa("else"), return_print, "keyword else");
+
+    auto dfa = nfa | regex::build | regex::minimize;
+
+    auto res = dfa.match("else");
+
+    if (res.has_value()) {
+        std::cout << std::format("dfa.match return:\n{}", res.value()) << std::endl;
+    }
+
     return 0;
 }

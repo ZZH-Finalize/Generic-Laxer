@@ -92,9 +92,9 @@ namespace regex {
 
         template<typename... Args>
         inline void add_final(Args &&...args)
-        requires has_insert<final_state_t>
+        requires has_emplace<final_state_t>
         {
-            this->final.insert(std::forward<Args>(args)...);
+            this->final.emplace(std::forward<Args>(args)...);
         }
 
         // 为nfa和dfa及其子类实现, 拷贝赋值版本
