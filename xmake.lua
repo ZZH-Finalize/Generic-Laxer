@@ -8,6 +8,8 @@ set_defaultplat('mingw')
 set_defaultmode('debug')
 set_toolchains('gcc')
 set_languages('c++latest')
+-- set_warnings('everything')
+set_warnings('error')
 
 includes('regex')
 

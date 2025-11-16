@@ -123,7 +123,7 @@
                 "name": "main",
                 "type": "cppdbg",
                 "request": "launch",
-                "program": "${workspaceFolder}/build/mingw/x86_64/debug/laxer-test.exe",
+                "program": "${workspaceFolder}/build/mingw/x86_64/debug/laxer.exe",
                 "args": [
                     "edl_demo/identifiers.edl",
                     // "edl_demo/keywords.edl",

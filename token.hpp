@@ -25,8 +25,10 @@ namespace laxer {
               const std::string name = {})
             : regex::final_state_t(state_id),
               token_id(token_id),
-              action(cb),
-              rule_name(std::move(name))
+              matched_text {},
+              rule_name(std::move(name)),
+              action(cb)
+
         {
         }
 

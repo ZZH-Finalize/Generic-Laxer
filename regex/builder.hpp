@@ -19,7 +19,6 @@ namespace regex {
         requires is_nfa<NFA>
         static NFA::dfa build(const NFA& input_nfa)
         {
-            using final_state_id_t = typename NFA::dfa::final_state_id_t;
             typename NFA::dfa result_dfa;
 
             if (input_nfa.get_states().empty()) {
@@ -63,7 +62,8 @@ namespace regex {
                     const auto& nfa_state   = input_nfa.get_state(nfa_state_id);
                     const auto& transitions = nfa_state.get_transition_map();
 
-                    for (int input_idx = 0; input_idx < transitions.size(); input_idx++) {
+                    for (std::size_t input_idx = 0; input_idx < transitions.size();
+                         input_idx++) {
                         if (not transitions[input_idx].empty()) {
                             input_chars.insert(static_cast<char>(input_idx));
                         }

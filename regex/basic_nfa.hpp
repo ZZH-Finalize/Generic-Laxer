@@ -115,7 +115,7 @@ namespace regex {
             const auto& other_states = other_nfa.get_states();
 
             // 添加other_nfa的所有状态到当前NFA中
-            for (const auto& s : other_states) {
+            for (const auto& _ : other_states) {
                 this->add_state();
             }
 
@@ -125,7 +125,7 @@ namespace regex {
                 const auto& other_transition_map = other_state.get_transition_map();
 
                 // 复制字符转换
-                for (int input_idx = 0; input_idx < other_transition_map.size();
+                for (std::size_t input_idx = 0; input_idx < other_transition_map.size();
                      input_idx++) {
                     if (not other_transition_map[input_idx].empty()) {
                         char input_char = static_cast<char>(input_idx);

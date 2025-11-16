@@ -56,7 +56,7 @@ namespace regex {
         id_t start;
         final_state_t final;
 
-        explicit basic_fa(void): start {}, final {}
+        explicit basic_fa(void): states{}, start {}, final {}
         {
         }
 
@@ -65,7 +65,7 @@ namespace regex {
         {
             this->states.emplace_back(std::forward<Args>(args)...);
 
-            return this->states.size() - 1;
+            return static_cast<id_t>(this->states.size() - 1);
         }
 
         inline void set_start(id_t start) noexcept

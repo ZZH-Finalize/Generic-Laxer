@@ -4,6 +4,7 @@
 
 #include "basic_nfa.hpp"
 #include "nfa.hpp"
+#include "regex_typedef.hpp"
 
 namespace std {
     // 为 nfa 类提供 std::format 支持
@@ -12,7 +13,7 @@ namespace std {
     struct formatter<regex::basic_nfa<T>, CharT>
     {
         using nfa = regex::basic_nfa<T>;
-        std::string direction;
+        std::string direction {};
 
         constexpr auto parse(std::format_parse_context& ctx)
         {
@@ -31,6 +32,17 @@ namespace std {
             return it;
         }
 
+        string get_state_str(const nfa& nfa, regex::id_t id) const
+        {
+            if (id == nfa.get_start() || id == nfa.get_final()) {
+                return std::string("[*]");
+            } else {
+                return std::format("state_{}", id);
+            }
+
+            return std::format("state_{}", id);
+        }
+
         template<typename FormatContext>
         auto format(const nfa& nfa, FormatContext& ctx) const
         {
@@ -46,26 +58,19 @@ namespace std {
 
             auto& states = nfa.get_states();
 
-            auto get_state_str = [&nfa](regex::id_t id) {
-                if (id == nfa.get_start() || id == nfa.get_final()) {
-                    return std::string("[*]");
-                } else {
-                    return std::format("state_{}", id);
-                }
-            };
-
             for (auto current_state_id = 0; current_state_id < states.size();
                  current_state_id++) {
-                if (current_state_id == nfa.get_final()) {
+                auto final = nfa.find_final({static_cast<regex::id_t>(current_state_id)});
+                if (final.has_value()) {
                     continue;
                 }
 
                 const typename nfa::state& state = states.at(current_state_id);
-                std::string from               = get_state_str(current_state_id);
+                std::string from = this->get_state_str(nfa, current_state_id);
 
                 // handle epsilon transitions
                 for (auto& to_state : state.get_epsilon_transition()) {
-                    std::string to = get_state_str(to_state);
+                    std::string to = this->get_state_str(nfa, to_state);
 
                     result += std::format("{} --> {}\n", from, to);
                 }
@@ -78,7 +83,7 @@ namespace std {
 
                     // 对输入字符, 遍历可能的目标状态
                     for (auto& to_state : trans) {
-                        std::string to = get_state_str(to_state);
+                        std::string to = get_state_str(nfa, to_state);
 
                         result += std::format("{} --> {} : {}\n", from, to,
                                               static_cast<char>(input));
@@ -99,7 +104,7 @@ namespace std {
     {
         using dfa = regex::basic_dfa<T>;
 
-        std::string direction;
+        std::string direction {};
 
         constexpr auto parse(std::format_parse_context& ctx)
         {
