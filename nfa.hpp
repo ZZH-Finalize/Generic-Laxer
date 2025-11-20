@@ -22,19 +22,16 @@ namespace laxer {
     };
 
     class nfa: public regex::basic_nfa<std::set<token>> {
-       private:
-        id_t current_token_id;
-
        public:
         using final_state_id_t = typename basic_nfa::final_state_id_t;
 
-        nfa(id_t initial_token_id = 0): current_token_id(initial_token_id)
+        nfa()
         {
         }
 
         // 添加单个regex::nfa到当前NFA
-        void add_nfa(const regex::nfa& input_nfa, const token::action_t& cb = {},
-                     std::string name = {})
+        void add_nfa(const regex::nfa& input_nfa, id_t token_id = 0,
+                     const token::action_t& cb = {}, std::string name = {})
         {
             auto offset = this->merge_states(input_nfa);
 
@@ -44,12 +41,11 @@ namespace laxer {
 
             // 自动生成规则名
             if (name.empty()) {
-                name = std::format("rule_{}", this->current_token_id + 1);
+                name = std::format("rule_{}", token_id);
             }
 
             // 把input_nfa的终态添加到accept_states中, 并填充元数据
-            this->add_final(input_nfa.get_final() + offset, this->current_token_id++, cb,
-                            name);
+            this->add_final(input_nfa.get_final() + offset, token_id, cb, name);
         }
 
         std::optional<final_state_id_t> find_final(const closure_t& states) const

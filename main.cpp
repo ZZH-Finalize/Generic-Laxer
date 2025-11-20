@@ -2,9 +2,11 @@
 #include <format>
 #include <iostream>
 #include <fstream>
+#include <istream>
 #include <optional>
 #include <string>
 
+#include "laxer.hpp"
 #include "regex/regex.hpp"
 #include "nfa.hpp"
 #include "token.hpp"
@@ -14,30 +16,21 @@ int main(const int argc, const char** argv)
     (void) argc;
     (void) argv;
 
-    laxer::nfa nfa;
+    laxer::laxer l;
+    l.open_file("D:/proj/edl-laxer/edl_demo/numbers.edl");
 
-    auto return_print = [](laxer::token& token) {
-        std::cout << std::format("action called\n{}", token) << std::endl;
+    l.add_rule("\\d+", 0, {}, "numbers");
+    l.add_rule("0x[a-fA-F0-9]+", 1, {}, "hex numbers");
+    l.add_rule("0b[01]+", 1, {}, "bin numbers");
+    l.add_rule("[ \r\n\t]", 2, [](laxer::token& token) { return false; }, "ignores");
+    l.add_rule(".", 3, [](laxer::token& token) { return false; }, "error token");
 
-        token.add_matched_text(" (Action edited)");
+    laxer::token token = l.next_token();
 
-        return true;
-    };
-
-    nfa.add_nfa(regex::build_nfa("else"), return_print, "keyword else");
-
-    auto dfa = nfa | regex::to_dfa | regex::minimize;
-    auto res = dfa.match("else");
-
-    if (res.has_value()) {
-        std::cout << std::format("dfa.match return:\n{}", res.value()) << std::endl;
+    while (token.get_token_id() != laxer::nfa::invalid_state) {
+        std::cout << std::format("{}\n", token);
+        token = l.next_token();
     }
-
-    laxer::nfa nfa2;
-
-    nfa2.add_nfa(regex::build_nfa("\\d+"), {}, "number");
-
-    std::cout << std::format("nfa2:\n{}\n", nfa2);
 
     return 0;
 }

@@ -21,14 +21,13 @@ namespace laxer {
 
        public:
         // 实现终态类似所必须的方法
-        token(id_t state_id, id_t token_id = 0, const action_t &cb = {},
+        token(id_t state_id = 0, id_t token_id = 0, const action_t &cb = {},
               const std::string name = {})
             : regex::final_state_t(state_id),
               token_id(token_id),
               matched_text {},
               rule_name(std::move(name)),
               action(cb)
-
         {
         }
 
