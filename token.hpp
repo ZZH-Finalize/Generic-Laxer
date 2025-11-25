@@ -1,8 +1,11 @@
 #pragma once
 
+#include <cstdint>
 #include <format>
 #include <functional>
 #include <string>
+#include <utility>
+#include <variant>
 #include "regex/nfa.hpp"
 #include "regex_typedef.hpp"
 
@@ -18,6 +21,9 @@ namespace laxer {
         std::string matched_text, rule_name;
 
         action_t action;
+        std::variant<std::monostate, std::int32_t, std::uint32_t, std::int64_t, std::uint64_t, double,
+                     std::string>
+            token_value;
 
        public:
         // 实现终态类似所必须的方法
@@ -90,6 +96,17 @@ namespace laxer {
         const auto &get_action(void) const noexcept
         {
             return this->action;
+        }
+
+        template<typename T>
+        void set_token_value(const T& val)
+        {
+            this->token_value = val;
+        }
+
+        const auto &get_token_value(void) const noexcept
+        {
+            return this->token_value;
         }
     };
 
