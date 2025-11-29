@@ -4,10 +4,18 @@
 #include <format>
 #include <functional>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <variant>
 #include "regex/nfa.hpp"
 #include "regex_typedef.hpp"
+
+#define STATIC_CONVERT(fn)       \
+    static bool fn(token &token) \
+    {                            \
+        token.fn();              \
+        return true;             \
+    }
 
 namespace laxer {
 
@@ -21,8 +29,8 @@ namespace laxer {
         std::string matched_text, rule_name;
 
         action_t action;
-        std::variant<std::monostate, std::int32_t, std::uint32_t, std::int64_t, std::uint64_t, double,
-                     std::string>
+        std::variant<std::monostate, std::int32_t, std::uint32_t, std::int64_t,
+                     std::uint64_t, double, std::string>
             token_value;
 
        public:
@@ -99,7 +107,7 @@ namespace laxer {
         }
 
         template<typename T>
-        void set_token_value(const T& val)
+        void set_token_value(const T &val)
         {
             this->token_value = val;
         }
@@ -108,6 +116,72 @@ namespace laxer {
         {
             return this->token_value;
         }
+
+        // token value converters
+
+        // accept format 0b[01]+
+        void convert_bin(void)
+        {
+            std::string_view matched_str(this->matched_text);
+            matched_str.remove_prefix(2);
+
+            std::uint32_t value = 0;
+
+            for (char ch : matched_str) {
+                value <<= 1;
+                value |= (ch == '1');
+            }
+
+            this->token_value = value;
+        }
+
+        // accept format \d+
+        void convert_dec(void)
+        {
+            this->token_value = static_cast<std::int32_t>(std::stoi(this->matched_text));
+        }
+
+        // accept format 0x[a-fA-F0-9]+
+        void convert_hex(void)
+        {
+            std::string_view matched_str(this->matched_text);
+            matched_str.remove_prefix(2);
+
+            std::uint32_t value = 0;
+
+            for (char ch : matched_str) {
+                value <<= 4;
+                if (ch >= '0' && ch <= '9') {
+                    value |= (ch - '0');
+                } else if (ch >= 'a' && ch <= 'f') {
+                    value |= (ch - 'a' + 10);
+                } else if (ch >= 'A' && ch <= 'F') {
+                    value |= (ch - 'A' + 10);
+                }
+            }
+
+            this->token_value = value;
+        }
+
+        // accept format \d+\.\d+
+        void convert_float(void)
+        {
+            this->token_value = std::stod(this->matched_text);
+        }
+
+        void record_string(void)
+        {
+            this->token_value = this->matched_text;
+        }
+    };
+
+    class converter {
+       public:
+        STATIC_CONVERT(convert_bin);
+        STATIC_CONVERT(convert_dec);
+        STATIC_CONVERT(convert_hex);
+        STATIC_CONVERT(convert_float);
+        STATIC_CONVERT(record_string);
     };
 
 } // namespace laxer

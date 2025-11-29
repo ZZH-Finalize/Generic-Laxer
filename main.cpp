@@ -18,18 +18,11 @@ int main(const int argc, const char** argv)
     (void) argv;
 
     laxer::laxer l;
-    l.open_file("D:/proj/edl-laxer/edl_demo/numbers.edl");
+    l.open_file("../../../../edl_demo/numbers.edl");
 
-    l.add_rule(
-        "\\d+", 0,
-        [](laxer::token& token) {
-            token.set_token_value(
-                static_cast<std::int32_t>(std::stoi(token.get_matched_text())));
-            return true;
-        },
-        "numbers");
-    l.add_rule("0x[a-fA-F0-9]+", 1, {}, "hex numbers");
-    l.add_rule("0b[01]+", 2, {}, "bin numbers");
+    l.add_rule("\\d+", 0, laxer::converter::convert_dec, "numbers");
+    l.add_rule("0x[a-fA-F0-9]+", 1, laxer::converter::convert_hex, "hex numbers");
+    l.add_rule("0b[01]+", 2, laxer::converter::convert_bin, "bin numbers");
     l.add_rule("[ \r\n\t]", 3, [](laxer::token& token) { return false; }, "ignores");
     l.add_rule(".", 4, [](laxer::token& token) { return false; }, "error token");
 
@@ -40,6 +33,9 @@ int main(const int argc, const char** argv)
 
         if (const auto intPtr = std::get_if<std::int32_t>(&token.get_token_value())) {
             std::cout << std::format("token value: {}\n", *intPtr);
+        } else if (const auto intPtr =
+                       std::get_if<std::uint32_t>(&token.get_token_value())) {
+            std::cout << std::format("token value: 0x{:X}\n", *intPtr);
         }
 
         token = l.next_token();
