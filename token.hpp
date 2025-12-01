@@ -29,9 +29,7 @@ namespace laxer {
         std::string matched_text, rule_name;
 
         action_t action;
-        std::variant<std::monostate, std::int32_t, std::uint32_t, std::int64_t,
-                     std::uint64_t, double, std::string>
-            token_value;
+        std::variant<std::monostate, std::uint64_t, double, std::string> token_value;
 
        public:
         // 实现终态类所必须的方法
@@ -138,7 +136,7 @@ namespace laxer {
         // accept format \d+
         void convert_dec(void) noexcept
         {
-            this->token_value = static_cast<std::int32_t>(std::stoi(this->matched_text));
+            this->token_value = static_cast<std::uint64_t>(std::stoull(this->matched_text));
         }
 
         // accept format 0x[a-fA-F0-9]+
@@ -147,7 +145,7 @@ namespace laxer {
             std::string_view matched_str(this->matched_text);
             matched_str.remove_prefix(2);
 
-            std::uint32_t value = 0;
+            std::uint64_t value = 0;
 
             for (char ch : matched_str) {
                 value <<= 4;

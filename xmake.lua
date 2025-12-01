@@ -29,6 +29,12 @@ target('laxer')
 
     add_files('main.cpp')
 
+target('demo')
+    set_kind('binary')
+    add_deps('laxer-engine')
+
+    add_files('simple_grammar.cpp')
+
 for _, file in ipairs(os.files('testcases/*.cpp')) do
     local name = path.basename(file)
     target('laxer_' .. name)

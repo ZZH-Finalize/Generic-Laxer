@@ -17,8 +17,8 @@ int main(const int argc, const char** argv)
     (void) argc;
     (void) argv;
 
-    laxer::laxer l;
-    l.open_file("../../../../edl_demo/numbers.edl");
+    std::ifstream file("../../../../edl_demo/numbers.edl");
+    laxer::laxer l(file.rdbuf());
 
     l.add_rule("\\d+", 0, laxer::converter::dec, "numbers");
     l.add_rule("0x[a-fA-F0-9]+", 1, laxer::converter::hex, "hex numbers");
@@ -31,15 +31,18 @@ int main(const int argc, const char** argv)
     while (token.get_token_id() != laxer::nfa::invalid_state) {
         std::cout << std::format("{}\n", token);
 
-        if (const auto intPtr = std::get_if<std::int32_t>(&token.get_token_value())) {
-            std::cout << std::format("token value: {}\n", *intPtr);
-        } else if (const auto intPtr =
-                       std::get_if<std::uint32_t>(&token.get_token_value())) {
-            std::cout << std::format("token value: 0x{:X}\n", *intPtr);
+        if (const auto intPtr = std::get_if<std::uint64_t>(&token.get_token_value())) {
+            if (token.get_token_id() == 1) {
+                std::cout << std::format("token value: 0x{:X}\n", *intPtr);
+            } else {
+                std::cout << std::format("token value: {}\n", *intPtr);
+            }
         }
 
         token = l.next_token();
     }
+
+    file.close();
 
     return 0;
 }

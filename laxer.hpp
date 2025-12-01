@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <fstream>
 #include <stdexcept>
+#include <streambuf>
 #include <string>
 #include "nfa.hpp"
 #include "regex/regex.hpp"
@@ -12,7 +13,7 @@ namespace laxer {
 
     class laxer {
        protected:
-        std::ifstream src_file;
+        std::istream input_stream;
         nfa nfa;
         nfa::dfa dfa;
 
@@ -24,13 +25,8 @@ namespace laxer {
             }
         };
 
-        laxer(): src_file {}, nfa {}, dfa {}
+        laxer(std::streambuf* input): input_stream(input), nfa {}, dfa {}
         {
-        }
-
-        inline void open_file(const std::string& fn)
-        {
-            this->src_file.open(fn, std::ios::in);
         }
 
         inline void add_rule(const std::string& regex, nfa::id_t token_id = 0,
@@ -66,12 +62,14 @@ namespace laxer {
 
                 // 持续匹配, 直到遇到无效状态
                 while (current_state != nfa::invalid_state) {
-                    // 根据输入字符推动状态转换
-                    char current_char = this->src_file.peek();
                     // 文件结束
-                    if (this->src_file.eof()) {
+                    if (this->input_stream.eof()
+                        and cur_token.get_token_id() == nfa::invalid_state) {
                         return token(nfa::invalid_state, nfa::invalid_state, {}, "EOF");
                     }
+
+                    // 根据输入字符推动状态转换
+                    char current_char = this->input_stream.peek();
 
                     auto next_state =
                         transition_map[current_state].get_transition(current_char);
@@ -88,10 +86,11 @@ namespace laxer {
                     // 下一状态不是无效状态
                     if (next_state != nfa::invalid_state) {
                         matched_text.push_back(current_char);
-                        this->src_file.get();
+                        this->input_stream.get();
                     } else if (current_state == this->dfa.get_start()
                                and next_state == nfa::invalid_state) {
-                        token default_token(nfa::invalid_state, nfa::invalid_state, {}, "default");
+                        token default_token(nfa::invalid_state, nfa::invalid_state, {},
+                                            "default");
                         matched_text.push_back(current_char);
                         default_token.set_matched_text(std::move(matched_text));
                         return default_token;
