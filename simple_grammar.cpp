@@ -16,9 +16,9 @@ enum tokens
     error,
 };
 
-bool debug(laxer::token &token) noexcept
+bool debug(laxer::token &token)
 {
-    std::cout << std::format("error token: {}", token.get_matched_text());
+    throw std::runtime_error(std::format("error token: {}", token.get_matched_text()));
 
     return true;
 }
