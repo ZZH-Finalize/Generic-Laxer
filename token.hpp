@@ -10,11 +10,11 @@
 #include "regex/nfa.hpp"
 #include "regex_typedef.hpp"
 
-#define STATIC_CONVERT(fn)       \
-    static bool fn(token &token) \
-    {                            \
-        token.fn();              \
-        return true;             \
+#define STATIC_CONVERT(fn)                \
+    static bool fn(token &token) noexcept \
+    {                                     \
+        token.convert_##fn();             \
+        return true;                      \
     }
 
 namespace laxer {
@@ -34,7 +34,7 @@ namespace laxer {
             token_value;
 
        public:
-        // 实现终态类似所必须的方法
+        // 实现终态类所必须的方法
         token(id_t state_id = 0, id_t token_id = 0, const action_t &cb = {},
               const std::string name = {})
             : regex::final_state_t(state_id),
@@ -120,7 +120,7 @@ namespace laxer {
         // token value converters
 
         // accept format 0b[01]+
-        void convert_bin(void)
+        void convert_bin(void) noexcept
         {
             std::string_view matched_str(this->matched_text);
             matched_str.remove_prefix(2);
@@ -136,13 +136,13 @@ namespace laxer {
         }
 
         // accept format \d+
-        void convert_dec(void)
+        void convert_dec(void) noexcept
         {
             this->token_value = static_cast<std::int32_t>(std::stoi(this->matched_text));
         }
 
         // accept format 0x[a-fA-F0-9]+
-        void convert_hex(void)
+        void convert_hex(void) noexcept
         {
             std::string_view matched_str(this->matched_text);
             matched_str.remove_prefix(2);
@@ -164,12 +164,12 @@ namespace laxer {
         }
 
         // accept format \d+\.\d+
-        void convert_float(void)
+        void convert_fp64(void) noexcept
         {
             this->token_value = std::stod(this->matched_text);
         }
 
-        void record_string(void)
+        void record_string(void) noexcept
         {
             this->token_value = this->matched_text;
         }
@@ -177,11 +177,22 @@ namespace laxer {
 
     class converter {
        public:
-        STATIC_CONVERT(convert_bin);
-        STATIC_CONVERT(convert_dec);
-        STATIC_CONVERT(convert_hex);
-        STATIC_CONVERT(convert_float);
-        STATIC_CONVERT(record_string);
+        STATIC_CONVERT(bin);
+        STATIC_CONVERT(dec);
+        STATIC_CONVERT(hex);
+        STATIC_CONVERT(fp64);
+
+        static bool string(token &token) noexcept
+        {
+            token.record_string();
+
+            return true;
+        }
+
+        static bool ignore(token &token) noexcept
+        {
+            return false;
+        }
     };
 
 } // namespace laxer

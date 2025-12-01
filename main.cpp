@@ -20,11 +20,11 @@ int main(const int argc, const char** argv)
     laxer::laxer l;
     l.open_file("../../../../edl_demo/numbers.edl");
 
-    l.add_rule("\\d+", 0, laxer::converter::convert_dec, "numbers");
-    l.add_rule("0x[a-fA-F0-9]+", 1, laxer::converter::convert_hex, "hex numbers");
-    l.add_rule("0b[01]+", 2, laxer::converter::convert_bin, "bin numbers");
-    l.add_rule("[ \r\n\t]", 3, [](laxer::token& token) { return false; }, "ignores");
-    l.add_rule(".", 4, [](laxer::token& token) { return false; }, "error token");
+    l.add_rule("\\d+", 0, laxer::converter::dec, "numbers");
+    l.add_rule("0x[a-fA-F0-9]+", 1, laxer::converter::hex, "hex numbers");
+    l.add_rule("0b[01]+", 2, laxer::converter::bin, "bin numbers");
+    l.add_rule("[ \r\n\t]", 3, laxer::converter::ignore, "ignores");
+    l.add_rule(".", 4, laxer::converter::ignore, "error token");
 
     laxer::token token = l.next_token();
 
